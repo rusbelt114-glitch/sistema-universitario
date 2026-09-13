@@ -4,6 +4,17 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sistema Universitario - Gestor Académico Interactivo</title>
+  
+  <!-- Configuración PWA (Aplicación Instalable con Icono de Birrete) -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0A4D40">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Sistema Universitario">
+  <link rel="apple-touch-icon" href="icon.jpg">
+  <link rel="icon" type="image/jpeg" href="icon.jpg">
+
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -15,7 +26,7 @@
          ==================================================================== -->
     <div id="landing-screen" class="landing-wrapper">
       <div class="landing-header">
-        <span class="brand-badge">UNEXCA • PANEL ACADÉMICO INTERACTIVO</span>
+        <span class="brand-badge">UNEXCA • APPLICACIÓN INSTALABLE</span>
         <h1 class="landing-title">Gestión de Estudios Universitarios</h1>
         <p class="landing-subtitle">
           Sistema personal interactivo para control de asignaturas, plan de evaluaciones, notas y alternancia por semanas.
@@ -27,6 +38,13 @@
         <span>ESTATUS ACADÉMICO ACTUAL:</span>
         <span id="landing-week-badge" class="week-badge">SEMANA A (ADMINISTRACIÓN)</span>
         <button id="btn-toggle-week-landing" class="week-toggle-btn" onclick="app.toggleWeek()">⚡ Cambiar a Semana B</button>
+      </div>
+
+      <!-- Botón Prominente para instalar en Pantalla de Inicio del Teléfono -->
+      <div id="pwa-install-banner" style="margin-bottom: 25px;">
+        <button class="btn-primary" style="padding: 14px 28px; font-size: 1.05rem; background: var(--primary-marine); border: 2px solid white; box-shadow: var(--shadow-md);" onclick="app.installPWA()">
+          📱 Instalar Aplicación en Pantalla de Inicio del Teléfono
+        </button>
       </div>
 
       <!-- Selección de Carrera Inicial -->
@@ -55,7 +73,7 @@
       <!-- Top Navigation Header -->
       <header class="app-header">
         <div class="header-brand">
-          <div class="header-logo">UN</div>
+          <img src="icon.jpg" style="width: 42px; height: 42px; border-radius: 10px; border: 2px solid white;" alt="Birrete Icon">
           <div class="header-title-text">
             <h1>SISTEMA UNIVERSITARIO INTERACTIVO</h1>
             <span id="header-career-title">PNF EN ADMINISTRACIÓN</span>
@@ -89,11 +107,8 @@
       <!-- CONTENIDO PRINCIPAL -->
       <main id="tab-content-area">
 
-        <!-- ================================================================
-             TAB 1: DASHBOARD
-             ================================================================ -->
+        <!-- TAB 1: DASHBOARD -->
         <section id="tab-dashboard" class="tab-section">
-          
           <div class="stats-grid">
             <div class="stat-card">
               <div class="stat-header">
@@ -138,25 +153,18 @@
             </div>
           </div>
 
-          <!-- Resumen de Alertas e Interacción -->
           <div class="trayecto-block">
             <div class="trayecto-header">
               <div class="trayecto-title">⚡ Acciones Rápidas & Estado del Período</div>
             </div>
             <div style="padding: 20px;">
-              <div id="dashboard-alerts-list">
-                <!-- Se puebla dinámicamente con JS -->
-              </div>
+              <div id="dashboard-alerts-list"></div>
             </div>
           </div>
-
         </section>
 
-        <!-- ================================================================
-             TAB 2: PENSUM & MATERIAS (INTERACTIVO)
-             ================================================================ -->
+        <!-- TAB 2: PENSUM & MATERIAS -->
         <section id="tab-pensum" class="tab-section" style="display: none;">
-          
           <div class="section-toolbar">
             <div class="search-box">
               <span class="search-icon">🔍</span>
@@ -190,43 +198,28 @@
             </div>
           </div>
 
-          <div id="pensum-trayectos-container">
-            <!-- Bloques por trayecto -->
-          </div>
-
+          <div id="pensum-trayectos-container"></div>
         </section>
 
-        <!-- ================================================================
-             TAB 3: PLAN DE EVALUACIONES
-             ================================================================ -->
+        <!-- TAB 3: PLAN DE EVALUACIONES -->
         <section id="tab-evaluaciones" class="tab-section" style="display: none;">
-          
           <div class="section-toolbar">
             <div style="flex: 1;">
               <label class="form-label">Seleccionar Asignatura para Desglose de Evaluaciones:</label>
-              <select id="eval-subject-picker" class="form-control" onchange="app.loadEvaluationsForSubject(this.value)">
-                <!-- Materias -->
-              </select>
+              <select id="eval-subject-picker" class="form-control" onchange="app.loadEvaluationsForSubject(this.value)"></select>
             </div>
             <div>
               <button class="btn-primary" onclick="app.openAddEvalModal()">+ Nueva Evaluación</button>
             </div>
           </div>
 
-          <div id="eval-panel-container">
-            <!-- Panel de evaluaciones -->
-          </div>
-
+          <div id="eval-panel-container"></div>
         </section>
 
-        <!-- ================================================================
-             TAB 4: CONSULTAS PENDIENTES (NUEVA SECCIÓN REVISIÓN)
-             ================================================================ -->
+        <!-- TAB 4: CONSULTAS PENDIENTES -->
         <section id="tab-consultas" class="tab-section" style="display: none;">
-          
           <div class="section-toolbar">
             <h2>🔍 Control de Asignaturas Pendientes por Consulta Oficial</h2>
-            <button class="btn-primary" onclick="app.openAddConsultaModal()">+ Registrar Consulta</button>
           </div>
 
           <div class="trayecto-block">
@@ -245,20 +238,14 @@
                     <th>Acción</th>
                   </tr>
                 </thead>
-                <tbody id="tabla-consultas-body">
-                  <!-- Se puebla dinámicamente -->
-                </tbody>
+                <tbody id="tabla-consultas-body"></tbody>
               </table>
             </div>
           </div>
-
         </section>
 
-        <!-- ================================================================
-             TAB 5: HORARIO SEMANAL
-             ================================================================ -->
+        <!-- TAB 5: HORARIO SEMANAL -->
         <section id="tab-horario" class="tab-section" style="display: none;">
-          
           <div class="section-toolbar">
             <h2>📅 Horario de Clases - <span id="horario-week-title">Semana A (Administración)</span></h2>
             <div>
@@ -267,33 +254,21 @@
             </div>
           </div>
 
-          <div id="schedule-cards-container" class="schedule-grid">
-            <!-- Horario por días -->
-          </div>
-
+          <div id="schedule-cards-container" class="schedule-grid"></div>
         </section>
 
-        <!-- ================================================================
-             TAB 6: ALERTAS & NOTIFICACIONES
-             ================================================================ -->
+        <!-- TAB 6: ALERTAS & NOTIFICACIONES -->
         <section id="tab-notificaciones" class="tab-section" style="display: none;">
-          
           <div class="section-toolbar">
             <h2>🔔 Tareas, Recordatorios & Alertas Académicas</h2>
             <button class="btn-primary" onclick="app.openAddTaskModal()">+ Nueva Alerta</button>
           </div>
 
-          <div id="notif-list-container">
-            <!-- Notificaciones -->
-          </div>
-
+          <div id="notif-list-container"></div>
         </section>
 
-        <!-- ================================================================
-             TAB 7: BACKUP & GIT SYNC
-             ================================================================ -->
+        <!-- TAB 7: BACKUP & GIT SYNC -->
         <section id="tab-gitsync" class="tab-section" style="display: none;">
-          
           <div class="git-sync-box">
             <h2 style="color: var(--primary-marine); margin-bottom: 10px;">💾 Control de Cambios & Sincronización Git</h2>
             <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 15px;">
@@ -308,16 +283,7 @@
             </div>
 
             <div id="git-sync-status-msg" style="display:none; padding:12px; border-radius:6px; background:#E8F8F5; color:#117A65; font-weight:bold; margin-bottom:15px;"></div>
-
-            <h3 style="font-size: 0.95rem; color: var(--primary-marine); margin-top: 15px;">Comandos de Consola Locales:</h3>
-            <div class="git-code-snippet">
-              # PowerShell:<br>
-              .\git-auto-sync.ps1<br><br>
-              # CMD Batch:<br>
-              git-auto-sync.bat
-            </div>
           </div>
-
         </section>
 
       </main>
@@ -330,11 +296,7 @@
 
   </div>
 
-  <!-- ====================================================================
-       MODALES DIALOGS INTERACTIVOS
-       ==================================================================== -->
-  
-  <!-- Modal Editar / Agregar Materia -->
+  <!-- MODALES DIALOGS -->
   <div id="modal-edit-subject" class="modal-overlay">
     <div class="modal-card">
       <div class="modal-header">
@@ -343,12 +305,10 @@
       </div>
       <form id="form-edit-subject" onsubmit="app.saveSubjectEdit(event)">
         <input type="hidden" id="edit-subject-id">
-        
         <div class="form-group">
           <label class="form-label">Nombre de la Asignatura:</label>
           <input type="text" id="edit-subject-name" class="form-control" required>
         </div>
-
         <div style="display: flex; gap: 10px;">
           <div class="form-group" style="flex:1;">
             <label class="form-label">Código:</label>
@@ -359,7 +319,6 @@
             <input type="number" min="1" max="15" id="edit-subject-uc" class="form-control" required>
           </div>
         </div>
-
         <div class="form-group">
           <label class="form-label">Trayecto:</label>
           <select id="edit-subject-trayecto" class="form-control">
@@ -373,7 +332,6 @@
             <option value="4-2">Trayecto 4-2</option>
           </select>
         </div>
-
         <div class="form-group">
           <label class="form-label">Estatus Académico:</label>
           <select id="edit-subject-status" class="form-control">
@@ -385,17 +343,14 @@
             <option value="por_cursar">Por Cursar</option>
           </select>
         </div>
-
         <div class="form-group">
           <label class="form-label">Nota Definitiva (0 a 20):</label>
           <input type="number" step="0.1" min="0" max="20" id="edit-subject-grade" class="form-control" placeholder="Ej: 16.5">
         </div>
-
         <div class="form-group">
           <label class="form-label">Documento o Hoja de Actuación de Referencia:</label>
           <input type="text" id="edit-subject-ref" class="form-control" placeholder="Ej: NOTAS1-2026 ALTAGRACIA.xlsx">
         </div>
-
         <div class="form-actions">
           <button type="button" class="btn-secondary" onclick="app.closeModal('modal-edit-subject')">Cancelar</button>
           <button type="submit" class="btn-primary">Guardar Asignatura</button>
@@ -404,7 +359,6 @@
     </div>
   </div>
 
-  <!-- Modal Agregar / Editar Evaluación -->
   <div id="modal-edit-eval" class="modal-overlay">
     <div class="modal-card">
       <div class="modal-header">
@@ -417,7 +371,6 @@
           <label class="form-label">Nombre de la Evaluación / Taller:</label>
           <input type="text" id="edit-eval-name" class="form-control" required placeholder="Ej: Parcial I, Taller, Proyecto...">
         </div>
-
         <div style="display: flex; gap: 10px;">
           <div class="form-group" style="flex:1;">
             <label class="form-label">Ponderación (%):</label>
@@ -428,17 +381,14 @@
             <input type="number" step="0.1" min="0" max="20" id="edit-eval-score" class="form-control" placeholder="Ej: 17">
           </div>
         </div>
-
         <div class="form-group">
           <label class="form-label">Fecha de Entrega / Presentación:</label>
           <input type="date" id="edit-eval-date" class="form-control">
         </div>
-
         <div class="form-group" style="display: flex; align-items: center; gap: 8px;">
           <input type="checkbox" id="edit-eval-completed">
           <label for="edit-eval-completed" style="font-size: 0.9rem;">Marcar como entregada / evaluada</label>
         </div>
-
         <div class="form-actions">
           <button type="button" class="btn-secondary" onclick="app.closeModal('modal-edit-eval')">Cancelar</button>
           <button type="submit" class="btn-primary">Guardar Evaluación</button>
@@ -447,7 +397,6 @@
     </div>
   </div>
 
-  <!-- Modal Agregar Clase al Horario -->
   <div id="modal-add-schedule" class="modal-overlay">
     <div class="modal-card">
       <div class="modal-header">
@@ -466,22 +415,18 @@
             <option value="Sábado">Sábado</option>
           </select>
         </div>
-
         <div class="form-group">
           <label class="form-label">Hora:</label>
           <input type="text" id="sched-time" class="form-control" placeholder="Ej: 08:00 - 10:00" required>
         </div>
-
         <div class="form-group">
           <label class="form-label">Materia / Asignatura:</label>
           <input type="text" id="sched-subject" class="form-control" required placeholder="Ej: Administración de Costos I">
         </div>
-
         <div class="form-group">
           <label class="form-label">Aula / Laboratorio:</label>
           <input type="text" id="sched-room" class="form-control" placeholder="Ej: Lab 3 / Aula 08">
         </div>
-
         <div class="form-actions">
           <button type="button" class="btn-secondary" onclick="app.closeModal('modal-add-schedule')">Cancelar</button>
           <button type="submit" class="btn-primary">Guardar Clase</button>
@@ -490,7 +435,6 @@
     </div>
   </div>
 
-  <!-- Modal Agregar Alerta / Tarea -->
   <div id="modal-add-task" class="modal-overlay">
     <div class="modal-card">
       <div class="modal-header">
@@ -502,12 +446,10 @@
           <label class="form-label">Título de la Notificación:</label>
           <input type="text" id="task-title" class="form-control" required placeholder="Ej: Entregar Avance PSI II">
         </div>
-
         <div class="form-group">
           <label class="form-label">Descripción / Asignatura:</label>
           <textarea id="task-desc" class="form-control" rows="3" placeholder="Detalles de la entrega o recordatorio..."></textarea>
         </div>
-
         <div class="form-group">
           <label class="form-label">Prioridad:</label>
           <select id="task-priority" class="form-control">
@@ -515,7 +457,6 @@
             <option value="urgente">Urgente / Importante</option>
           </select>
         </div>
-
         <div class="form-actions">
           <button type="button" class="btn-secondary" onclick="app.closeModal('modal-add-task')">Cancelar</button>
           <button type="submit" class="btn-primary">Guardar Notificación</button>
@@ -524,8 +465,15 @@
     </div>
   </div>
 
-  <!-- Scripts -->
+  <!-- Scripts & Service Worker registration for PWA -->
   <script src="pensumData.js"></script>
   <script src="app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW error', err));
+      });
+    }
+  </script>
 </body>
 </html>

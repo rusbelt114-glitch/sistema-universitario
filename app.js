@@ -1,7 +1,13 @@
 /**
  * SISTEMA UNIVERSITARIO DE GESTIÓN ACADÉMICA - APP LOGIC
- * Control de Estado Interactivo con Auto-Sync Instantáneo a GitHub
+ * Control de Estado Interactivo con Auto-Sync Instantáneo y PWA Instalable
  */
+
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+});
 
 class UniversityApp {
   constructor() {
@@ -11,7 +17,6 @@ class UniversityApp {
     this.currentTab = "dashboard";
     this.selectedEvalSubjectId = null;
 
-    // Estado global de la app
     this.state = {
       pensum: {
         ADM: JSON.parse(JSON.stringify(PENSUM_ADMINISTRACION)),
@@ -33,6 +38,18 @@ class UniversityApp {
     this.loadState();
     this.updateWeekUI();
     this.render();
+  }
+
+  // --- INSTALACIÓN PWA EN PANTALLA DE INICIO ---
+  installPWA() {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then(() => {
+        deferredPrompt = null;
+      });
+    } else {
+      alert("📱 PARA INSTALAR COMO APP EN TU TELÉFONO:\n\n• Android (Chrome): Toca los 3 puntos (⋮) arriba a la derecha y presiona 'Agregar a la pantalla principal' o 'Instalar aplicación'.\n\n• iPhone (Safari): Toca el botón Compartir (⎋) abajo y selecciona 'Agregar a inicio'.");
+    }
   }
 
   // --- PERSISTENCIA & AUTO-SYNC INSTANTÁNEO ---
@@ -64,7 +81,6 @@ class UniversityApp {
     };
     localStorage.setItem(this.storageKey, JSON.stringify(toSave));
 
-    // Sincronización Automática con GitHub en Segundo Plano
     fetch('/api/git-sync', { method: 'POST' }).catch(() => {});
   }
 
@@ -216,7 +232,6 @@ class UniversityApp {
     alertsContainer.innerHTML = html;
   }
 
-  // --- RENDERIZADO DEL PENSUM Y MATERIAS ---
   renderPensum() {
     const container = document.getElementById("pensum-trayectos-container");
     const pensum = this.state.pensum[this.currentCareer];
@@ -312,7 +327,6 @@ class UniversityApp {
     this.renderPensum();
   }
 
-  // --- MODAL EDITAR / CREAR MATERIA ---
   openAddSubjectModal() {
     document.getElementById("edit-subject-id").value = "";
     document.getElementById("modal-subject-title").textContent = "Agregar Nueva Asignatura";
@@ -412,7 +426,6 @@ class UniversityApp {
     this.renderDashboard();
   }
 
-  // --- CONSULTAS PENDIENTES ---
   renderConsultas() {
     const tbody = document.getElementById("tabla-consultas-body");
     const pensum = this.state.pensum[this.currentCareer];
@@ -447,7 +460,6 @@ class UniversityApp {
     tbody.innerHTML = html;
   }
 
-  // --- EVALUACIONES Y PLAN DE EVALUACIÓN ---
   renderEvaluationsSection() {
     const picker = document.getElementById("eval-subject-picker");
     const pensum = this.state.pensum[this.currentCareer];
@@ -629,7 +641,6 @@ class UniversityApp {
     this.loadEvaluationsForSubject(this.selectedEvalSubjectId);
   }
 
-  // --- HORARIOS ---
   renderSchedule() {
     const container = document.getElementById("schedule-cards-container");
     const items = this.state.horario[this.currentWeek] || [];
@@ -694,7 +705,6 @@ class UniversityApp {
     this.renderSchedule();
   }
 
-  // --- NOTIFICACIONES ---
   renderNotifications() {
     const container = document.getElementById("notif-list-container");
     const notifs = this.state.notificaciones || [];
@@ -759,7 +769,6 @@ class UniversityApp {
     this.renderNotifications();
   }
 
-  // --- GIT SYNC DESDE LA INTERFAZ ---
   async syncGitRemote() {
     const msgBox = document.getElementById("git-sync-status-msg");
     if (msgBox) {
@@ -783,12 +792,11 @@ class UniversityApp {
       if (msgBox) {
         msgBox.style.background = "#FEF9E7";
         msgBox.style.color = "#B7950B";
-        msgBox.textContent = "⚡ Datos guardados en navegador. Ejecuta `.\\git-auto-sync.ps1` en la consola.";
+        msgBox.textContent = "⚡ Datos guardados en navegador.";
       }
     }
   }
 
-  // --- MODAL UTILS ---
   openModal(modalId) {
     document.getElementById(modalId).classList.add("active");
   }
@@ -797,7 +805,6 @@ class UniversityApp {
     document.getElementById(modalId).classList.remove("active");
   }
 
-  // --- EXPORTAR E IMPORTAR JSON BACKUP ---
   exportDataJSON() {
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.state, null, 2));
     const downloadAnchor = document.createElement("a");
@@ -837,7 +844,6 @@ class UniversityApp {
   }
 }
 
-// Inicializar la app
 let app;
 document.addEventListener("DOMContentLoaded", () => {
   app = new UniversityApp();

@@ -1,6 +1,6 @@
 """
 SISTEMA UNIVERSITARIO - SERVIDOR DE API REST EN PYTHON & AUTOMATIZACIÓN GIT EN TIEMPO REAL
-Cualquier cambio guardado en la web realiza automáticamente `git commit` y `git push origin main`
+Acceso Local y Red Móvil Wi-Fi (0.0.0.0:8000)
 """
 
 import http.server
@@ -9,31 +9,37 @@ import json
 import sqlite3
 import subprocess
 import os
+import socket
 from datetime import datetime
 
 PORT = 8000
 DB_NAME = "sistema_universitario.db"
 
-def auto_git_push(commit_reason="Actualización académica"):
-    """Función de Sincronización Automática con GitHub en segundo plano"""
+def get_local_ip():
     try:
-        # 1. Asegurar rama main
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+        s.close()
+        return ip
+    except Exception:
+        return "127.0.0.1"
+
+def auto_git_push(commit_reason="Actualización académica"):
+    try:
         subprocess.run(["git", "branch", "-M", "main"], capture_output=True)
-        # 2. Agregar cambios
         subprocess.run(["git", "add", "."], capture_output=True)
-        # 3. Commit automático
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%mm:%S")
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         commit_msg = f"Auto-Sync: {commit_reason} - {timestamp}"
         subprocess.run(["git", "commit", "-m", commit_msg], capture_output=True)
 
-        # 4. Push automático a GitHub si está vinculado el remoto origin
         remote_check = subprocess.run(["git", "remote", "get-url", "origin"], capture_output=True, text=True)
         if remote_check.returncode == 0:
             push_res = subprocess.run(["git", "push", "origin", "main"], capture_output=True, text=True)
-            print(f"✅ Auto-Git Push a GitHub exitoso: {push_res.stdout.strip()}")
+            print(f"✅ Auto-Git Push a GitHub exitoso")
             return True
         else:
-            print("ℹ️ Commit local realizado. Remoto 'origin' aún no vinculado.")
+            print("ℹ️ Commit local realizado.")
             return False
     except Exception as e:
         print(f"⚠️ Error en Auto-Git Sync: {e}")
@@ -128,7 +134,6 @@ class UniversityRequestHandler(http.server.SimpleHTTPRequestHandler):
         conn.commit()
         conn.close()
 
-        # Sincronización automática inmediata a GitHub
         auto_git_push(f"Modificación de Asignatura {data.get('id')}")
 
         self._set_headers(200)
@@ -148,7 +153,6 @@ class UniversityRequestHandler(http.server.SimpleHTTPRequestHandler):
         conn.commit()
         conn.close()
 
-        # Sincronización automática inmediata a GitHub
         auto_git_push(f"Actualización de Evaluación {data.get('nombre')}")
 
         self._set_headers(200)
@@ -170,6 +174,11 @@ if __name__ == "__main__":
     from database import init_db
     init_db()
 
-    print(f"Servidor Python en http://localhost:{PORT} con Git Auto-Push activado")
-    with socketserver.TCPServer(("", PORT), UniversityRequestHandler) as httpd:
+    local_ip = get_local_ip()
+    print("======================================================================")
+    print(f" 💻 Link PC: http://localhost:{PORT}")
+    print(f" 📱 Link Teléfono (Wi-Fi): http://{local_ip}:{PORT}")
+    print("======================================================================")
+    
+    with socketserver.TCPServer(("0.0.0.0", PORT), UniversityRequestHandler) as httpd:
         httpd.serve_forever()
