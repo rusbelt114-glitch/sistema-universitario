@@ -640,16 +640,6 @@ class UniversityApp {
           selectedExists = true;
         }
 
-        const statusPrefixMap = {
-          en_curso: "🔥 [EN CURSO]",
-          repetir: "🔄 [REPETIR]",
-          intensivo_verano: "☀️ [INTENSIVO]",
-          pendiente_consulta: "🔍 [EN CONSULTA]",
-          aprobada: "✅ [APROBADA]",
-          por_cursar: "📌 [POR CURSAR]"
-        };
-        const statusPrefix = statusPrefixMap[m.estatus] || "📘";
-
         const selectedAttr = (this.selectedEvalSubjectId === m.id) ? "selected" : "";
         groupOptions += `<option value="${m.id}" ${selectedAttr}>${m.nombre}</option>`;
       });

@@ -216,8 +216,9 @@
         <section id="tab-consultas" class="tab-section" style="display: none;">
           <div class="section-toolbar" style="flex-wrap: wrap; gap: 15px; align-items: center; justify-content: space-between;">
             <h2>🔍 Control de Asignaturas & Verificación de Notas</h2>
-            <div class="filter-group">
-              <select id="consultas-filter-select" class="filter-select" onchange="app.renderConsultas()">
+            <div class="filter-group" style="align-items: center;">
+              <label class="form-label" for="consultas-filter-select" style="margin-bottom: 0;">Filtrar por estado:</label>
+              <select id="consultas-filter-select" class="filter-select" aria-label="Filtrar por estado" onchange="app.renderConsultas()">
                 <option value="pendiente_consulta" selected>🔍 Pendientes por Consulta Oficial</option>
                 <option value="repetir">🔄 Por Repetir / Recuperar</option>
                 <option value="intensivo_verano">☀️ Intensivo Verano</option>
