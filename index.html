@@ -133,7 +133,16 @@
             </div>
           </div>
 
-          <div class="trayecto-block">
+          <div class="trayecto-block" style="margin-top: 25px;">
+            <div class="trayecto-header">
+              <div class="trayecto-title">📊 Historial & Resumen de Todos los Trayectos Académicos</div>
+            </div>
+            <div style="padding: 16px;">
+              <div id="dashboard-trayectos-summary"></div>
+            </div>
+          </div>
+
+          <div class="trayecto-block" style="margin-top: 20px;">
             <div class="trayecto-header">
               <div class="trayecto-title">⚡ Estado Académico & Novedades</div>
             </div>
@@ -203,15 +212,25 @@
           <div id="eval-panel-container"></div>
         </section>
 
-        <!-- TAB 4: CONSULTAS PENDIENTES -->
+        <!-- TAB 4: CONSULTAS & CONTROL ACADÉMICO -->
         <section id="tab-consultas" class="tab-section" style="display: none;">
-          <div class="section-toolbar">
-            <h2>🔍 Control de Asignaturas Pendientes por Consulta Oficial</h2>
+          <div class="section-toolbar" style="flex-wrap: wrap; gap: 15px; align-items: center; justify-content: space-between;">
+            <h2>🔍 Control de Asignaturas & Verificación de Notas</h2>
+            <div class="filter-group">
+              <select id="consultas-filter-select" class="filter-select" onchange="app.renderConsultas()">
+                <option value="pendiente_consulta" selected>🔍 Pendientes por Consulta Oficial</option>
+                <option value="repetir">🔄 Por Repetir / Recuperar</option>
+                <option value="intensivo_verano">☀️ Intensivo Verano</option>
+                <option value="por_cursar">📌 Por Cursar</option>
+                <option value="aprobada">✅ Aprobadas / Verificadas</option>
+                <option value="todos">📚 Todas las Asignaturas</option>
+              </select>
+            </div>
           </div>
 
           <div class="trayecto-block">
             <div class="trayecto-header">
-              <div class="trayecto-title">📋 Asignaturas en Proceso de Verificación de Nota</div>
+              <div class="trayecto-title">📋 Listado de Asignaturas Seleccionadas</div>
             </div>
             <div class="subject-table-wrapper">
               <table class="subject-table">
@@ -219,7 +238,7 @@
                   <tr>
                     <th>Asignatura</th>
                     <th>Trayecto</th>
-                    <th>Estatus Consulta</th>
+                    <th>Estatus Actual</th>
                     <th>Nota Verificada</th>
                     <th>Soportes / Observaciones</th>
                     <th>Acción</th>
@@ -233,10 +252,11 @@
 
         <!-- TAB 5: HORARIO SEMANAL -->
         <section id="tab-horario" class="tab-section" style="display: none;">
-          <div class="section-toolbar">
-            <h2>📅 Horario de Clases - <span id="horario-week-title">Semana A (Administración)</span></h2>
-            <div>
+          <div class="section-toolbar" style="flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between;">
+            <h2>📅 Horario de Clases - <span id="horario-week-title">Semana A</span></h2>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
               <button class="btn-secondary" onclick="app.toggleWeek()">Cambiar Semana (A / B)</button>
+              <button class="btn-secondary" style="color: #C0392B; border-color: #FDEDEC;" onclick="app.clearCurrentSchedule()">🗑️ Limpiar Horario</button>
               <button class="btn-primary" onclick="app.openAddScheduleModal()">+ Agregar Clase</button>
             </div>
           </div>
@@ -381,6 +401,15 @@
             <option value="Jueves">Jueves</option>
             <option value="Viernes">Viernes</option>
             <option value="Sábado">Sábado</option>
+            <option value="Domingo">Domingo</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="sched-shift">Turno:</label>
+          <select id="sched-shift" class="form-control">
+            <option value="Mañana">🌅 Mañana</option>
+            <option value="Tarde">☀️ Tarde</option>
+            <option value="Noche">🌙 Noche</option>
           </select>
         </div>
         <div class="form-group">

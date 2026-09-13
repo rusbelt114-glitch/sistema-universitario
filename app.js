@@ -237,24 +237,81 @@ class UniversityApp {
     const notifsCount = document.getElementById("stat-eval-pendientes");
     if (notifsCount) notifsCount.textContent = String(this.state.notificaciones.length);
 
+    // Render Dashboard Trayectos Summary
+    const summaryContainer = document.getElementById("dashboard-trayectos-summary");
+    if (summaryContainer) {
+      const pensum = this.state.pensum[this.currentCareer];
+      let trayectosHtml = "";
+
+      pensum.trayectos.forEach(t => {
+        let aprobadas = 0;
+        let repetir = 0;
+        let enCurso = 0;
+        let consulta = 0;
+        let ucGanadas = 0;
+
+        let matListHtml = "";
+        t.materias.forEach(m => {
+          if (m.estatus === "aprobada") {
+            aprobadas++;
+            ucGanadas += m.uc;
+          }
+          if (m.estatus === "repetir") repetir++;
+          if (m.estatus === "en_curso") enCurso++;
+          if (m.estatus === "pendiente_consulta") consulta++;
+
+          const statusTextMap = {
+            aprobada: "Aprobada",
+            en_curso: "En Curso",
+            repetir: "Por Repetir",
+            intensivo_verano: "Intensivo Verano",
+            pendiente_consulta: "Pendiente Consulta",
+            por_cursar: "Por Cursar"
+          };
+
+          matListHtml += `
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-bottom: 1px dashed var(--border-color); flex-wrap: wrap; gap: 8px;">
+              <div>
+                <strong style="color: var(--text-dark);">${m.nombre}</strong>
+                <span style="font-size: 0.8rem; color: var(--text-muted); margin-left: 6px;">(${m.uc} UC)</span>
+                ${m.nota ? `<span style="font-size: 0.85rem; font-weight: 700; color: var(--primary-marine); margin-left: 8px;">• ${m.nota} pts</span>` : ''}
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span class="status-badge status-${m.estatus}">${statusTextMap[m.estatus] || m.estatus}</span>
+                <button class="btn-action" onclick="app.openEditSubjectModal('${m.id}')">✏️ Editar</button>
+              </div>
+            </div>
+          `;
+        });
+
+        trayectosHtml += `
+          <div style="background: white; border-radius: 10px; padding: 15px; margin-bottom: 15px; border: 1px solid var(--border-color); box-shadow: var(--shadow-sm);">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; border-bottom: 2px solid var(--primary-marine); padding-bottom: 8px; margin-bottom: 10px;">
+              <h3 style="margin: 0; font-size: 1.05rem; color: var(--primary-marine);">📍 ${t.nombre}</h3>
+              <div style="font-size: 0.85rem; color: var(--text-secondary);">
+                ✅ Aprobadas: <strong>${aprobadas}</strong> | 🔄 Repetir: <strong>${repetir}</strong> | 🔥 En Curso: <strong>${enCurso}</strong> | 🎓 UC: <strong>${ucGanadas} / ${t.totalUC}</strong>
+              </div>
+            </div>
+            <div>${matListHtml}</div>
+          </div>
+        `;
+      });
+
+      summaryContainer.innerHTML = trayectosHtml;
+    }
+
     const alertsContainer = document.getElementById("dashboard-alerts-list");
     let html = `
       <div class="notification-item urgent">
         <div>
-          <div class="notification-title">📌 Fase Académica Actual Activa</div>
-          <div class="notification-desc">Trayecto II - Fase II (2-2) • Culminación de TSU en Administración.</div>
+          <div class="notification-title">📌 Estado Académico de la Carrera</div>
+          <div class="notification-desc">Puedes editar el estatus de cualquier materia anterior o actual directamente en el resumen superior.</div>
         </div>
       </div>
       <div class="notification-item urgent">
         <div>
-          <div class="notification-title">⚠️ Materias pendientes por repetir (6 Asignaturas)</div>
-          <div class="notification-desc">Fundamentos de Adm I y II, Contabilidad I y II, Formación Socio Crítica I (MI y MII).</div>
-        </div>
-      </div>
-      <div class="notification-item">
-        <div>
-          <div class="notification-title">🔍 Asignaturas en Consulta de Nota Oficial</div>
-          <div class="notification-desc">Estadística, Expresión Oral, Marco Jurídico I y II, Electiva I, Fundamentos de Economía.</div>
+          <div class="notification-title">⚠️ Asignaturas Pendientes por Repetir</div>
+          <div class="notification-desc">Las materias marcadas como "Por Repetir" se mantienen visibles en el resumen para su reprogramación.</div>
         </div>
       </div>
     `;
@@ -458,6 +515,8 @@ class UniversityApp {
 
   renderConsultas() {
     const tbody = document.getElementById("tabla-consultas-body");
+    const filterSelect = document.getElementById("consultas-filter-select");
+    const filterVal = filterSelect ? filterSelect.value : "pendiente_consulta";
     const pensum = this.state.pensum[this.currentCareer];
 
     let html = "";
@@ -465,17 +524,27 @@ class UniversityApp {
 
     pensum.trayectos.forEach(t => {
       t.materias.forEach(m => {
-        if (m.estatus === "pendiente_consulta") {
+        const matches = (filterVal === "todos") || (m.estatus === filterVal);
+        if (matches) {
           count++;
+          const statusTextMap = {
+            aprobada: "Aprobada",
+            en_curso: "En Curso",
+            repetir: "Por Repetir",
+            intensivo_verano: "Intensivo Verano",
+            pendiente_consulta: "Pendiente Consulta",
+            por_cursar: "Por Cursar"
+          };
+
           html += `
             <tr>
               <td class="subject-name">${m.nombre}</td>
               <td><strong>${t.nombre}</strong></td>
-              <td><span class="status-badge status-pendiente_consulta">Pendiente Consulta Oficial</span></td>
+              <td><span class="status-badge status-${m.estatus}">${statusTextMap[m.estatus] || m.estatus}</span></td>
               <td>${m.nota ? `${m.nota} pts` : "Por Registrar"}</td>
-              <td>${m.refDoc || "En verificación con secretaría / profesor"}</td>
+              <td>${m.refDoc || "Sin observaciones registradas"}</td>
               <td>
-                <button class="btn-action" onclick="app.openEditSubjectModal('${m.id}')">Registrar Nota / Aprobar</button>
+                <button class="btn-action" onclick="app.openEditSubjectModal('${m.id}')">✏️ Editar Estatus / Nota</button>
               </td>
             </tr>
           `;
@@ -484,7 +553,7 @@ class UniversityApp {
     });
 
     if (count === 0) {
-      html = `<tr><td colspan="6" style="text-align:center; padding:20px; color:var(--text-muted);">¡No tienes asignaturas pendientes por consulta! Todas tus notas están verificadas.</td></tr>`;
+      html = `<tr><td colspan="6" style="text-align:center; padding:25px; color:var(--text-muted);">No hay asignaturas registradas con este filtro.</td></tr>`;
     }
 
     tbody.innerHTML = html;
@@ -751,11 +820,29 @@ class UniversityApp {
     this.loadEvaluationsForSubject(this.selectedEvalSubjectId);
   }
 
+  getScheduleList() {
+    if (!this.state.horario || typeof this.state.horario !== "object") {
+      this.state.horario = { ADM: { A: [], B: [] }, INF: { A: [], B: [] } };
+    }
+    if (!this.state.horario[this.currentCareer]) {
+      this.state.horario[this.currentCareer] = { A: [], B: [] };
+    }
+    if (!this.state.horario[this.currentCareer][this.currentWeek]) {
+      this.state.horario[this.currentCareer][this.currentWeek] = [];
+    }
+    return this.state.horario[this.currentCareer][this.currentWeek];
+  }
+
   renderSchedule() {
     const container = document.getElementById("schedule-cards-container");
-    const items = this.state.horario[this.currentWeek] || [];
+    const weekTitle = document.getElementById("horario-week-title");
+    const careerName = this.currentCareer === "ADM" ? "Administración" : "Informática";
+    if (weekTitle) {
+      weekTitle.textContent = `Semana ${this.currentWeek} (${careerName})`;
+    }
 
-    const days = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+    const items = this.getScheduleList();
+    const days = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
     let html = "";
 
     days.forEach(day => {
@@ -766,13 +853,15 @@ class UniversityApp {
       `;
 
       if (dayClasses.length === 0) {
-        html += '<div style="font-size:0.8rem; color:var(--text-muted);">Sin clases programadas.</div>';
+        html += '<div style="font-size:0.8rem; color:var(--text-muted); padding: 10px 0;">Sin clases programadas.</div>';
       } else {
-        dayClasses.forEach(c => {
+        dayClasses.forEach((c, idx) => {
+          const shiftBadge = c.turno ? `<span style="font-size: 0.75rem; background: #EAECEE; color: #2C3E50; padding: 2px 6px; border-radius: 4px; font-weight: bold; margin-left: 4px;">${c.turno}</span>` : '';
           html += `
-            <div class="schedule-item">
-              <div class="schedule-item-time">⏰ ${c.hora} • 📍 ${c.aula || 'Aula Genérica'}</div>
+            <div class="schedule-item" style="position: relative; margin-bottom: 8px;">
+              <div class="schedule-item-time">⏰ ${c.hora} ${shiftBadge} • 📍 ${c.aula || 'Aula por definir'}</div>
               <div class="schedule-item-title">${c.materia}</div>
+              <button type="button" onclick="app.deleteScheduleClass(${idx})" style="position: absolute; right: 5px; top: 5px; background: transparent; border: none; color: #C0392B; cursor: pointer; font-size: 1rem; line-height: 1;" title="Eliminar clase">&times;</button>
             </div>
           `;
         });
@@ -782,6 +871,22 @@ class UniversityApp {
     });
 
     container.innerHTML = html;
+  }
+
+  clearCurrentSchedule() {
+    const careerName = this.currentCareer === "ADM" ? "Administración" : "Informática";
+    if (!confirm(`¿Estás seguro de limpiar todo el horario de la Semana ${this.currentWeek} en ${careerName}?`)) return;
+    const items = this.getScheduleList();
+    items.length = 0;
+    this.saveState();
+    this.renderSchedule();
+  }
+
+  deleteScheduleClass(index) {
+    const items = this.getScheduleList();
+    items.splice(index, 1);
+    this.saveState();
+    this.renderSchedule();
   }
 
   openAddScheduleModal() {
@@ -794,17 +899,16 @@ class UniversityApp {
   saveScheduleClass(event) {
     event.preventDefault();
     const day = document.getElementById("sched-day").value;
+    const shift = document.getElementById("sched-shift")?.value || "Mañana";
     const time = document.getElementById("sched-time").value;
     const subject = document.getElementById("sched-subject").value;
     const room = document.getElementById("sched-room").value;
 
-    if (!this.state.horario[this.currentWeek]) {
-      this.state.horario[this.currentWeek] = [];
-    }
-
-    this.state.horario[this.currentWeek].push({
+    const items = this.getScheduleList();
+    items.push({
       id: "h-" + Date.now(),
       dia: day,
+      turno: shift,
       hora: time,
       materia: subject,
       aula: room

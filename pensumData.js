@@ -151,12 +151,12 @@ const PENSUM_INFORMATICA = {
       nivel: "TSU",
       totalUC: 28,
       materias: [
-        { id: "inf-111", codigo: "INF-PSI1", nombre: "Proyecto Socio Tecnológico I - MI", uc: 9, estatus: "por_cursar", nota: null, refDoc: "" },
-        { id: "inf-112", codigo: "INF-AED1", nombre: "Algorítmica y Programación I", uc: 5, estatus: "por_cursar", nota: null, refDoc: "" },
-        { id: "inf-113", codigo: "INF-SOC1", nombre: "Sistemas Operativos", uc: 4, estatus: "por_cursar", nota: null, refDoc: "" },
-        { id: "inf-114", codigo: "INF-MAT1", nombre: "Matemática I", uc: 4, estatus: "por_cursar", nota: null, refDoc: "" },
-        { id: "inf-115", codigo: "INF-ARQ1", nombre: "Arquitectura del Computador", uc: 4, estatus: "por_cursar", nota: null, refDoc: "" },
-        { id: "inf-116", codigo: "INF-FSC1", nombre: "Formación Socio Crítica I", uc: 2, estatus: "por_cursar", nota: null, refDoc: "" }
+        { id: "inf-111", codigo: "INF-PSI1", nombre: "Proyecto Socio Tecnológico I - MI", uc: 9, estatus: "en_curso", nota: null, refDoc: "" },
+        { id: "inf-112", codigo: "INF-AED1", nombre: "Algorítmica y Programación I", uc: 5, estatus: "en_curso", nota: null, refDoc: "" },
+        { id: "inf-113", codigo: "INF-SOC1", nombre: "Sistemas Operativos", uc: 4, estatus: "en_curso", nota: null, refDoc: "" },
+        { id: "inf-114", codigo: "INF-MAT1", nombre: "Matemática I", uc: 4, estatus: "en_curso", nota: null, refDoc: "" },
+        { id: "inf-115", codigo: "INF-ARQ1", nombre: "Arquitectura del Computador", uc: 4, estatus: "en_curso", nota: null, refDoc: "" },
+        { id: "inf-116", codigo: "INF-FSC1", nombre: "Formación Socio Crítica I", uc: 2, estatus: "en_curso", nota: null, refDoc: "" }
       ]
     },
     {
@@ -171,6 +171,83 @@ const PENSUM_INFORMATICA = {
         { id: "inf-124", codigo: "INF-RED1", nombre: "Redes de Computadoras I", uc: 4, estatus: "por_cursar", nota: null, refDoc: "" },
         { id: "inf-125", codigo: "INF-ING1", nombre: "Ingeniería del Software I", uc: 4, estatus: "por_cursar", nota: null, refDoc: "" },
         { id: "inf-126", codigo: "INF-ELE1", nombre: "Electiva I Informática", uc: 2, estatus: "por_cursar", nota: null, refDoc: "" }
+      ]
+    },
+    {
+      id: "inf-21",
+      nombre: "Trayecto II - Fase I (2-1)",
+      nivel: "TSU",
+      totalUC: 28,
+      materias: [
+        { id: "inf-211", codigo: "INF-PSI3", nombre: "Proyecto Socio Tecnológico II - MI", uc: 9, estatus: "por_cursar", nota: null, refDoc: "" },
+        { id: "inf-212", codigo: "INF-POO1", nombre: "Programación Orientada a Objetos", uc: 5, estatus: "por_cursar", nota: null, refDoc: "" },
+        { id: "inf-213", codigo: "INF-BD2", nombre: "Bases de Datos II", uc: 4, estatus: "por_cursar", nota: null, refDoc: "" },
+        { id: "inf-214", codigo: "INF-RED2", nombre: "Redes de Computadoras II", uc: 4, estatus: "por_cursar", nota: null, refDoc: "" },
+        { id: "inf-215", codigo: "INF-ING2", nombre: "Ingeniería del Software II", uc: 4, estatus: "por_cursar", nota: null, refDoc: "" },
+        { id: "inf-216", codigo: "INF-ELE2", nombre: "Electiva II Informática", uc: 2, estatus: "por_cursar", nota: null, refDoc: "" }
+      ]
+    },
+    {
+      id: "inf-22",
+      nombre: "Trayecto II - Fase II (2-2)",
+      nivel: "TSU",
+      totalUC: 26,
+      materias: [
+        { id: "inf-221", codigo: "INF-PSI4", nombre: "Proyecto Socio Tecnológico II - MII", uc: 9, estatus: "por_cursar", nota: null, refDoc: "" },
+        { id: "inf-222", codigo: "INF-WEB1", nombre: "Desarrollo Web", uc: 5, estatus: "por_cursar", nota: null, refDoc: "" },
+        { id: "inf-223", codigo: "INF-SEG1", nombre: "Seguridad Informática", uc: 4, estatus: "por_cursar", nota: null, refDoc: "" },
+        { id: "inf-224", codigo: "INF-SIS1", nombre: "Sistemas Distribuidos", uc: 4, estatus: "por_cursar", nota: null, refDoc: "" },
+        { id: "inf-225", codigo: "INF-AAC1", nombre: "Actividades Acreditables I", uc: 4, estatus: "por_cursar", nota: null, refDoc: "" }
+      ]
+    },
+    {
+      id: "inf-31",
+      nombre: "Trayecto III - Fase I (3-1)",
+      nivel: "Ingeniería",
+      totalUC: 28,
+      materias: [
+        { id: "inf-311", codigo: "INF-PSI5", nombre: "Proyecto Socio Tecnológico III - MI", uc: 9, estatus: "por_cursar", nota: null, refDoc: "" },
+        { id: "inf-312", codigo: "INF-MOD1", nombre: "Modelado de Sistemas", uc: 5, estatus: "por_cursar", nota: null, refDoc: "" },
+        { id: "inf-313", codigo: "INF-AUD1", nombre: "Auditoría Informática", uc: 4, estatus: "por_cursar", nota: null, refDoc: "" },
+        { id: "inf-314", codigo: "INF-GES1", nombre: "Gestión de Proyectos Informáticos", uc: 5, estatus: "por_cursar", nota: null, refDoc: "" },
+        { id: "inf-315", codigo: "INF-ELE3", nombre: "Electiva III Informática", uc: 5, estatus: "por_cursar", nota: null, refDoc: "" }
+      ]
+    },
+    {
+      id: "inf-32",
+      nombre: "Trayecto III - Fase II (3-2)",
+      nivel: "Ingeniería",
+      totalUC: 26,
+      materias: [
+        { id: "inf-321", codigo: "INF-PSI6", nombre: "Proyecto Socio Tecnológico III - MII", uc: 9, estatus: "por_cursar", nota: null, refDoc: "" },
+        { id: "inf-322", codigo: "INF-IA1", nombre: "Inteligencia Artificial", uc: 5, estatus: "por_cursar", nota: null, refDoc: "" },
+        { id: "inf-323", codigo: "INF-CAL1", nombre: "Calidad del Software", uc: 4, estatus: "por_cursar", nota: null, refDoc: "" },
+        { id: "inf-324", codigo: "INF-TEL1", nombre: "Teleprocesamiento", uc: 4, estatus: "por_cursar", nota: null, refDoc: "" },
+        { id: "inf-325", codigo: "INF-AAC2", nombre: "Actividades Acreditables II", uc: 4, estatus: "por_cursar", nota: null, refDoc: "" }
+      ]
+    },
+    {
+      id: "inf-41",
+      nombre: "Trayecto IV - Fase I (4-1)",
+      nivel: "Ingeniería",
+      totalUC: 28,
+      materias: [
+        { id: "inf-411", codigo: "INF-PSI7", nombre: "Proyecto Socio Tecnológico IV - MI", uc: 9, estatus: "por_cursar", nota: null, refDoc: "" },
+        { id: "inf-412", codigo: "INF-OPT1", nombre: "Optimización de Algoritmos", uc: 5, estatus: "por_cursar", nota: null, refDoc: "" },
+        { id: "inf-413", codigo: "INF-ARQ2", nombre: "Arquitectura de Software", uc: 5, estatus: "por_cursar", nota: null, refDoc: "" },
+        { id: "inf-414", codigo: "INF-GOB1", nombre: "Gobierno de Tecnologías de Información", uc: 5, estatus: "por_cursar", nota: null, refDoc: "" },
+        { id: "inf-415", codigo: "INF-ELE4", nombre: "Electiva IV Informática", uc: 4, estatus: "por_cursar", nota: null, refDoc: "" }
+      ]
+    },
+    {
+      id: "inf-42",
+      nombre: "Trayecto IV - Fase II (4-2)",
+      nivel: "Ingeniería",
+      totalUC: 24,
+      materias: [
+        { id: "inf-421", codigo: "INF-PSI8", nombre: "Proyecto Socio Tecnológico IV - MII (Grado)", uc: 12, estatus: "por_cursar", nota: null, refDoc: "" },
+        { id: "inf-422", codigo: "INF-SEG2", nombre: "Seguridad de la Información Avanzada", uc: 6, estatus: "por_cursar", nota: null, refDoc: "" },
+        { id: "inf-423", codigo: "INF-CGR4", nombre: "Trabajo Especial de Grado / Ingeniería", uc: 6, estatus: "por_cursar", nota: null, refDoc: "" }
       ]
     }
   ]
@@ -194,20 +271,8 @@ const EVALUACIONES_INICIALES = {
   ]
 };
 
-// Seed Horario por defecto
+// Horario por defecto en blanco para personalización total
 const HORARIO_DEFECTO = {
-  A: [
-    { id: "h1", dia: "Lunes", hora: "08:00 - 10:00", materia: "Proyecto Socio Integrador II (PSI-22)", aula: "Lab 3" },
-    { id: "h2", dia: "Lunes", hora: "10:15 - 12:15", materia: "Formación Socio Crítica II (FSC-22)", aula: "Aula 12" },
-    { id: "h3", dia: "Miércoles", hora: "08:00 - 10:00", materia: "Administración de Costos I", aula: "Aula 08" },
-    { id: "h4", dia: "Miércoles", hora: "10:15 - 12:15", materia: "Presupuesto Público y Privado", aula: "Aula 08" },
-    { id: "h5", dia: "Viernes", hora: "08:00 - 10:00", materia: "Gestión Ecológica Ambiental", aula: "Aula 05" },
-    { id: "h6", dia: "Viernes", hora: "10:15 - 12:15", materia: "Habilidades Directivas I", aula: "Aula 05" }
-  ],
-  B: [
-    { id: "h7", dia: "Martes", hora: "08:00 - 10:30", materia: "Algorítmica y Programación", aula: "Lab Computación 1" },
-    { id: "h8", dia: "Martes", hora: "10:45 - 12:30", materia: "Sistemas Operativos", aula: "Lab Computación 2" },
-    { id: "h9", dia: "Jueves", hora: "08:00 - 10:30", materia: "Bases de Datos I", aula: "Lab Computación 1" },
-    { id: "h10", dia: "Jueves", hora: "10:45 - 12:30", materia: "Arquitectura del Computador", aula: "Aula 14" }
-  ]
+  ADM: { A: [], B: [] },
+  INF: { A: [], B: [] }
 };
