@@ -109,6 +109,34 @@ class UniversityApp {
     this.switchTab("evaluaciones");
   }
 
+  activateTrayecto(trayectoId) {
+    const pensum = this.state.pensum[this.currentCareer];
+    const targetTrayecto = pensum.trayectos.find(t => t.id === trayectoId);
+    if (!targetTrayecto) return;
+
+    if (!confirm(`¿Deseas activar "${targetTrayecto.nombre}" como tu trayecto actual de cursado?`)) return;
+
+    pensum.trayectos.forEach(t => {
+      if (t.id === trayectoId) {
+        t.actual = true;
+        t.materias.forEach(m => {
+          if (m.estatus === "por_cursar") {
+            m.estatus = "en_curso";
+          }
+        });
+      } else {
+        t.actual = false;
+      }
+    });
+
+    this.saveState();
+    this.renderDashboard();
+    this.renderPensum();
+    this.renderEvaluationsSection();
+    this.renderConsultas();
+    alert(`¡Genial! Has iniciado ${targetTrayecto.nombre}. Las materias correspondientes ahora están marcadas como En Curso.`);
+  }
+
   showLanding() {
     const landing = document.getElementById("landing-screen");
     if (landing) landing.style.display = "flex";
@@ -243,6 +271,8 @@ class UniversityApp {
       const pensum = this.state.pensum[this.currentCareer];
       let trayectosHtml = "";
 
+      let activeTrayectoName = "";
+
       pensum.trayectos.forEach(t => {
         let aprobadas = 0;
         let repetir = 0;
@@ -284,10 +314,22 @@ class UniversityApp {
           `;
         });
 
+        const isCurrentActive = t.actual || (enCurso > 0);
+        if (isCurrentActive && !activeTrayectoName) {
+          activeTrayectoName = `${t.nombre} (En Curso)`;
+        }
+
+        const trayectoActionBtn = isCurrentActive
+          ? `<span style="font-size: 0.8rem; background: var(--primary-marine); color: white; padding: 4px 10px; border-radius: 6px; font-weight: bold;">⚡ Fase Actual Activa</span>`
+          : `<button class="btn-action" style="color: var(--primary-marine); border-color: var(--primary-marine); font-weight: bold; font-size: 0.82rem;" onclick="app.activateTrayecto('${t.id}')">🚀 Iniciar este Trayecto</button>`;
+
         trayectosHtml += `
           <div style="background: white; border-radius: 10px; padding: 15px; margin-bottom: 15px; border: 1px solid var(--border-color); box-shadow: var(--shadow-sm);">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; border-bottom: 2px solid var(--primary-marine); padding-bottom: 8px; margin-bottom: 10px;">
-              <h3 style="margin: 0; font-size: 1.05rem; color: var(--primary-marine);">📍 ${t.nombre}</h3>
+              <div>
+                <h3 style="margin: 0; font-size: 1.05rem; color: var(--primary-marine); display: inline-block;">📍 ${t.nombre}</h3>
+                <span style="margin-left: 10px;">${trayectoActionBtn}</span>
+              </div>
               <div style="font-size: 0.85rem; color: var(--text-secondary);">
                 ✅ Aprobadas: <strong>${aprobadas}</strong> | 🔄 Repetir: <strong>${repetir}</strong> | 🔥 En Curso: <strong>${enCurso}</strong> | 🎓 UC: <strong>${ucGanadas} / ${t.totalUC}</strong>
               </div>
@@ -298,6 +340,11 @@ class UniversityApp {
       });
 
       summaryContainer.innerHTML = trayectosHtml;
+
+      const phaseDesc = document.getElementById("home-phase-desc");
+      if (phaseDesc && activeTrayectoName) {
+        phaseDesc.textContent = activeTrayectoName;
+      }
     }
 
     const alertsContainer = document.getElementById("dashboard-alerts-list");
