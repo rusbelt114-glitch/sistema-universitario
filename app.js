@@ -1,6 +1,6 @@
 /**
  * SISTEMA UNIVERSITARIO DE GESTIÓN ACADÉMICA - APP LOGIC
- * Control de Estado Interactivo, LocalStorage, Python REST API, Evaluaciones y Git Sync
+ * Control de Estado Interactivo con Auto-Sync Instantáneo a GitHub
  */
 
 class UniversityApp {
@@ -35,7 +35,7 @@ class UniversityApp {
     this.render();
   }
 
-  // --- PERSISTENCIA LOCAL STORAGE & SYNC ---
+  // --- PERSISTENCIA & AUTO-SYNC INSTANTÁNEO ---
   loadState() {
     const saved = localStorage.getItem(this.storageKey);
     if (saved) {
@@ -63,6 +63,9 @@ class UniversityApp {
       currentWeek: this.currentWeek
     };
     localStorage.setItem(this.storageKey, JSON.stringify(toSave));
+
+    // Sincronización Automática con GitHub en Segundo Plano
+    fetch('/api/git-sync', { method: 'POST' }).catch(() => {});
   }
 
   // --- CONTROL DE NAVEGACIÓN Y CARRERA ---
@@ -121,23 +124,19 @@ class UniversityApp {
   switchTab(tabId) {
     this.currentTab = tabId;
 
-    // Actualizar botones de pestaña
     document.querySelectorAll(".nav-tabs .tab-btn").forEach(btn => {
       btn.classList.remove("active");
     });
     const targetBtn = Array.from(document.querySelectorAll(".nav-tabs .tab-btn")).find(b => b.getAttribute("onclick").includes(tabId));
     if (targetBtn) targetBtn.classList.add("active");
 
-    // Ocultar todas las secciones
     document.querySelectorAll(".tab-section").forEach(sec => {
       sec.style.display = "none";
     });
 
-    // Mostrar sección activa
     const activeSec = document.getElementById(`tab-${tabId}`);
     if (activeSec) activeSec.style.display = "block";
 
-    // Renderizar según la pestaña activa
     if (tabId === "dashboard") this.renderDashboard();
     if (tabId === "pensum") this.renderPensum();
     if (tabId === "evaluaciones") this.renderEvaluationsSection();
@@ -180,23 +179,19 @@ class UniversityApp {
   renderDashboard() {
     const stats = this.getCalculatedStats(this.currentCareer);
 
-    // UC TSU
     const pctTSU = Math.min(100, Math.round((stats.ucTSUAprobadas / stats.metaUC_TSU) * 100));
     document.getElementById("stat-uc-tsu-val").textContent = `${stats.ucTSUAprobadas} / ${stats.metaUC_TSU}`;
     document.getElementById("stat-uc-tsu-bar").style.width = `${pctTSU}%`;
     document.getElementById("stat-uc-tsu-pct").textContent = `${pctTSU}% completado del TSU`;
 
-    // UC LICENCIATURA
     const pctLic = Math.min(100, Math.round((stats.ucTotalAprobadas / stats.metaUC_Lic) * 100));
     document.getElementById("stat-uc-lic-val").textContent = `${stats.ucTotalAprobadas} / ${stats.metaUC_Lic}`;
     document.getElementById("stat-uc-lic-bar").style.width = `${pctLic}%`;
     document.getElementById("stat-uc-lic-pct").textContent = `${pctLic}% acumulado total`;
 
-    // MATERIAS
     document.getElementById("stat-materias-curso").textContent = stats.materiasEnCurso;
     document.getElementById("stat-materias-repetir").textContent = stats.materiasRepetir;
 
-    // Alertas Relevantes
     const alertsContainer = document.getElementById("dashboard-alerts-list");
     let html = `
       <div class="notification-item urgent">
@@ -370,7 +365,6 @@ class UniversityApp {
     const pensum = this.state.pensum[this.currentCareer];
 
     if (id !== "") {
-      // Editar existente
       pensum.trayectos.forEach(t => {
         t.materias.forEach(m => {
           if (m.id === id) {
@@ -384,7 +378,6 @@ class UniversityApp {
         });
       });
     } else {
-      // Crear nueva
       const newSubject = {
         id: "mat-" + Date.now(),
         codigo: code,
@@ -771,7 +764,7 @@ class UniversityApp {
     const msgBox = document.getElementById("git-sync-status-msg");
     if (msgBox) {
       msgBox.style.display = "block";
-      msgBox.textContent = "⏳ Sincronizando con GitHub...";
+      msgBox.textContent = "⏳ Sincronizando automáticamente con GitHub...";
     }
 
     try {
@@ -781,7 +774,7 @@ class UniversityApp {
         if (msgBox) {
           msgBox.style.background = "#E8F8F5";
           msgBox.style.color = "#117A65";
-          msgBox.textContent = "✅ ¡Sincronizado con éxito en GitHub!";
+          msgBox.textContent = "✅ ¡Sincronizado automáticamente en GitHub!";
         }
       } else {
         throw new Error("Servidor no respondió");
@@ -790,7 +783,7 @@ class UniversityApp {
       if (msgBox) {
         msgBox.style.background = "#FEF9E7";
         msgBox.style.color = "#B7950B";
-        msgBox.textContent = "⚡ Datos guardados localmente. Puedes ejecutar `.\\git-auto-sync.ps1` en la consola.";
+        msgBox.textContent = "⚡ Datos guardados en navegador. Ejecuta `.\\git-auto-sync.ps1` en la consola.";
       }
     }
   }
