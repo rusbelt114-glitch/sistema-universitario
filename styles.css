@@ -933,68 +933,77 @@ footer {
 /* Media Queries para Pantallas Pequeñas (Mobile First Usability) */
 @media (max-width: 650px) {
   #app-container {
-    padding: 8px;
-  }
-  .landing-title {
-    font-size: 1.5rem;
+    padding: 4px;
   }
   .app-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
-    padding: 10px 14px;
-    border-radius: var(--radius-md);
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-md);
   }
   .header-brand h1 {
-    font-size: 0.95rem;
+    font-size: 0.88rem;
   }
   .header-brand span {
-    font-size: 0.72rem;
+    font-size: 0.7rem;
   }
   .header-actions {
-    gap: 6px;
+    gap: 4px;
   }
   .career-pill {
-    padding: 5px 10px;
-    font-size: 0.78rem;
+    padding: 4px 8px;
+    font-size: 0.75rem;
   }
   .career-select-grid {
     grid-template-columns: 1fr;
   }
   .nav-tabs {
+    position: sticky;
+    top: 50px;
+    z-index: 99;
+    background: var(--bg-light);
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 6px;
-    padding: 6px;
-    overflow-x: hidden;
+    gap: 4px;
+    padding: 4px 0;
+    margin-bottom: 10px;
   }
   .tab-btn {
     min-width: 0;
-    padding: 8px 2px;
-    font-size: 0.75rem;
+    padding: 7px 2px;
+    font-size: 0.72rem;
     flex-direction: column;
     gap: 2px;
-    border-radius: 8px;
+    border-radius: 6px;
     white-space: normal;
     word-break: break-word;
   }
   .home-summary-card {
-    padding: 14px 16px;
+    padding: 12px 14px;
   }
   .home-career-badge {
-    font-size: 1.05rem;
+    font-size: 0.95rem;
   }
   .home-metrics-grid {
     grid-template-columns: 1fr 1fr;
-    gap: 8px;
+    gap: 6px;
   }
   .home-metric-item {
-    padding: 10px 6px;
+    padding: 8px 4px;
   }
   .home-metric-num {
-    font-size: 1.3rem;
+    font-size: 1.2rem;
   }
   .home-metric-label {
-    font-size: 0.7rem;
+    font-size: 0.68rem;
+  }
+  .subject-table th, .subject-table td {
+    padding: 8px 6px;
+    font-size: 0.78rem;
   }
 }

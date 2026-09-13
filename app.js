@@ -320,22 +320,24 @@ class UniversityApp {
         }
 
         const trayectoActionBtn = isCurrentActive
-          ? `<span style="font-size: 0.8rem; background: var(--primary-marine); color: white; padding: 4px 10px; border-radius: 6px; font-weight: bold;">⚡ Fase Actual Activa</span>`
-          : `<button class="btn-action" style="color: var(--primary-marine); border-color: var(--primary-marine); font-weight: bold; font-size: 0.82rem;" onclick="app.activateTrayecto('${t.id}')">🚀 Iniciar este Trayecto</button>`;
+          ? `<span style="font-size: 0.8rem; background: var(--primary-marine); color: white; padding: 3px 8px; border-radius: 6px; font-weight: bold;">⚡ Fase Activa</span>`
+          : `<button class="btn-action" style="color: var(--primary-marine); border-color: var(--primary-marine); font-weight: bold; font-size: 0.78rem;" onclick="app.activateTrayecto('${t.id}')">🚀 Iniciar Trayecto</button>`;
+
+        const isOpenAttr = isCurrentActive ? "open" : "";
 
         trayectosHtml += `
-          <div style="background: white; border-radius: 10px; padding: 15px; margin-bottom: 15px; border: 1px solid var(--border-color); box-shadow: var(--shadow-sm);">
-            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; border-bottom: 2px solid var(--primary-marine); padding-bottom: 8px; margin-bottom: 10px;">
-              <div>
-                <h3 style="margin: 0; font-size: 1.05rem; color: var(--primary-marine); display: inline-block;">📍 ${t.nombre}</h3>
-                <span style="margin-left: 10px;">${trayectoActionBtn}</span>
+          <details ${isOpenAttr} style="background: white; border-radius: 10px; margin-bottom: 10px; border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); overflow: hidden;">
+            <summary style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: var(--bg-teal-subtle); cursor: pointer; user-select: none; flex-wrap: wrap; gap: 8px;">
+              <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <h3 style="margin: 0; font-size: 0.98rem; color: var(--primary-marine); display: inline-block;">📍 ${t.nombre}</h3>
+                <span>${trayectoActionBtn}</span>
               </div>
-              <div style="font-size: 0.85rem; color: var(--text-secondary);">
-                ✅ Aprobadas: <strong>${aprobadas}</strong> | 🔄 Repetir: <strong>${repetir}</strong> | 🔥 En Curso: <strong>${enCurso}</strong> | 🎓 UC: <strong>${ucGanadas} / ${t.totalUC}</strong>
+              <div style="font-size: 0.8rem; color: var(--text-secondary);">
+                ✅ <strong>${aprobadas}</strong> | 🔄 <strong>${repetir}</strong> | 🔥 <strong>${enCurso}</strong> | 🎓 <strong>${ucGanadas}/${t.totalUC} UC</strong>
               </div>
-            </div>
-            <div>${matListHtml}</div>
-          </div>
+            </summary>
+            <div style="padding: 10px 14px; border-top: 1px solid var(--border-color);">${matListHtml}</div>
+          </details>
         `;
       });
 
@@ -352,7 +354,7 @@ class UniversityApp {
       <div class="notification-item urgent">
         <div>
           <div class="notification-title">📌 Estado Académico de la Carrera</div>
-          <div class="notification-desc">Puedes editar el estatus de cualquier materia anterior o actual directamente en el resumen superior.</div>
+          <div class="notification-desc">Puedes desplegar cualquier trayecto y editar asignaturas o iniciar fases de cursado.</div>
         </div>
       </div>
       <div class="notification-item urgent">
@@ -386,17 +388,20 @@ class UniversityApp {
 
       if (filteredMaterias.length === 0) return;
 
+      const isCurrentActive = t.actual || (filteredMaterias.some(m => m.estatus === "en_curso"));
+      const isOpenAttr = (isCurrentActive || searchQuery !== "" || statusFilter !== "todos" || trayectoFilter !== "todos") ? "open" : "";
+
       html += `
-        <div class="trayecto-block">
-          <div class="trayecto-header">
+        <details ${isOpenAttr} class="trayecto-block" style="margin-bottom: 12px; border-radius: 10px; overflow: hidden;">
+          <summary class="trayecto-header" style="cursor: pointer; user-select: none;">
             <div class="trayecto-title">
               <span>${t.nombre}</span>
               ${t.actual ? '<span class="status-badge status-en_curso">ACTUAL EN CURSO</span>' : ''}
             </div>
             <span class="trayecto-badge-uc">${t.totalUC} UC</span>
-          </div>
+          </summary>
 
-          <div class="subject-table-wrapper">
+          <div class="subject-table-wrapper" style="padding-top: 5px;">
             <table class="subject-table">
               <thead>
                 <tr>
@@ -416,7 +421,7 @@ class UniversityApp {
         const statusClass = `status-${m.estatus}`;
         const statusTextMap = {
           aprobada: "Aprobada",
-          en_curso: "En Curso (2-2)",
+          en_curso: "En Curso",
           repetir: "Por Repetir",
           intensivo_verano: "Intensivo Verano",
           pendiente_consulta: "Pendiente Consulta",
@@ -446,7 +451,7 @@ class UniversityApp {
               </tbody>
             </table>
           </div>
-        </div>
+        </details>
       `;
     });
 
