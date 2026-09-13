@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema Universitario - Gestor Académico Interactivo</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <div id="app-container">
+
+    <!-- ====================================================================
+         PANTALLA INICIAL / LANDING DE SELECCIÓN DE CARRERA
+         ==================================================================== -->
+    <div id="landing-screen" class="landing-wrapper">
+      <div class="landing-header">
+        <span class="brand-badge">UNEXCA • PANEL ACADÉMICO INTERACTIVO</span>
+        <h1 class="landing-title">Gestión de Estudios Universitarios</h1>
+        <p class="landing-subtitle">
+          Sistema personal interactivo para control de asignaturas, plan de evaluaciones, notas y alternancia por semanas.
+        </p>
+      </div>
+
+      <!-- Barra de Indicación de Semana Actual -->
+      <div class="week-indicator-bar">
+        <span>ESTATUS ACADÉMICO ACTUAL:</span>
+        <span id="landing-week-badge" class="week-badge">SEMANA A (ADMINISTRACIÓN)</span>
+        <button id="btn-toggle-week-landing" class="week-toggle-btn" onclick="app.toggleWeek()">⚡ Cambiar a Semana B</button>
+      </div>
+
+      <!-- Selección de Carrera Inicial -->
+      <div class="career-select-grid">
+        <div id="card-select-adm" class="career-card active-career" onclick="app.selectCareer('ADM')">
+          <div class="career-icon">💼</div>
+          <h2 class="career-name">PNF Administración</h2>
+          <p class="career-meta">Trayecto II - Fase II (2-2) En Curso • TSU & Licenciatura</p>
+          <button class="career-btn">Gestión Administración →</button>
+        </div>
+
+        <div id="card-select-inf" class="career-card" onclick="app.selectCareer('INF')">
+          <div class="career-icon">💻</div>
+          <h2 class="career-name">PNF Informática</h2>
+          <p class="career-meta">Trayecto I - Fase I (1-1) • Modalidad Paralela</p>
+          <button class="career-btn">Gestión Informática →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====================================================================
+         PANTALLA PRINCIPAL INTERACTIVA DEL SISTEMA
+         ==================================================================== -->
+    <div id="main-app-screen" style="display: none;">
+      
+      <!-- Top Navigation Header -->
+      <header class="app-header">
+        <div class="header-brand">
+          <div class="header-logo">UN</div>
+          <div class="header-title-text">
+            <h1>SISTEMA UNIVERSITARIO INTERACTIVO</h1>
+            <span id="header-career-title">PNF EN ADMINISTRACIÓN</span>
+          </div>
+        </div>
+
+        <div class="header-actions">
+          <div id="header-week-pill" class="career-pill" onclick="app.toggleWeek()">
+            <span>📅</span> <strong id="header-week-text">SEMANA A</strong>
+          </div>
+
+          <div class="career-pill" onclick="app.showLanding()">
+            <span>🔄</span> <span>Cambiar Carrera</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- Pestañas de Navegación Interactivas -->
+      <nav class="nav-tabs">
+        <button class="tab-btn active" onclick="app.switchTab('dashboard')">📊 Dashboard & Métricas</button>
+        <button class="tab-btn" onclick="app.switchTab('pensum')">📚 Pensum & Materias</button>
+        <button class="tab-btn" onclick="app.switchTab('evaluaciones')">📝 Plan de Evaluaciones</button>
+        <button class="tab-btn" onclick="app.switchTab('consultas')">🔍 Consultas Pendientes</button>
+        <button class="tab-btn" onclick="app.switchTab('horario')">📅 Horario Semanal</button>
+        <button class="tab-btn" onclick="app.switchTab('notificaciones')">
+          🔔 Alertas & Tareas <span id="badge-notif-count" class="badge-num" style="display:none;">0</span>
+        </button>
+        <button class="tab-btn" onclick="app.switchTab('gitsync')">💾 Backup & Sync Git</button>
+      </nav>
+
+      <!-- CONTENIDO PRINCIPAL -->
+      <main id="tab-content-area">
+
+        <!-- ================================================================
+             TAB 1: DASHBOARD
+             ================================================================ -->
+        <section id="tab-dashboard" class="tab-section">
+          
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-header">
+                <span>UC ACUMULADAS TSU</span>
+                <span>META: 110 UC</span>
+              </div>
+              <div id="stat-uc-tsu-val" class="stat-value">0 / 110</div>
+              <div class="progress-bar-bg">
+                <div id="stat-uc-tsu-bar" class="progress-bar-fill" style="width: 0%;"></div>
+              </div>
+              <div id="stat-uc-tsu-pct" class="stat-subtext">0% completado del TSU</div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-header">
+                <span>UC LICENCIATURA TOTAL</span>
+                <span>META: 222 UC</span>
+              </div>
+              <div id="stat-uc-lic-val" class="stat-value">0 / 222</div>
+              <div class="progress-bar-bg">
+                <div id="stat-uc-lic-bar" class="progress-bar-fill" style="width: 0%;"></div>
+              </div>
+              <div id="stat-uc-lic-pct" class="stat-subtext">0% acumulado total</div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-header">
+                <span>MATERIAS EN CURSO</span>
+                <span>FASE ACTIVA</span>
+              </div>
+              <div id="stat-materias-curso" class="stat-value">8</div>
+              <div class="stat-subtext" id="stat-fase-activa-desc">Trayecto II - Fase II (2-2)</div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-header">
+                <span>MATERIAS A REPETIR</span>
+                <span>ALERTA</span>
+              </div>
+              <div id="stat-materias-repetir" class="stat-value" style="color: #C0392B;">6</div>
+              <div class="stat-subtext">Requieren reprogramación</div>
+            </div>
+          </div>
+
+          <!-- Resumen de Alertas e Interacción -->
+          <div class="trayecto-block">
+            <div class="trayecto-header">
+              <div class="trayecto-title">⚡ Acciones Rápidas & Estado del Período</div>
+            </div>
+            <div style="padding: 20px;">
+              <div id="dashboard-alerts-list">
+                <!-- Se puebla dinámicamente con JS -->
+              </div>
+            </div>
+          </div>
+
+        </section>
+
+        <!-- ================================================================
+             TAB 2: PENSUM & MATERIAS (INTERACTIVO)
+             ================================================================ -->
+        <section id="tab-pensum" class="tab-section" style="display: none;">
+          
+          <div class="section-toolbar">
+            <div class="search-box">
+              <span class="search-icon">🔍</span>
+              <input type="text" id="search-subject-input" class="search-input" placeholder="Buscar materia..." oninput="app.filterSubjects()">
+            </div>
+            
+            <div class="filter-group">
+              <select id="filter-status-select" class="filter-select" onchange="app.filterSubjects()">
+                <option value="todos">Todos los Estatus</option>
+                <option value="en_curso">En Curso (Fase Activa)</option>
+                <option value="aprobada">Aprobadas / Registradas</option>
+                <option value="repetir">Por Repetir</option>
+                <option value="intensivo_verano">Intensivo Verano</option>
+                <option value="pendiente_consulta">Pendiente Consulta</option>
+                <option value="por_cursar">Por Cursar</option>
+              </select>
+
+              <select id="filter-trayecto-select" class="filter-select" onchange="app.filterSubjects()">
+                <option value="todos">Todos los Trayectos</option>
+                <option value="1-1">Trayecto 1-1</option>
+                <option value="1-2">Trayecto 1-2</option>
+                <option value="2-1">Trayecto 2-1</option>
+                <option value="2-2">Trayecto 2-2 (Actual)</option>
+                <option value="3-1">Trayecto 3-1</option>
+                <option value="3-2">Trayecto 3-2</option>
+                <option value="4-1">Trayecto 4-1</option>
+                <option value="4-2">Trayecto 4-2</option>
+              </select>
+
+              <button class="btn-primary" onclick="app.openAddSubjectModal()">+ Nueva Materia</button>
+            </div>
+          </div>
+
+          <div id="pensum-trayectos-container">
+            <!-- Bloques por trayecto -->
+          </div>
+
+        </section>
+
+        <!-- ================================================================
+             TAB 3: PLAN DE EVALUACIONES
+             ================================================================ -->
+        <section id="tab-evaluaciones" class="tab-section" style="display: none;">
+          
+          <div class="section-toolbar">
+            <div style="flex: 1;">
+              <label class="form-label">Seleccionar Asignatura para Desglose de Evaluaciones:</label>
+              <select id="eval-subject-picker" class="form-control" onchange="app.loadEvaluationsForSubject(this.value)">
+                <!-- Materias -->
+              </select>
+            </div>
+            <div>
+              <button class="btn-primary" onclick="app.openAddEvalModal()">+ Nueva Evaluación</button>
+            </div>
+          </div>
+
+          <div id="eval-panel-container">
+            <!-- Panel de evaluaciones -->
+          </div>
+
+        </section>
+
+        <!-- ================================================================
+             TAB 4: CONSULTAS PENDIENTES (NUEVA SECCIÓN REVISIÓN)
+             ================================================================ -->
+        <section id="tab-consultas" class="tab-section" style="display: none;">
+          
+          <div class="section-toolbar">
+            <h2>🔍 Control de Asignaturas Pendientes por Consulta Oficial</h2>
+            <button class="btn-primary" onclick="app.openAddConsultaModal()">+ Registrar Consulta</button>
+          </div>
+
+          <div class="trayecto-block">
+            <div class="trayecto-header">
+              <div class="trayecto-title">📋 Asignaturas en Proceso de Verificación de Nota</div>
+            </div>
+            <div class="subject-table-wrapper">
+              <table class="subject-table">
+                <thead>
+                  <tr>
+                    <th>Asignatura</th>
+                    <th>Trayecto</th>
+                    <th>Estatus Consulta</th>
+                    <th>Nota Verificada</th>
+                    <th>Soportes / Observaciones</th>
+                    <th>Acción</th>
+                  </tr>
+                </thead>
+                <tbody id="tabla-consultas-body">
+                  <!-- Se puebla dinámicamente -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </section>
+
+        <!-- ================================================================
+             TAB 5: HORARIO SEMANAL
+             ================================================================ -->
+        <section id="tab-horario" class="tab-section" style="display: none;">
+          
+          <div class="section-toolbar">
+            <h2>📅 Horario de Clases - <span id="horario-week-title">Semana A (Administración)</span></h2>
+            <div>
+              <button class="btn-secondary" onclick="app.toggleWeek()">Cambiar Semana (A / B)</button>
+              <button class="btn-primary" onclick="app.openAddScheduleModal()">+ Agregar Clase</button>
+            </div>
+          </div>
+
+          <div id="schedule-cards-container" class="schedule-grid">
+            <!-- Horario por días -->
+          </div>
+
+        </section>
+
+        <!-- ================================================================
+             TAB 6: ALERTAS & NOTIFICACIONES
+             ================================================================ -->
+        <section id="tab-notificaciones" class="tab-section" style="display: none;">
+          
+          <div class="section-toolbar">
+            <h2>🔔 Tareas, Recordatorios & Alertas Académicas</h2>
+            <button class="btn-primary" onclick="app.openAddTaskModal()">+ Nueva Alerta</button>
+          </div>
+
+          <div id="notif-list-container">
+            <!-- Notificaciones -->
+          </div>
+
+        </section>
+
+        <!-- ================================================================
+             TAB 7: BACKUP & GIT SYNC
+             ================================================================ -->
+        <section id="tab-gitsync" class="tab-section" style="display: none;">
+          
+          <div class="git-sync-box">
+            <h2 style="color: var(--primary-marine); margin-bottom: 10px;">💾 Control de Cambios & Sincronización Git</h2>
+            <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 15px;">
+              Guarda tus modificaciones localmente en la base de datos o sincronízalas con tu repositorio remoto de GitHub con 1 solo clic:
+            </p>
+
+            <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px;">
+              <button class="btn-primary" onclick="app.syncGitRemote()">⚡ Sincronizar con GitHub Ahora</button>
+              <button class="btn-secondary" onclick="app.exportDataJSON()">📥 Exportar Copia (JSON)</button>
+              <button class="btn-secondary" onclick="document.getElementById('import-file-input').click()">📤 Importar Copia (JSON)</button>
+              <input type="file" id="import-file-input" style="display:none" onchange="app.importDataJSON(event)">
+            </div>
+
+            <div id="git-sync-status-msg" style="display:none; padding:12px; border-radius:6px; background:#E8F8F5; color:#117A65; font-weight:bold; margin-bottom:15px;"></div>
+
+            <h3 style="font-size: 0.95rem; color: var(--primary-marine); margin-top: 15px;">Comandos de Consola Locales:</h3>
+            <div class="git-code-snippet">
+              # PowerShell:<br>
+              .\git-auto-sync.ps1<br><br>
+              # CMD Batch:<br>
+              git-auto-sync.bat
+            </div>
+          </div>
+
+        </section>
+
+      </main>
+
+      <footer>
+        <p>Sistema Universitario Personal • PNF Administración & Informática UNEXCA</p>
+      </footer>
+
+    </div>
+
+  </div>
+
+  <!-- ====================================================================
+       MODALES DIALOGS INTERACTIVOS
+       ==================================================================== -->
+  
+  <!-- Modal Editar / Agregar Materia -->
+  <div id="modal-edit-subject" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="modal-subject-title" class="modal-title">Editar Asignatura</h3>
+        <button class="modal-close-btn" onclick="app.closeModal('modal-edit-subject')">&times;</button>
+      </div>
+      <form id="form-edit-subject" onsubmit="app.saveSubjectEdit(event)">
+        <input type="hidden" id="edit-subject-id">
+        
+        <div class="form-group">
+          <label class="form-label">Nombre de la Asignatura:</label>
+          <input type="text" id="edit-subject-name" class="form-control" required>
+        </div>
+
+        <div style="display: flex; gap: 10px;">
+          <div class="form-group" style="flex:1;">
+            <label class="form-label">Código:</label>
+            <input type="text" id="edit-subject-code" class="form-control" required>
+          </div>
+          <div class="form-group" style="flex:1;">
+            <label class="form-label">UC (Créditos):</label>
+            <input type="number" min="1" max="15" id="edit-subject-uc" class="form-control" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Trayecto:</label>
+          <select id="edit-subject-trayecto" class="form-control">
+            <option value="1-1">Trayecto 1-1</option>
+            <option value="1-2">Trayecto 1-2</option>
+            <option value="2-1">Trayecto 2-1</option>
+            <option value="2-2">Trayecto 2-2</option>
+            <option value="3-1">Trayecto 3-1</option>
+            <option value="3-2">Trayecto 3-2</option>
+            <option value="4-1">Trayecto 4-1</option>
+            <option value="4-2">Trayecto 4-2</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Estatus Académico:</label>
+          <select id="edit-subject-status" class="form-control">
+            <option value="en_curso">En Curso</option>
+            <option value="aprobada">Aprobada</option>
+            <option value="repetir">Por Repetir</option>
+            <option value="intensivo_verano">Intensivo de Verano</option>
+            <option value="pendiente_consulta">Pendiente por Consulta</option>
+            <option value="por_cursar">Por Cursar</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Nota Definitiva (0 a 20):</label>
+          <input type="number" step="0.1" min="0" max="20" id="edit-subject-grade" class="form-control" placeholder="Ej: 16.5">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Documento o Hoja de Actuación de Referencia:</label>
+          <input type="text" id="edit-subject-ref" class="form-control" placeholder="Ej: NOTAS1-2026 ALTAGRACIA.xlsx">
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn-secondary" onclick="app.closeModal('modal-edit-subject')">Cancelar</button>
+          <button type="submit" class="btn-primary">Guardar Asignatura</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Agregar / Editar Evaluación -->
+  <div id="modal-edit-eval" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="modal-eval-title" class="modal-title">Agregar Evaluación</h3>
+        <button class="modal-close-btn" onclick="app.closeModal('modal-edit-eval')">&times;</button>
+      </div>
+      <form id="form-edit-eval" onsubmit="app.saveEvaluation(event)">
+        <input type="hidden" id="edit-eval-id">
+        <div class="form-group">
+          <label class="form-label">Nombre de la Evaluación / Taller:</label>
+          <input type="text" id="edit-eval-name" class="form-control" required placeholder="Ej: Parcial I, Taller, Proyecto...">
+        </div>
+
+        <div style="display: flex; gap: 10px;">
+          <div class="form-group" style="flex:1;">
+            <label class="form-label">Ponderación (%):</label>
+            <input type="number" step="1" min="1" max="100" id="edit-eval-weight" class="form-control" required placeholder="25">
+          </div>
+          <div class="form-group" style="flex:1;">
+            <label class="form-label">Nota Obtenida (0-20):</label>
+            <input type="number" step="0.1" min="0" max="20" id="edit-eval-score" class="form-control" placeholder="Ej: 17">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Fecha de Entrega / Presentación:</label>
+          <input type="date" id="edit-eval-date" class="form-control">
+        </div>
+
+        <div class="form-group" style="display: flex; align-items: center; gap: 8px;">
+          <input type="checkbox" id="edit-eval-completed">
+          <label for="edit-eval-completed" style="font-size: 0.9rem;">Marcar como entregada / evaluada</label>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn-secondary" onclick="app.closeModal('modal-edit-eval')">Cancelar</button>
+          <button type="submit" class="btn-primary">Guardar Evaluación</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Agregar Clase al Horario -->
+  <div id="modal-add-schedule" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">Agregar Clase al Horario</h3>
+        <button class="modal-close-btn" onclick="app.closeModal('modal-add-schedule')">&times;</button>
+      </div>
+      <form id="form-add-schedule" onsubmit="app.saveScheduleClass(event)">
+        <div class="form-group">
+          <label class="form-label">Día de la semana:</label>
+          <select id="sched-day" class="form-control">
+            <option value="Lunes">Lunes</option>
+            <option value="Martes">Martes</option>
+            <option value="Miércoles">Miércoles</option>
+            <option value="Jueves">Jueves</option>
+            <option value="Viernes">Viernes</option>
+            <option value="Sábado">Sábado</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Hora:</label>
+          <input type="text" id="sched-time" class="form-control" placeholder="Ej: 08:00 - 10:00" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Materia / Asignatura:</label>
+          <input type="text" id="sched-subject" class="form-control" required placeholder="Ej: Administración de Costos I">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Aula / Laboratorio:</label>
+          <input type="text" id="sched-room" class="form-control" placeholder="Ej: Lab 3 / Aula 08">
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn-secondary" onclick="app.closeModal('modal-add-schedule')">Cancelar</button>
+          <button type="submit" class="btn-primary">Guardar Clase</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Agregar Alerta / Tarea -->
+  <div id="modal-add-task" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">Nueva Alerta / Tarea</h3>
+        <button class="modal-close-btn" onclick="app.closeModal('modal-add-task')">&times;</button>
+      </div>
+      <form id="form-add-task" onsubmit="app.saveTaskNotification(event)">
+        <div class="form-group">
+          <label class="form-label">Título de la Notificación:</label>
+          <input type="text" id="task-title" class="form-control" required placeholder="Ej: Entregar Avance PSI II">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Descripción / Asignatura:</label>
+          <textarea id="task-desc" class="form-control" rows="3" placeholder="Detalles de la entrega o recordatorio..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Prioridad:</label>
+          <select id="task-priority" class="form-control">
+            <option value="normal">Normal</option>
+            <option value="urgente">Urgente / Importante</option>
+          </select>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn-secondary" onclick="app.closeModal('modal-add-task')">Cancelar</button>
+          <button type="submit" class="btn-primary">Guardar Notificación</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="pensumData.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

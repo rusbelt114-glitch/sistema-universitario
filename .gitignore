@@ -1,0 +1,3 @@
+# Ignorar archivos temporales de Python y base de datos local si se desea
+__pycache__/
+*.pyc
