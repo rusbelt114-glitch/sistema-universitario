@@ -2,6 +2,7 @@
  * SISTEMA UNIVERSITARIO DE GESTIÓN ACADÉMICA - APP LOGIC
  * Control de Estado Interactivo con Auto-Sync Instantáneo y PWA Instalable
  */
+/* global PENSUM_ADMINISTRACION, PENSUM_INFORMATICA, EVALUACIONES_INICIALES, HORARIO_DEFECTO */
 
 let deferredPrompt;
 window.addEventListener('beforeinstallprompt', (e) => {
@@ -10,20 +11,20 @@ window.addEventListener('beforeinstallprompt', (e) => {
 });
 
 class UniversityApp {
-  constructor() {
-    this.storageKey = "SISTEMA_UNIVERSITARIO_DATA_V2";
-    this.currentCareer = "ADM"; // "ADM" o "INF"
-    this.currentWeek = "A"; // "A" (Administración) o "B" (Informática)
-    this.currentTab = "dashboard";
-    this.selectedEvalSubjectId = null;
+  storageKey = "SISTEMA_UNIVERSITARIO_DATA_V2";
+  currentCareer = "ADM"; // "ADM" o "INF"
+  currentWeek = "A"; // "A" (Administración) o "B" (Informática)
+  currentTab = "dashboard";
+  selectedEvalSubjectId = null;
 
+  constructor() {
     this.state = {
       pensum: {
-        ADM: JSON.parse(JSON.stringify(PENSUM_ADMINISTRACION)),
-        INF: JSON.parse(JSON.stringify(PENSUM_INFORMATICA))
+        ADM: structuredClone(PENSUM_ADMINISTRACION),
+        INF: structuredClone(PENSUM_INFORMATICA)
       },
-      evaluaciones: JSON.parse(JSON.stringify(EVALUACIONES_INICIALES)),
-      horario: JSON.parse(JSON.stringify(HORARIO_DEFECTO)),
+      evaluaciones: structuredClone(EVALUACIONES_INICIALES),
+      horario: structuredClone(HORARIO_DEFECTO),
       notificaciones: [
         { id: "n1", titulo: "Materias por Repetir en Adm", desc: "Fundamentos de Adm I y II, Contabilidad I y II, Formación Socio Crítica I (MI y MII). Revisa reprogramación.", prioridad: "urgente" },
         { id: "n2", titulo: "Intensivo de Verano Próximo", desc: "Inscripción en Teoría y Práctica del Mercadeo y Deberes Formales del Contribuyente.", prioridad: "normal" },
@@ -44,9 +45,13 @@ class UniversityApp {
   installPWA() {
     if (deferredPrompt) {
       deferredPrompt.prompt();
-      deferredPrompt.userChoice.then(() => {
-        deferredPrompt = null;
-      });
+      deferredPrompt.userChoice
+        .then(() => {
+          deferredPrompt = null;
+        })
+        .catch((err) => {
+          console.error("Error en instalación PWA:", err);
+        });
     } else {
       alert("📱 PARA INSTALAR COMO APP EN TU TELÉFONO:\n\n• Android (Chrome): Toca los 3 puntos (⋮) arriba a la derecha y presiona 'Agregar a la pantalla principal' o 'Instalar aplicación'.\n\n• iPhone (Safari): Toca el botón Compartir (⎋) abajo y selecciona 'Agregar a inicio'.");
     }
@@ -89,16 +94,20 @@ class UniversityApp {
     this.currentCareer = careerCode;
     this.saveState();
 
-    document.getElementById("landing-screen").style.display = "none";
-    document.getElementById("main-app-screen").style.display = "block";
+    const landing = document.getElementById("landing-screen");
+    if (landing) landing.style.display = "none";
+    const mainApp = document.getElementById("main-app-screen");
+    if (mainApp) mainApp.style.display = "block";
 
     this.updateCareerHeaderUI();
     this.switchTab("dashboard");
   }
 
   showLanding() {
-    document.getElementById("landing-screen").style.display = "flex";
-    document.getElementById("main-app-screen").style.display = "none";
+    const landing = document.getElementById("landing-screen");
+    if (landing) landing.style.display = "flex";
+    const mainApp = document.getElementById("main-app-screen");
+    if (mainApp) mainApp.style.display = "none";
   }
 
   toggleWeek() {
@@ -111,29 +120,28 @@ class UniversityApp {
   }
 
   updateWeekUI() {
-    const landingBadge = document.getElementById("landing-week-badge");
-    const landingBtn = document.getElementById("btn-toggle-week-landing");
-    const headerWeekText = document.getElementById("header-week-text");
-    const horarioWeekTitle = document.getElementById("horario-week-title");
+    const isWeekA = this.currentWeek === "A";
+    const elementTexts = {
+      "landing-week-badge": isWeekA ? "SEMANA A (ADMINISTRACIÓN)" : "SEMANA B (INFORMÁTICA)",
+      "btn-toggle-week-landing": isWeekA ? "⚡ Cambiar a Semana B (Informática)" : "⚡ Cambiar a Semana A (Administración)",
+      "header-week-text": isWeekA ? "SEMANA A (ADM)" : "SEMANA B (INF)",
+      "home-week-text": isWeekA ? "SEMANA A (ADM)" : "SEMANA B (INF)",
+      "horario-week-title": isWeekA ? "Semana A (Administración)" : "Semana B (Informática)"
+    };
 
-    if (this.currentWeek === "A") {
-      if (landingBadge) landingBadge.textContent = "SEMANA A (ADMINISTRACIÓN)";
-      if (landingBtn) landingBtn.textContent = "⚡ Cambiar a Semana B (Informática)";
-      if (headerWeekText) headerWeekText.textContent = "SEMANA A (ADM)";
-      if (horarioWeekTitle) horarioWeekTitle.textContent = "Semana A (Administración)";
-    } else {
-      if (landingBadge) landingBadge.textContent = "SEMANA B (INFORMÁTICA)";
-      if (landingBtn) landingBtn.textContent = "⚡ Cambiar a Semana A (Administración)";
-      if (headerWeekText) headerWeekText.textContent = "SEMANA B (INF)";
-      if (horarioWeekTitle) horarioWeekTitle.textContent = "Semana B (Informática)";
-    }
+    Object.entries(elementTexts).forEach(([id, text]) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = text;
+    });
   }
 
   updateCareerHeaderUI() {
     const headerTitle = document.getElementById("header-career-title");
+    const homeCareerBadge = document.getElementById("home-career-badge");
     const activeData = this.state.pensum[this.currentCareer];
-    if (headerTitle && activeData) {
-      headerTitle.textContent = activeData.carrera + " (" + activeData.institucion + ")";
+    if (activeData) {
+      if (headerTitle) headerTitle.textContent = activeData.carrera + " (" + activeData.institucion + ")";
+      if (homeCareerBadge) homeCareerBadge.textContent = `${activeData.carrera} (${this.currentCareer})`;
     }
   }
 
@@ -143,7 +151,7 @@ class UniversityApp {
     document.querySelectorAll(".nav-tabs .tab-btn").forEach(btn => {
       btn.classList.remove("active");
     });
-    const targetBtn = Array.from(document.querySelectorAll(".nav-tabs .tab-btn")).find(b => b.getAttribute("onclick").includes(tabId));
+    const targetBtn = Array.from(document.querySelectorAll(".nav-tabs .tab-btn")).find(b => b.getAttribute("onclick")?.includes(tabId));
     if (targetBtn) targetBtn.classList.add("active");
 
     document.querySelectorAll(".tab-section").forEach(sec => {
@@ -168,6 +176,7 @@ class UniversityApp {
     let ucTotalAprobadas = 0;
     let materiasEnCurso = 0;
     let materiasRepetir = 0;
+    let materiasConsulta = 0;
 
     pensum.trayectos.forEach(t => {
       t.materias.forEach(m => {
@@ -179,6 +188,7 @@ class UniversityApp {
         }
         if (m.estatus === "en_curso") materiasEnCurso++;
         if (m.estatus === "repetir") materiasRepetir++;
+        if (m.estatus === "pendiente_consulta") materiasConsulta++;
       });
     });
 
@@ -188,7 +198,8 @@ class UniversityApp {
       ucTotalAprobadas,
       metaUC_Lic: pensum.metaUC_Lic,
       materiasEnCurso,
-      materiasRepetir
+      materiasRepetir,
+      materiasConsulta
     };
   }
 
@@ -196,17 +207,29 @@ class UniversityApp {
     const stats = this.getCalculatedStats(this.currentCareer);
 
     const pctTSU = Math.min(100, Math.round((stats.ucTSUAprobadas / stats.metaUC_TSU) * 100));
-    document.getElementById("stat-uc-tsu-val").textContent = `${stats.ucTSUAprobadas} / ${stats.metaUC_TSU}`;
-    document.getElementById("stat-uc-tsu-bar").style.width = `${pctTSU}%`;
-    document.getElementById("stat-uc-tsu-pct").textContent = `${pctTSU}% completado del TSU`;
+    const tsuVal = document.getElementById("stat-uc-tsu-val");
+    if (tsuVal) tsuVal.textContent = `${stats.ucTSUAprobadas} / ${stats.metaUC_TSU}`;
+    const tsuBar = document.getElementById("stat-uc-tsu-bar");
+    if (tsuBar) tsuBar.style.width = `${pctTSU}%`;
+    const tsuPct = document.getElementById("stat-uc-tsu-pct");
+    if (tsuPct) tsuPct.textContent = `${pctTSU}% completado del TSU`;
 
     const pctLic = Math.min(100, Math.round((stats.ucTotalAprobadas / stats.metaUC_Lic) * 100));
-    document.getElementById("stat-uc-lic-val").textContent = `${stats.ucTotalAprobadas} / ${stats.metaUC_Lic}`;
-    document.getElementById("stat-uc-lic-bar").style.width = `${pctLic}%`;
-    document.getElementById("stat-uc-lic-pct").textContent = `${pctLic}% acumulado total`;
+    const licVal = document.getElementById("stat-uc-lic-val");
+    if (licVal) licVal.textContent = `${stats.ucTotalAprobadas} / ${stats.metaUC_Lic}`;
+    const licBar = document.getElementById("stat-uc-lic-bar");
+    if (licBar) licBar.style.width = `${pctLic}%`;
+    const licPct = document.getElementById("stat-uc-lic-pct");
+    if (licPct) licPct.textContent = `${pctLic}% acumulado total`;
 
-    document.getElementById("stat-materias-curso").textContent = stats.materiasEnCurso;
-    document.getElementById("stat-materias-repetir").textContent = stats.materiasRepetir;
+    const matCurso = document.getElementById("stat-materias-curso");
+    if (matCurso) matCurso.textContent = String(stats.materiasEnCurso);
+    const matRepetir = document.getElementById("stat-materias-repetir");
+    if (matRepetir) matRepetir.textContent = String(stats.materiasRepetir);
+    const matConsulta = document.getElementById("stat-consultas-count");
+    if (matConsulta) matConsulta.textContent = String(stats.materiasConsulta);
+    const notifsCount = document.getElementById("stat-eval-pendientes");
+    if (notifsCount) notifsCount.textContent = String(this.state.notificaciones.length);
 
     const alertsContainer = document.getElementById("dashboard-alerts-list");
     let html = `
@@ -229,7 +252,7 @@ class UniversityApp {
         </div>
       </div>
     `;
-    alertsContainer.innerHTML = html;
+    if (alertsContainer) alertsContainer.innerHTML = html;
   }
 
   renderPensum() {
@@ -370,7 +393,7 @@ class UniversityApp {
     const id = document.getElementById("edit-subject-id").value;
     const name = document.getElementById("edit-subject-name").value;
     const code = document.getElementById("edit-subject-code").value;
-    const uc = parseInt(document.getElementById("edit-subject-uc").value);
+    const uc = Number.parseInt(document.getElementById("edit-subject-uc").value, 10);
     const trayectoTarget = document.getElementById("edit-subject-trayecto").value;
     const newStatus = document.getElementById("edit-subject-status").value;
     const newGradeVal = document.getElementById("edit-subject-grade").value;
@@ -386,7 +409,7 @@ class UniversityApp {
             m.codigo = code;
             m.uc = uc;
             m.estatus = newStatus;
-            m.nota = newGradeVal !== "" ? parseFloat(newGradeVal) : null;
+            m.nota = newGradeVal !== "" ? Number.parseFloat(newGradeVal) : null;
             m.refDoc = newRef;
           }
         });
@@ -398,7 +421,7 @@ class UniversityApp {
         nombre: name,
         uc: uc,
         estatus: newStatus,
-        nota: newGradeVal !== "" ? parseFloat(newGradeVal) : null,
+        nota: newGradeVal !== "" ? Number.parseFloat(newGradeVal) : null,
         refDoc: newRef
       };
 
@@ -497,9 +520,9 @@ class UniversityApp {
     let totalScoreWeighted = 0;
 
     evals.forEach(e => {
-      totalWeight += parseFloat(e.ponderacion || 0);
+      totalWeight += Number.parseFloat(e.ponderacion || 0);
       if (e.nota !== null && e.nota !== undefined) {
-        totalScoreWeighted += (parseFloat(e.nota) * (parseFloat(e.ponderacion) / 100));
+        totalScoreWeighted += (Number.parseFloat(e.nota) * (Number.parseFloat(e.ponderacion) / 100));
       }
     });
 
@@ -604,9 +627,9 @@ class UniversityApp {
 
     const evalIdIndex = document.getElementById("edit-eval-id").value;
     const name = document.getElementById("edit-eval-name").value;
-    const weight = parseFloat(document.getElementById("edit-eval-weight").value);
+    const weight = Number.parseFloat(document.getElementById("edit-eval-weight").value);
     const scoreVal = document.getElementById("edit-eval-score").value;
-    const score = scoreVal !== "" ? parseFloat(scoreVal) : null;
+    const score = scoreVal !== "" ? Number.parseFloat(scoreVal) : null;
     const date = document.getElementById("edit-eval-date").value;
     const completed = document.getElementById("edit-eval-completed").checked;
 
@@ -624,7 +647,7 @@ class UniversityApp {
     };
 
     if (evalIdIndex !== "") {
-      this.state.evaluaciones[this.selectedEvalSubjectId][parseInt(evalIdIndex)] = evalObj;
+      this.state.evaluaciones[this.selectedEvalSubjectId][Number.parseInt(evalIdIndex, 10)] = evalObj;
     } else {
       this.state.evaluaciones[this.selectedEvalSubjectId].push(evalObj);
     }
@@ -779,7 +802,7 @@ class UniversityApp {
     try {
       const response = await fetch("/api/git-sync", { method: "POST" });
       if (response.ok) {
-        const resData = await response.json();
+        await response.json();
         if (msgBox) {
           msgBox.style.background = "#E8F8F5";
           msgBox.style.color = "#117A65";
@@ -789,6 +812,8 @@ class UniversityApp {
         throw new Error("Servidor no respondió");
       }
     } catch (e) {
+      // Si la sincronización con Git falla por error de red o servidor, se le notifica al usuario que sus datos se guardaron localmente.
+      console.warn("Error de sincronización con Git (usando respaldo local):", e);
       if (msgBox) {
         msgBox.style.background = "#FEF9E7";
         msgBox.style.color = "#B7950B";
@@ -798,11 +823,13 @@ class UniversityApp {
   }
 
   openModal(modalId) {
-    document.getElementById(modalId).classList.add("active");
+    const modal = document.getElementById(modalId);
+    if (modal) modal.classList.add("active");
   }
 
   closeModal(modalId) {
-    document.getElementById(modalId).classList.remove("active");
+    const modal = document.getElementById(modalId);
+    if (modal) modal.classList.remove("active");
   }
 
   exportDataJSON() {
@@ -815,27 +842,25 @@ class UniversityApp {
     downloadAnchor.remove();
   }
 
-  importDataJSON(event) {
+  async importDataJSON(event) {
     const file = event.target.files[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const imported = JSON.parse(e.target.result);
-        if (imported.pensum) this.state.pensum = imported.pensum;
-        if (imported.evaluaciones) this.state.evaluaciones = imported.evaluaciones;
-        if (imported.horario) this.state.horario = imported.horario;
-        if (imported.notificaciones) this.state.notificaciones = imported.notificaciones;
+    try {
+      const text = await file.text();
+      const imported = JSON.parse(text);
+      if (imported.pensum) this.state.pensum = imported.pensum;
+      if (imported.evaluaciones) this.state.evaluaciones = imported.evaluaciones;
+      if (imported.horario) this.state.horario = imported.horario;
+      if (imported.notificaciones) this.state.notificaciones = imported.notificaciones;
 
-        this.saveState();
-        alert("¡Datos importados con éxito!");
-        this.render();
-      } catch (err) {
-        alert("Error al leer el archivo de respaldo JSON.");
-      }
-    };
-    reader.readAsText(file);
+      this.saveState();
+      alert("¡Datos importados con éxito!");
+      this.render();
+    } catch (err) {
+      console.error("Error al importar datos:", err);
+      alert("Error al leer el archivo de respaldo JSON.");
+    }
   }
 
   render() {
@@ -847,4 +872,5 @@ class UniversityApp {
 let app;
 document.addEventListener("DOMContentLoaded", () => {
   app = new UniversityApp();
+  window.app = app;
 });

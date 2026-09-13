@@ -4,7 +4,6 @@ Base de Datos SQLite3 & Script de Inicialización
 """
 
 import sqlite3
-import os
 
 DB_NAME = "sistema_universitario.db"
 
