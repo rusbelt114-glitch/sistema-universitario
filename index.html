@@ -40,12 +40,6 @@
         <button id="btn-toggle-week-landing" type="button" class="week-toggle-btn" onclick="app.toggleWeek()">⚡ Cambiar a Semana B</button>
       </div>
 
-      <!-- Botón Prominente para instalar en Pantalla de Inicio del Teléfono -->
-      <div id="pwa-install-banner" style="margin-bottom: 25px;">
-        <button type="button" class="btn-primary" style="padding: 14px 28px; font-size: 1.05rem; background: var(--primary-marine); border: 2px solid white; box-shadow: var(--shadow-md);" onclick="app.installPWA()">
-          📱 Instalar Aplicación en Pantalla de Inicio del Teléfono
-        </button>
-      </div>
 
       <!-- Selección de Carrera Inicial -->
       <div class="career-select-grid">
@@ -189,9 +183,16 @@
 
         <!-- TAB 3: PLAN DE EVALUACIONES -->
         <section id="tab-evaluaciones" class="tab-section" style="display: none;">
-          <div class="section-toolbar">
-            <div style="flex: 1;">
-              <label class="form-label" for="eval-subject-picker">Seleccionar Asignatura para Desglose de Evaluaciones:</label>
+          <div class="section-toolbar" style="flex-wrap: wrap; gap: 15px; align-items: flex-end;">
+            <div style="flex: 1; min-width: 220px;">
+              <label class="form-label" for="eval-filter-scope">Filtro de Materias:</label>
+              <select id="eval-filter-scope" class="form-control" onchange="app.renderEvaluationsSection()">
+                <option value="actuales" selected>🔥 Solo Materias Activas (En Curso / Repetir)</option>
+                <option value="todas">📚 Todas las Materias del Pensum (Carrera Completa)</option>
+              </select>
+            </div>
+            <div style="flex: 2; min-width: 280px;">
+              <label class="form-label" for="eval-subject-picker">Seleccionar Asignatura:</label>
               <select id="eval-subject-picker" class="form-control" onchange="app.loadEvaluationsForSubject(this.value)"></select>
             </div>
             <div>

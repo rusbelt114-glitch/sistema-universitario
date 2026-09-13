@@ -92,6 +92,7 @@ class UniversityApp {
   // --- CONTROL DE NAVEGACIÓN Y CARRERA ---
   selectCareer(careerCode) {
     this.currentCareer = careerCode;
+    this.selectedEvalSubjectId = null;
     this.saveState();
 
     const landing = document.getElementById("landing-screen");
@@ -101,6 +102,11 @@ class UniversityApp {
 
     this.updateCareerHeaderUI();
     this.switchTab("dashboard");
+  }
+
+  goToSubjectEvaluations(subjectId) {
+    this.selectedEvalSubjectId = subjectId;
+    this.switchTab("evaluaciones");
   }
 
   showLanding() {
@@ -324,6 +330,7 @@ class UniversityApp {
             <td>${notaDisplay}</td>
             <td style="font-size: 0.8rem; color: var(--text-secondary);">${m.refDoc || "-"}</td>
             <td>
+              <button class="btn-action" style="color: var(--primary-marine);" onclick="app.goToSubjectEvaluations('${m.id}')">📝 Evaluaciones</button>
               <button class="btn-action" onclick="app.openEditSubjectModal('${m.id}')">Editar</button>
               <button class="btn-action" style="color:#C0392B; border-color:#FDEDEC;" onclick="app.deleteSubject('${m.id}')">Eliminar</button>
             </td>
@@ -485,23 +492,60 @@ class UniversityApp {
 
   renderEvaluationsSection() {
     const picker = document.getElementById("eval-subject-picker");
+    const scopeSelect = document.getElementById("eval-filter-scope");
+    const scope = scopeSelect ? scopeSelect.value : "actuales";
     const pensum = this.state.pensum[this.currentCareer];
 
     let options = "";
     let firstEnCursoId = null;
+    let firstAnyId = null;
+    let selectedExists = false;
 
     pensum.trayectos.forEach(t => {
+      let groupOptions = "";
+
       t.materias.forEach(m => {
-        if (!firstEnCursoId) firstEnCursoId = m.id;
+        if (!firstAnyId) firstAnyId = m.id;
+        if (!firstEnCursoId && (m.estatus === "en_curso" || m.estatus === "repetir")) {
+          firstEnCursoId = m.id;
+        }
+
+        const isActiva = (m.estatus === "en_curso" || m.estatus === "repetir" || m.estatus === "intensivo_verano" || m.estatus === "pendiente_consulta");
+        if (scope === "actuales" && !isActiva) {
+          return;
+        }
+
+        if (this.selectedEvalSubjectId === m.id) {
+          selectedExists = true;
+        }
+
+        const statusPrefixMap = {
+          en_curso: "🔥 [EN CURSO]",
+          repetir: "🔄 [REPETIR]",
+          intensivo_verano: "☀️ [INTENSIVO]",
+          pendiente_consulta: "🔍 [EN CONSULTA]",
+          aprobada: "✅ [APROBADA]",
+          por_cursar: "📌 [POR CURSAR]"
+        };
+        const statusPrefix = statusPrefixMap[m.estatus] || "📘";
+
         const selectedAttr = (this.selectedEvalSubjectId === m.id) ? "selected" : "";
-        options += `<option value="${m.id}" ${selectedAttr}>[${m.codigo}] ${m.nombre} (${m.uc} UC) - ${m.estatus.toUpperCase()}</option>`;
+        groupOptions += `<option value="${m.id}" ${selectedAttr}>${m.nombre}</option>`;
       });
+
+      if (groupOptions) {
+        options += `<optgroup label="${t.nombre}">${groupOptions}</optgroup>`;
+      }
     });
+
+    if (!options && scope === "actuales") {
+      options = `<option value="">No hay materias activas. Cambia el filtro a "Todas".</option>`;
+    }
 
     picker.innerHTML = options || '<option value="">No hay materias disponibles</option>';
 
-    if (!this.selectedEvalSubjectId && firstEnCursoId) {
-      this.selectedEvalSubjectId = firstEnCursoId;
+    if (!selectedExists || !this.selectedEvalSubjectId) {
+      this.selectedEvalSubjectId = firstEnCursoId || firstAnyId;
     }
 
     if (this.selectedEvalSubjectId) {
@@ -513,6 +557,19 @@ class UniversityApp {
   loadEvaluationsForSubject(subjectId) {
     this.selectedEvalSubjectId = subjectId;
     const container = document.getElementById("eval-panel-container");
+
+    const pensum = this.state.pensum[this.currentCareer];
+    let foundSubject = null;
+    let foundTrayecto = null;
+
+    pensum.trayectos.forEach(t => {
+      t.materias.forEach(m => {
+        if (m.id === subjectId) {
+          foundSubject = m;
+          foundTrayecto = t;
+        }
+      });
+    });
 
     const evals = this.state.evaluaciones[subjectId] || [];
 
@@ -526,7 +583,37 @@ class UniversityApp {
       }
     });
 
+    let subjectHeaderHtml = "";
+    if (foundSubject) {
+      const statusTextMap = {
+        aprobada: "Aprobada",
+        en_curso: "En Curso",
+        repetir: "Por Repetir",
+        intensivo_verano: "Intensivo Verano",
+        pendiente_consulta: "Pendiente Consulta",
+        por_cursar: "Por Cursar"
+      };
+
+      subjectHeaderHtml = `
+        <div class="subject-eval-header-card" style="background: white; border-radius: 12px; padding: 18px 22px; margin-bottom: 20px; border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+          <div>
+            <div style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: var(--primary-marine); letter-spacing: 0.5px; margin-bottom: 4px;">
+              📍 ${foundTrayecto ? foundTrayecto.nombre : 'Pensum Académico'} • ${foundSubject.uc} UC
+            </div>
+            <h2 style="margin: 0; font-size: 1.35rem; color: var(--text-dark);">
+              📚 ${foundSubject.nombre}
+            </h2>
+            ${foundSubject.refDoc ? `<p style="margin: 6px 0 0 0; font-size: 0.85rem; color: var(--text-secondary);">📝 <strong>Detalles / Profesor / Soporte:</strong> ${foundSubject.refDoc}</p>` : ''}
+          </div>
+          <div>
+            <span class="status-badge status-${foundSubject.estatus}">${statusTextMap[foundSubject.estatus] || foundSubject.estatus}</span>
+          </div>
+        </div>
+      `;
+    }
+
     let html = `
+      ${subjectHeaderHtml}
       <div class="eval-panel">
         <div class="eval-summary-bar">
           <div>
@@ -554,7 +641,7 @@ class UniversityApp {
     `;
 
     if (evals.length === 0) {
-      html += `<tr><td colspan="7" style="text-align:center; padding:20px; color:var(--text-muted);">No hay evaluaciones registradas para esta asignatura aún. ¡Agrega la primera!</td></tr>`;
+      html += `<tr><td colspan="7" style="text-align:center; padding:30px; color:var(--text-muted);">No hay evaluaciones registradas para esta asignatura aún.<br><span style="font-size:0.85rem; margin-top:5px; display:inline-block;">Haz clic en <strong>+ Nueva Evaluación</strong> arriba para registrar lo acordado con el profesor.</span></td></tr>`;
     } else {
       evals.forEach((e, idx) => {
         const ptsGanados = (e.nota !== null) ? ((e.nota * e.ponderacion) / 100).toFixed(2) : "-";
