@@ -250,6 +250,12 @@ class UniversityApp {
     const targetBtn = Array.from(document.querySelectorAll(".nav-tabs .tab-btn")).find(b => b.getAttribute("onclick")?.includes(tabId));
     if (targetBtn) targetBtn.classList.add("active");
 
+    document.querySelectorAll(".bottom-nav-item").forEach(btn => {
+      btn.classList.remove("active");
+    });
+    const targetBottomBtn = Array.from(document.querySelectorAll(".bottom-nav-item")).find(b => b.getAttribute("onclick")?.includes(tabId));
+    if (targetBottomBtn) targetBottomBtn.classList.add("active");
+
     document.querySelectorAll(".tab-section").forEach(sec => {
       sec.style.display = "none";
     });
@@ -263,6 +269,20 @@ class UniversityApp {
     if (tabId === "consultas") this.renderConsultas();
     if (tabId === "horario") this.renderSchedule();
     if (tabId === "notificaciones") this.renderNotifications();
+  }
+
+  triggerFabAction() {
+    if (this.currentTab === "pensum" || this.currentTab === "dashboard") {
+      this.openAddSubjectModal();
+    } else if (this.currentTab === "evaluaciones") {
+      this.openAddEvalModal();
+    } else if (this.currentTab === "horario") {
+      this.openAddScheduleModal();
+    } else if (this.currentTab === "notificaciones") {
+      this.openAddTaskModal();
+    } else {
+      this.openAddSubjectModal();
+    }
   }
 
   // --- METRICAS Y DASHBOARD ---
@@ -360,6 +380,53 @@ class UniversityApp {
     const notifsCount = document.getElementById("stat-eval-pendientes");
     if (notifsCount) notifsCount.textContent = String(this.state.notificaciones.length);
 
+    // Render Active Subjects Cards in Dashboard
+    const activeListContainer = document.getElementById("dashboard-active-subjects-list");
+    if (activeListContainer) {
+      const pensum = this.state.pensum[this.currentCareer];
+      const activeSubjects = [];
+      pensum.trayectos.forEach(t => {
+        t.materias.forEach(m => {
+          if (m.estatus === "en_curso" || m.estatus === "repetir") {
+            activeSubjects.push({ materia: m, trayecto: t });
+          }
+        });
+      });
+
+      if (activeSubjects.length === 0) {
+        activeListContainer.innerHTML = `<div style="text-align:center; padding:12px; color:var(--text-muted); font-size:0.8rem;">No hay asignaturas marcadas en curso actualmente. Inicia un trayecto abajo o en Asignaturas.</div>`;
+      } else {
+        let actHtml = `<div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap:6px;">`;
+        activeSubjects.forEach(item => {
+          const m = item.materia;
+          const t = item.trayecto;
+          const statusTextMap = {
+            aprobada: "Aprobada",
+            en_curso: "En Curso",
+            repetir: "Por Repetir",
+            intensivo_verano: "Intensivo Verano",
+            pendiente_consulta: "Pendiente Consulta",
+            por_cursar: "Por Cursar"
+          };
+          actHtml += `
+            <div class="schedule-item" style="display:flex; justify-content:space-between; align-items:center; padding:8px 10px; margin-bottom:0; cursor:pointer;" onclick="app.openSubjectDetailModal('${m.id}')">
+              <div>
+                <div style="font-size:0.68rem; color:var(--text-muted); font-weight:700;">${t.nombre} • ${m.uc} UC</div>
+                <div style="font-size:0.82rem; font-weight:800; color:var(--text-primary); margin:1px 0;">${m.nombre}</div>
+                <span class="status-badge status-${m.estatus}">${statusTextMap[m.estatus] || m.estatus}</span>
+              </div>
+              <div style="text-align:right;">
+                <div style="font-size:0.95rem; font-weight:900; color:var(--primary-blue);">${m.nota ? `${m.nota} pts` : '-'}</div>
+                <button type="button" class="btn-action" style="margin-top:2px; font-size:0.68rem; padding:2px 6px;" onclick="event.stopPropagation(); app.openSubjectDetailModal('${m.id}')">Ficha / Notas →</button>
+              </div>
+            </div>
+          `;
+        });
+        actHtml += `</div>`;
+        activeListContainer.innerHTML = actHtml;
+      }
+    }
+
     // Render Dashboard Trayectos Summary
     const summaryContainer = document.getElementById("dashboard-trayectos-summary");
     if (summaryContainer) {
@@ -396,15 +463,15 @@ class UniversityApp {
           };
 
           matListHtml += `
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-bottom: 1px dashed var(--border-color); flex-wrap: wrap; gap: 8px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 8px; border-bottom: 1px dashed var(--border-color); flex-wrap: wrap; gap: 6px; cursor: pointer;" onclick="app.openSubjectDetailModal('${m.id}')">
               <div>
-                <strong style="color: var(--text-dark);">${m.nombre}</strong>
-                <span style="font-size: 0.8rem; color: var(--text-muted); margin-left: 6px;">(${m.uc} UC)</span>
-                ${m.nota ? `<span style="font-size: 0.85rem; font-weight: 700; color: var(--primary-marine); margin-left: 8px;">• ${m.nota} pts</span>` : ''}
+                <strong style="color: var(--text-dark); font-size: 0.8rem;">${m.nombre}</strong>
+                <span style="font-size: 0.72rem; color: var(--text-muted); margin-left: 4px;">(${m.uc} UC)</span>
+                ${m.nota ? `<span style="font-size: 0.78rem; font-weight: 700; color: var(--primary-blue); margin-left: 6px;">• ${m.nota} pts</span>` : ''}
               </div>
-              <div style="display: flex; align-items: center; gap: 8px;">
+              <div style="display: flex; align-items: center; gap: 6px;">
                 <span class="status-badge status-${m.estatus}">${statusTextMap[m.estatus] || m.estatus}</span>
-                <button type="button" class="btn-action" onclick="app.openEditSubjectModal('${m.id}')">Editar</button>
+                <button type="button" class="btn-action" onclick="event.stopPropagation(); app.openSubjectDetailModal('${m.id}')">Notas</button>
               </div>
             </div>
           `;
@@ -418,36 +485,36 @@ class UniversityApp {
         let trayectoActionBtn = "";
         if (isCurrentActive) {
           trayectoActionBtn = `
-            <span style="font-size: 0.78rem; background: #E8F8F5; color: #117A65; border: 1px solid #A3E4D7; padding: 2px 7px; border-radius: 4px; font-weight: bold;">En Curso</span>
-            <button type="button" class="btn-action" style="background: #117A65; color: white; border: none; font-weight: bold; font-size: 0.78rem; margin-left: 6px;" onclick="app.culminateTrayecto('${t.id}', event)">Culminar Trayecto</button>
+            <span style="font-size: 0.72rem; background: #E8F8F5; color: #117A65; border: 1px solid #A3E4D7; padding: 1px 6px; border-radius: 4px; font-weight: bold;">En Curso</span>
+            <button type="button" class="btn-action" style="background: #117A65; color: white; border: none; font-weight: bold; font-size: 0.72rem; margin-left: 4px;" onclick="app.culminateTrayecto('${t.id}', event)">Culminar</button>
           `;
         } else if (t.culminado || (aprobadas === t.materias.length && t.materias.length > 0)) {
           trayectoActionBtn = `
-            <span style="font-size: 0.78rem; background: #D1F2EB; color: #0E6251; padding: 2px 7px; border-radius: 4px; font-weight: bold;">Culminado</span>
-            <button type="button" class="btn-action" style="color: var(--primary-marine); border-color: var(--primary-marine); font-size: 0.75rem; margin-left: 6px;" onclick="app.activateTrayecto('${t.id}', event)">Iniciar</button>
-            <button type="button" class="btn-action" style="background: #117A65; color: white; border: none; font-weight: bold; font-size: 0.75rem; margin-left: 6px;" onclick="app.culminateTrayecto('${t.id}', event)">Culminar</button>
+            <span style="font-size: 0.72rem; background: #D1F2EB; color: #0E6251; padding: 1px 6px; border-radius: 4px; font-weight: bold;">Culminado</span>
+            <button type="button" class="btn-action" style="color: var(--primary-blue); border-color: var(--primary-blue); font-size: 0.72rem; margin-left: 4px;" onclick="app.activateTrayecto('${t.id}', event)">Iniciar</button>
+            <button type="button" class="btn-action" style="background: #117A65; color: white; border: none; font-weight: bold; font-size: 0.72rem; margin-left: 4px;" onclick="app.culminateTrayecto('${t.id}', event)">Culminar</button>
           `;
         } else {
           trayectoActionBtn = `
-            <button type="button" class="btn-action" style="color: var(--primary-marine); border-color: var(--primary-marine); font-weight: bold; font-size: 0.78rem;" onclick="app.activateTrayecto('${t.id}', event)">Iniciar Trayecto</button>
-            <button type="button" class="btn-action" style="background: #117A65; color: white; border: none; font-weight: bold; font-size: 0.78rem; margin-left: 6px;" onclick="app.culminateTrayecto('${t.id}', event)">Culminar Trayecto</button>
+            <button type="button" class="btn-action" style="color: var(--primary-blue); border-color: var(--primary-blue); font-weight: bold; font-size: 0.72rem;" onclick="app.activateTrayecto('${t.id}', event)">Iniciar</button>
+            <button type="button" class="btn-action" style="background: #117A65; color: white; border: none; font-weight: bold; font-size: 0.72rem; margin-left: 4px;" onclick="app.culminateTrayecto('${t.id}', event)">Culminar</button>
           `;
         }
 
         const isOpenAttr = (openTrayectos.has(t.id) || (openTrayectos.size === 0 && isCurrentActive)) ? "open" : "";
 
         trayectosHtml += `
-          <details data-trayecto-id="${t.id}" ${isOpenAttr} style="background: white; border-radius: 10px; margin-bottom: 10px; border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); overflow: hidden;">
-            <summary style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: var(--bg-teal-subtle); cursor: pointer; user-select: none; flex-wrap: wrap; gap: 8px;">
-              <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                <h3 style="margin: 0; font-size: 0.98rem; color: var(--primary-marine); display: inline-block;">${t.nombre}</h3>
+          <details data-trayecto-id="${t.id}" ${isOpenAttr} class="trayecto-block" style="margin-bottom: 6px; border-radius: 8px;">
+            <summary class="trayecto-header" style="padding: 7px 10px; cursor: pointer; user-select: none;">
+              <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                <h3 style="margin: 0; font-size: 0.85rem; color: var(--primary-blue); display: inline-block;">${t.nombre}</h3>
                 <div style="display: inline-flex; align-items: center; gap: 4px; flex-wrap: wrap;">${trayectoActionBtn}</div>
               </div>
-              <div style="font-size: 0.8rem; color: var(--text-secondary);">
-                Aprobadas: <strong>${aprobadas}</strong> | Repetir: <strong>${repetir}</strong> | En Curso: <strong>${enCurso}</strong> | UC: <strong>${ucGanadas}/${t.totalUC}</strong>
+              <div style="font-size: 0.72rem; color: var(--text-secondary);">
+                Aprobadas: <strong>${aprobadas}</strong> | Repetir: <strong>${repetir}</strong> | UC: <strong>${ucGanadas}/${t.totalUC}</strong>
               </div>
             </summary>
-            <div style="padding: 10px 14px; border-top: 1px solid var(--border-color);">${matListHtml}</div>
+            <div style="padding: 6px 10px; border-top: 1px solid var(--border-color);">${matListHtml}</div>
           </details>
         `;
       });
@@ -459,23 +526,6 @@ class UniversityApp {
         phaseDesc.textContent = activeTrayectoName;
       }
     }
-
-    const alertsContainer = document.getElementById("dashboard-alerts-list");
-    let html = `
-      <div class="notification-item urgent">
-        <div>
-          <div class="notification-title">Estado Académico de la Carrera</div>
-          <div class="notification-desc">Puedes desplegar cualquier trayecto y editar asignaturas o iniciar/culminar fases de cursado.</div>
-        </div>
-      </div>
-      <div class="notification-item urgent">
-        <div>
-          <div class="notification-title">Asignaturas Pendientes por Repetir</div>
-          <div class="notification-desc">Las materias marcadas como "Por Repetir" se mantienen visibles en el resumen para su reprogramación.</div>
-        </div>
-      </div>
-    `;
-    if (alertsContainer) alertsContainer.innerHTML = html;
   }
 
   renderPensum() {
@@ -506,25 +556,25 @@ class UniversityApp {
       let trayectoActionBtn = "";
       if (isCurrentActive) {
         trayectoActionBtn = `
-          <span class="status-badge status-en_curso" style="margin-left: 8px;">ACTUAL EN CURSO</span>
-          <button type="button" class="btn-action" style="background: #117A65; color: white; border: none; font-weight: bold; font-size: 0.75rem; margin-left: 6px;" onclick="app.culminateTrayecto('${t.id}', event)">Culminar</button>
+          <span class="status-badge status-en_curso" style="margin-left: 6px;">ACTUAL EN CURSO</span>
+          <button type="button" class="btn-action" style="background: #117A65; color: white; border: none; font-weight: bold; font-size: 0.72rem; margin-left: 4px;" onclick="app.culminateTrayecto('${t.id}', event)">Culminar</button>
         `;
       } else if (t.culminado || (filteredMaterias.every(m => m.estatus === "aprobada") && filteredMaterias.length > 0)) {
         trayectoActionBtn = `
-          <span style="font-size: 0.75rem; background: #D1F2EB; color: #0E6251; padding: 2px 6px; border-radius: 4px; font-weight: bold; margin-left: 8px;">Culminado</span>
-          <button type="button" class="btn-action" style="color: var(--primary-marine); border-color: var(--primary-marine); font-size: 0.75rem; margin-left: 6px;" onclick="app.activateTrayecto('${t.id}', event)">Iniciar</button>
-          <button type="button" class="btn-action" style="background: #117A65; color: white; border: none; font-weight: bold; font-size: 0.75rem; margin-left: 6px;" onclick="app.culminateTrayecto('${t.id}', event)">Culminar</button>
+          <span style="font-size: 0.72rem; background: #D1F2EB; color: #0E6251; padding: 1px 6px; border-radius: 4px; font-weight: bold; margin-left: 6px;">Culminado</span>
+          <button type="button" class="btn-action" style="color: var(--primary-blue); border-color: var(--primary-blue); font-size: 0.72rem; margin-left: 4px;" onclick="app.activateTrayecto('${t.id}', event)">Iniciar</button>
+          <button type="button" class="btn-action" style="background: #117A65; color: white; border: none; font-weight: bold; font-size: 0.72rem; margin-left: 4px;" onclick="app.culminateTrayecto('${t.id}', event)">Culminar</button>
         `;
       } else {
         trayectoActionBtn = `
-          <button type="button" class="btn-action" style="color: var(--primary-marine); border-color: var(--primary-marine); font-weight: bold; font-size: 0.75rem; margin-left: 8px;" onclick="app.activateTrayecto('${t.id}', event)">Iniciar</button>
-          <button type="button" class="btn-action" style="background: #117A65; color: white; border: none; font-weight: bold; font-size: 0.75rem; margin-left: 6px;" onclick="app.culminateTrayecto('${t.id}', event)">Culminar</button>
+          <button type="button" class="btn-action" style="color: var(--primary-blue); border-color: var(--primary-blue); font-weight: bold; font-size: 0.72rem; margin-left: 6px;" onclick="app.activateTrayecto('${t.id}', event)">Iniciar</button>
+          <button type="button" class="btn-action" style="background: #117A65; color: white; border: none; font-weight: bold; font-size: 0.72rem; margin-left: 4px;" onclick="app.culminateTrayecto('${t.id}', event)">Culminar</button>
         `;
       }
 
       html += `
-        <details data-trayecto-id="${t.id}" ${isOpenAttr} class="trayecto-block" style="margin-bottom: 12px; border-radius: 10px; overflow: hidden;">
-          <summary class="trayecto-header" style="cursor: pointer; user-select: none;">
+        <details data-trayecto-id="${t.id}" ${isOpenAttr} class="trayecto-block" style="margin-bottom: 8px; border-radius: 8px; overflow: hidden;">
+          <summary class="trayecto-header" style="cursor: pointer; user-select: none; padding: 7px 10px;">
             <div class="trayecto-title">
               <span>${t.nombre}</span>
               ${trayectoActionBtn}
@@ -532,7 +582,7 @@ class UniversityApp {
             <span class="trayecto-badge-uc">${t.totalUC} UC</span>
           </summary>
 
-          <div class="subject-table-wrapper" style="padding-top: 5px;">
+          <div class="subject-table-wrapper" style="padding: 4px 6px;">
             <table class="subject-table">
               <thead>
                 <tr>
@@ -540,9 +590,8 @@ class UniversityApp {
                   <th>Asignatura</th>
                   <th>UC</th>
                   <th>Estatus</th>
-                  <th>Nota / Reg.</th>
-                  <th>Ref. Documento</th>
-                  <th>Acciones</th>
+                  <th>Nota</th>
+                  <th>Acción</th>
                 </tr>
               </thead>
               <tbody>
@@ -565,7 +614,7 @@ class UniversityApp {
         if (typeof MAPA_PRELACIONES !== "undefined" && MAPA_PRELACIONES[this.currentCareer]) {
           const careerPrela = MAPA_PRELACIONES[this.currentCareer];
           if (careerPrela[m.id]) {
-            prelaHtml += `<div class="prela-tag">Requisito clave para materias avanzadas</div>`;
+            prelaHtml += `<div class="prela-tag">Requisito clave</div>`;
           }
           for (const [reqId, info] of Object.entries(careerPrela)) {
             if (info.prelaA && info.prelaA.includes(m.id)) {
@@ -579,7 +628,7 @@ class UniversityApp {
         }
 
         html += `
-          <tr>
+          <tr style="cursor: pointer;" onclick="app.openSubjectDetailModal('${m.id}')">
             <td class="subject-code">${m.codigo}</td>
             <td class="subject-name">
               ${m.nombre}
@@ -588,11 +637,8 @@ class UniversityApp {
             <td><strong>${m.uc}</strong></td>
             <td><span class="status-badge ${statusClass}">${statusTextMap[m.estatus] || m.estatus}</span></td>
             <td>${notaDisplay}</td>
-            <td style="font-size: 0.8rem; color: var(--text-secondary);">${m.refDoc || "-"}</td>
             <td>
-              <button type="button" class="btn-action" style="color: var(--primary-marine);" onclick="app.goToSubjectEvaluations('${m.id}')">Evaluaciones</button>
-              <button type="button" class="btn-action" onclick="app.openEditSubjectModal('${m.id}')">Editar</button>
-              <button type="button" class="btn-action" style="color:#C0392B; border-color:#FDEDEC;" onclick="app.deleteSubject('${m.id}')">Eliminar</button>
+              <button type="button" class="btn-action" style="color: var(--primary-blue); font-weight: bold;" onclick="event.stopPropagation(); app.openSubjectDetailModal('${m.id}')">Ficha / Notas →</button>
             </td>
           </tr>
         `;
@@ -606,15 +652,192 @@ class UniversityApp {
       `;
     });
 
-    if (!html) {
-      html = '<div style="padding: 30px; text-align: center; color: var(--text-muted);">No se encontraron asignaturas con los filtros seleccionados.</div>';
-    }
-
-    container.innerHTML = html;
+    container.innerHTML = html || '<div style="text-align:center; padding:20px; color:var(--text-muted);">No hay asignaturas que coincidan con la búsqueda.</div>';
   }
 
   filterSubjects() {
     this.renderPensum();
+  }
+
+  openSubjectDetailModal(subjectId) {
+    this.selectedEvalSubjectId = subjectId;
+    this.renderSubjectDetailContent(subjectId);
+    this.openModal("modal-subject-detail");
+  }
+
+  renderSubjectDetailContent(subjectId) {
+    const container = document.getElementById("detail-subject-content");
+    const titleEl = document.getElementById("detail-subject-title");
+    if (!container) return;
+
+    const pensum = this.state.pensum[this.currentCareer];
+    let foundSubject = null;
+    let foundTrayecto = null;
+
+    pensum.trayectos.forEach(t => {
+      t.materias.forEach(m => {
+        if (m.id === subjectId) {
+          foundSubject = m;
+          foundTrayecto = t;
+        }
+      });
+    });
+
+    if (!foundSubject) {
+      container.innerHTML = '<div style="padding:20px; text-align:center; color:var(--text-muted);">Asignatura no encontrada.</div>';
+      return;
+    }
+
+    if (titleEl) {
+      titleEl.textContent = `${foundSubject.codigo} • ${foundSubject.nombre}`;
+    }
+
+    const statusTextMap = {
+      aprobada: "Aprobada",
+      en_curso: "En Curso",
+      repetir: "Por Repetir",
+      intensivo_verano: "Intensivo Verano",
+      pendiente_consulta: "Pendiente Consulta",
+      por_cursar: "Por Cursar"
+    };
+
+    const isProyecto = (foundSubject.nombre.toLowerCase().includes("proyecto socio") || foundSubject.codigo.toLowerCase().includes("psi") || foundSubject.codigo.toLowerCase().includes("pst"));
+    const minPassScore = isProyecto ? 16 : 13;
+    const goodScore = isProyecto ? 18 : 16;
+    const excelScore = 20;
+
+    const evals = this.state.evaluaciones[subjectId] || [];
+    let totalWeight = 0;
+    let totalScoreWeighted = 0;
+
+    evals.forEach(e => {
+      totalWeight += Number.parseFloat(e.ponderacion || 0);
+      if (e.nota !== null && e.nota !== undefined) {
+        totalScoreWeighted += (Number.parseFloat(e.nota) * (Number.parseFloat(e.ponderacion) / 100));
+      }
+    });
+
+    const remainingWeight = Math.max(0, 100 - totalWeight);
+    let predictiveHtml = "";
+    if (totalWeight < 100 || foundSubject.estatus !== "aprobada") {
+      const neededMin = Math.max(0, minPassScore - totalScoreWeighted);
+      const reqGradeMin = remainingWeight > 0 ? (neededMin / (remainingWeight / 100)).toFixed(1) : "N/A";
+
+      const neededGood = Math.max(0, goodScore - totalScoreWeighted);
+      const reqGradeGood = remainingWeight > 0 ? (neededGood / (remainingWeight / 100)).toFixed(1) : "N/A";
+
+      const neededExcel = Math.max(0, excelScore - totalScoreWeighted);
+      const reqGradeExcel = remainingWeight > 0 ? (neededExcel / (remainingWeight / 100)).toFixed(1) : "N/A";
+
+      predictiveHtml = `
+        <div class="eval-predictive-box" style="margin-top: 12px; margin-bottom: 12px;">
+          <div class="predictive-header">
+            <div class="predictive-title">
+              <span>Simulador de Calificación (${isProyecto ? 'Proyecto: Mínimo 16 pts' : 'General: Mínimo 13 pts'})</span>
+            </div>
+            <div style="font-size: 0.75rem; color: #166534; font-weight: bold;">
+              Por evaluar: ${remainingWeight}%
+            </div>
+          </div>
+          <div class="predictive-targets-grid">
+            <div class="predictive-target-card">
+              <div class="predictive-target-name">Mínimo para Aprobar (${minPassScore} pts)</div>
+              <div class="predictive-target-score">${reqGradeMin <= 0 ? "¡Aprobado!" : (reqGradeMin > 20 ? "No alcanza" : `${reqGradeMin} pts prom.`)}</div>
+              <div style="font-size:0.68rem; color:var(--text-muted); margin-top: 2px;">Faltan ${neededMin.toFixed(2)} pts</div>
+            </div>
+            <div class="predictive-target-card">
+              <div class="predictive-target-name">Meta Rendimiento (${goodScore} pts)</div>
+              <div class="predictive-target-score">${reqGradeGood <= 0 ? "¡Alcanzado!" : (reqGradeGood > 20 ? "No alcanza" : `${reqGradeGood} pts prom.`)}</div>
+              <div style="font-size:0.68rem; color:var(--text-muted); margin-top: 2px;">Faltan ${neededGood.toFixed(2)} pts</div>
+            </div>
+            <div class="predictive-target-card">
+              <div class="predictive-target-name">Sobresaliente (${excelScore} pts)</div>
+              <div class="predictive-target-score">${reqGradeExcel <= 0 ? "¡Alcanzado!" : (reqGradeExcel > 20 ? "No alcanza" : `${reqGradeExcel} pts prom.`)}</div>
+              <div style="font-size:0.68rem; color:var(--text-muted); margin-top: 2px;">Faltan ${neededExcel.toFixed(2)} pts</div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    let evalRows = "";
+    if (evals.length === 0) {
+      evalRows = '<tr><td colspan="6" style="text-align:center; padding:16px; color:var(--text-muted); font-size:0.8rem;">Sin evaluaciones registradas aún. Presiona <strong>+ Nueva Evaluación</strong> para agregar una.</td></tr>';
+    } else {
+      evals.forEach((e, idx) => {
+        const ptsGanados = (e.nota !== null) ? ((e.nota * e.ponderacion) / 100).toFixed(2) : "-";
+        const statusBadge = e.completada
+          ? '<span class="status-badge status-aprobada" style="font-size:0.68rem;">Completada</span>'
+          : '<span class="status-badge status-intensivo_verano" style="font-size:0.68rem;">Pendiente</span>';
+
+        evalRows += `
+          <tr>
+            <td class="subject-name" style="font-size:0.82rem;">${e.nombre}</td>
+            <td style="font-size:0.8rem;"><strong>${e.ponderacion}%</strong></td>
+            <td style="font-size:0.8rem;">${e.nota !== null ? `<strong>${e.nota} pts</strong>` : "-"}</td>
+            <td style="font-size:0.8rem;"><strong style="color: var(--primary-blue);">${ptsGanados} pts</strong></td>
+            <td>${statusBadge}</td>
+            <td>
+              <div style="display:flex; gap:4px;">
+                <button type="button" class="btn-action" style="padding:2px 6px; font-size:0.7rem;" onclick="app.openEditEvalModal('${idx}')">Editar</button>
+                <button type="button" class="btn-action" style="padding:2px 6px; font-size:0.7rem; color:#BE123C; border-color:#FECDD3;" onclick="app.deleteEvaluation('${idx}')">&times;</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      });
+    }
+
+    const html = `
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <div style="background: var(--bg-hover); border-radius: 8px; padding: 10px 12px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+          <div>
+            <div style="font-size: 0.72rem; font-weight: bold; color: var(--primary-blue); text-transform: uppercase;">
+              ${foundTrayecto ? foundTrayecto.nombre : 'Pensum'} • ${foundSubject.uc} UC • Nota Oficial: <strong>${foundSubject.nota !== null ? foundSubject.nota + ' pts' : 'Sin calificar'}</strong>
+            </div>
+            ${foundSubject.refDoc ? `<div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 2px;"><strong>Profesor / Nota:</strong> ${foundSubject.refDoc}</div>` : ''}
+          </div>
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <span class="status-badge status-${foundSubject.estatus}">${statusTextMap[foundSubject.estatus] || foundSubject.estatus}</span>
+            <button type="button" class="btn-action" style="font-size: 0.72rem; padding: 3px 8px;" onclick="app.openEditSubjectModal('${foundSubject.id}')">Editar Datos</button>
+          </div>
+        </div>
+
+        ${predictiveHtml}
+
+        <div style="background: white; border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; margin-top: 4px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; background: var(--bg-hover); border-bottom: 1px solid var(--border-color); flex-wrap: wrap; gap: 6px;">
+            <div style="font-size: 0.78rem; font-weight: bold; color: var(--text-dark);">
+              Ponderación: ${totalWeight}% / 100% • Acumulado: <span style="color: var(--primary-blue);">${totalScoreWeighted.toFixed(2)} / 20 pts</span>
+            </div>
+            <div style="display: flex; gap: 6px;">
+              <button type="button" class="btn-primary" style="padding: 3px 8px; font-size: 0.72rem;" onclick="app.openAddEvalModal()">+ Nueva Evaluación</button>
+              <button type="button" class="btn-action" style="background: #117A65; color: white; border: none; font-weight: bold; padding: 3px 8px; font-size: 0.72rem;" onclick="app.syncEvalGradeToPensum('${subjectId}')">Sincronizar Nota</button>
+            </div>
+          </div>
+
+          <div class="subject-table-wrapper" style="max-height: 250px; overflow-y: auto;">
+            <table class="subject-table">
+              <thead>
+                <tr>
+                  <th>Evaluación</th>
+                  <th>Peso</th>
+                  <th>Nota</th>
+                  <th>Ganados</th>
+                  <th>Estatus</th>
+                  <th>Acción</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${evalRows}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    `;
+
+    container.innerHTML = html;
   }
 
   openAddSubjectModal() {
@@ -718,6 +941,9 @@ class UniversityApp {
     this.closeModal("modal-edit-subject");
     this.renderPensum();
     this.renderDashboard();
+    if (id && this.selectedEvalSubjectId === id) {
+      this.renderSubjectDetailContent(id);
+    }
     window.scrollTo({ top: scrollPos, behavior: "instant" });
   }
 
@@ -835,6 +1061,7 @@ class UniversityApp {
 
   loadEvaluationsForSubject(subjectId) {
     this.selectedEvalSubjectId = subjectId;
+    this.renderSubjectDetailContent(subjectId);
     const container = document.getElementById("eval-panel-container");
 
     const pensum = this.state.pensum[this.currentCareer];
@@ -1477,7 +1704,17 @@ class UniversityApp {
 }
 
 let app;
-document.addEventListener("DOMContentLoaded", () => {
-  app = new UniversityApp();
-  window.app = app;
-});
+function initUniversityApp() {
+  if (!window.app) {
+    app = new UniversityApp();
+    window.app = app;
+  }
+}
+
+if (typeof document !== "undefined") {
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initUniversityApp);
+  } else {
+    initUniversityApp();
+  }
+}

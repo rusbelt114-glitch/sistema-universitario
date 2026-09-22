@@ -15,7 +15,7 @@
   <link rel="apple-touch-icon" href="icon.jpg">
   <link rel="icon" type="image/jpeg" href="icon.jpg">
 
-  <link rel="stylesheet" href="styles.css?v=6.0">
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
@@ -89,41 +89,39 @@
         </div>
       </header>
 
-      <!-- Pestañas de Navegación Seleccionables (Sin scroll horizontal) -->
+      <!-- Pestañas de Navegación Seleccionables (3 Módulos Claros) -->
       <nav class="nav-tabs">
         <button type="button" class="tab-btn active" onclick="app.switchTab('dashboard')">Inicio</button>
-        <button type="button" class="tab-btn" onclick="app.switchTab('pensum')">Materias</button>
-        <button type="button" class="tab-btn" onclick="app.switchTab('evaluaciones')">Notas</button>
-        <button type="button" class="tab-btn" onclick="app.switchTab('consultas')">Consultas</button>
-        <button type="button" class="tab-btn" onclick="app.switchTab('horario')">Horario</button>
-        <button type="button" class="tab-btn" onclick="app.switchTab('notificaciones')">
-          Alertas <span id="badge-notif-count" class="badge-num" style="display:none;">0</span>
-        </button>
+        <button type="button" class="tab-btn" onclick="app.switchTab('pensum')">Asignaturas & Notas</button>
+        <button type="button" class="tab-btn" onclick="app.switchTab('horario')">Horario & Tareas</button>
       </nav>
 
       <!-- CONTENIDO PRINCIPAL -->
       <main id="tab-content-area">
 
-        <!-- TAB 1: INICIO -->
+        <!-- ====================================================================
+             MÓDULO 1: INICIO & RESUMEN ACADÉMICO
+             ==================================================================== -->
         <section id="tab-dashboard" class="tab-section">
           <div class="home-summary-card">
             <div class="home-summary-header">
               <div>
                 <div id="home-career-badge" class="home-career-badge">PNF EN ADMINISTRACIÓN (ADM)</div>
-                <div id="home-phase-desc" style="font-size: 0.85rem; opacity: 0.9; margin-top: 2px;">Trayecto II - Fase II (2-2) En Curso</div>
+                <div id="home-phase-desc" style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 2px;">Trayecto II - Fase II (2-2) En Curso</div>
               </div>
               <button type="button" id="home-week-pill" class="week-badge" style="cursor: pointer;" onclick="app.toggleWeek()">
                 <span id="home-week-text">SEMANA A (ADM)</span>
               </button>
             </div>
 
+            <!-- Grilla de Métricas Rápidas -->
             <div class="home-metrics-grid">
               <div class="home-metric-item">
                 <div id="stat-materias-curso" class="home-metric-num">8</div>
                 <div class="home-metric-label">En Curso</div>
               </div>
               <div class="home-metric-item">
-                <div id="stat-materias-repetir" class="home-metric-num" style="color: #FF8A8A;">6</div>
+                <div id="stat-materias-repetir" class="home-metric-num" style="color: #BE123C;">6</div>
                 <div class="home-metric-label">Por Repetir</div>
               </div>
               <div class="home-metric-item">
@@ -140,58 +138,54 @@
           <!-- Módulo de Índices Académicos & Promedios (IRA) -->
           <div class="gpa-summary-strip">
             <div class="gpa-card">
-              <div>
-                <div class="gpa-card-title">Promedio Ponderado (IRA)</div>
-                <div id="stat-promedio-ponderado" class="gpa-card-val">0.00</div>
-                <div id="stat-promedio-sub" class="gpa-card-sub">Base ponderada por UC</div>
-              </div>
+              <div class="gpa-card-title">Promedio Ponderado (IRA)</div>
+              <div id="stat-promedio-ponderado" class="gpa-card-val">0.00</div>
+              <div id="stat-promedio-sub" class="gpa-card-sub">Base ponderada por UC</div>
             </div>
 
             <div class="gpa-card">
-              <div>
-                <div class="gpa-card-title">Promedio Simple</div>
-                <div id="stat-promedio-simple" class="gpa-card-val">0.00</div>
-                <div id="stat-materias-evaluadas" class="gpa-card-sub">0 materias evaluadas</div>
-              </div>
+              <div class="gpa-card-title">Promedio Simple</div>
+              <div id="stat-promedio-simple" class="gpa-card-val">0.00</div>
+              <div id="stat-materias-evaluadas" class="gpa-card-sub">0 materias evaluadas</div>
             </div>
 
             <div class="gpa-card">
-              <div>
-                <div class="gpa-card-title">Eficiencia Académica</div>
-                <div id="stat-eficiencia-val" class="gpa-card-val">0%</div>
-                <div id="stat-eficiencia-sub" class="gpa-card-sub">Aprobadas vs Cursadas</div>
-              </div>
+              <div class="gpa-card-title">Eficiencia Académica</div>
+              <div id="stat-eficiencia-val" class="gpa-card-val">0%</div>
+              <div id="stat-eficiencia-sub" class="gpa-card-sub">Aprobadas vs Cursadas</div>
             </div>
 
             <div class="gpa-card">
-              <div>
-                <div class="gpa-card-title">Progreso Titulación</div>
-                <div id="stat-uc-tsu-val" class="gpa-card-val" style="font-size: 1.25rem;">0 / 110 UC</div>
-                <div id="stat-uc-tsu-pct" class="gpa-card-sub">0% completado TSU</div>
-              </div>
+              <div class="gpa-card-title">Progreso Titulación</div>
+              <div id="stat-uc-tsu-val" class="gpa-card-val">0 / 110 UC</div>
+              <div id="stat-uc-tsu-pct" class="gpa-card-sub">0% completado TSU</div>
             </div>
           </div>
 
-          <div class="trayecto-block" style="margin-top: 20px;">
+          <!-- Materias Activas en Curso -->
+          <div class="trayecto-block" style="margin-top: 10px;">
             <div class="trayecto-header">
-              <div class="trayecto-title">Historial & Resumen de Trayectos Académicos</div>
+              <div class="trayecto-title">Materias en Curso Actuales</div>
             </div>
-            <div style="padding: 16px;">
+            <div style="padding: 8px 12px;">
+              <div id="dashboard-active-subjects-list"></div>
+            </div>
+          </div>
+
+          <!-- Historial de Trayectos -->
+          <div class="trayecto-block" style="margin-top: 10px;">
+            <div class="trayecto-header">
+              <div class="trayecto-title">Historial Curricular por Trayectos</div>
+            </div>
+            <div style="padding: 8px 12px;">
               <div id="dashboard-trayectos-summary"></div>
-            </div>
-          </div>
-
-          <div class="trayecto-block" style="margin-top: 20px;">
-            <div class="trayecto-header">
-              <div class="trayecto-title">Estado Académico & Novedades</div>
-            </div>
-            <div style="padding: 16px;">
-              <div id="dashboard-alerts-list"></div>
             </div>
           </div>
         </section>
 
-        <!-- TAB 2: PENSUM & MATERIAS -->
+        <!-- ====================================================================
+             MÓDULO 2: ASIGNATURAS & NOTAS (UNIFICADO)
+             ==================================================================== -->
         <section id="tab-pensum" class="tab-section" style="display: none;">
           <div class="section-toolbar">
             <div class="search-box">
@@ -202,7 +196,7 @@
               <select id="filter-status-select" class="filter-select" aria-label="Filtrar por estatus" onchange="app.filterSubjects()">
                 <option value="todos">Todos los Estatus</option>
                 <option value="en_curso">En Curso (Fase Activa)</option>
-                <option value="aprobada">Aprobadas / Registradas</option>
+                <option value="aprobada">Aprobadas</option>
                 <option value="repetir">Por Repetir</option>
                 <option value="intensivo_verano">Intensivo Verano</option>
                 <option value="pendiente_consulta">Pendiente Consulta</option>
@@ -228,89 +222,30 @@
           <div id="pensum-trayectos-container"></div>
         </section>
 
-        <!-- TAB 3: PLAN DE EVALUACIONES -->
-        <section id="tab-evaluaciones" class="tab-section" style="display: none;">
-          <div class="section-toolbar" style="flex-wrap: wrap; gap: 15px; align-items: flex-end;">
-            <div style="flex: 1; min-width: 220px;">
-              <label class="form-label" for="eval-filter-scope">Filtro de Materias:</label>
-              <select id="eval-filter-scope" class="form-control" onchange="app.renderEvaluationsSection()">
-                <option value="actuales" selected>Solo Materias Activas (En Curso / Repetir)</option>
-                <option value="todas">Todas las Materias del Pensum (Carrera Completa)</option>
-              </select>
-            </div>
-            <div style="flex: 2; min-width: 280px;">
-              <label class="form-label" for="eval-subject-picker">Seleccionar Asignatura:</label>
-              <select id="eval-subject-picker" class="form-control" onchange="app.loadEvaluationsForSubject(this.value)"></select>
-            </div>
-            <div>
-              <button class="btn-primary" onclick="app.openAddEvalModal()">+ Nueva Evaluación</button>
-            </div>
-          </div>
-
-          <div id="eval-panel-container"></div>
-        </section>
-
-        <!-- TAB 4: CONSULTAS & CONTROL ACADÉMICO -->
-        <section id="tab-consultas" class="tab-section" style="display: none;">
-          <div class="section-toolbar" style="flex-wrap: wrap; gap: 15px; align-items: center; justify-content: space-between;">
-            <h2>Control de Asignaturas & Verificación de Notas</h2>
-            <div class="filter-group" style="align-items: center;">
-              <label class="form-label" for="consultas-filter-select" style="margin-bottom: 0;">Filtrar por estado:</label>
-              <select id="consultas-filter-select" class="filter-select" aria-label="Filtrar por estado" onchange="app.renderConsultas()">
-                <option value="pendiente_consulta" selected>Pendientes por Consulta Oficial</option>
-                <option value="repetir">Por Repetir / Recuperar</option>
-                <option value="intensivo_verano">Intensivo Verano</option>
-                <option value="por_cursar">Por Cursar</option>
-                <option value="aprobada">Aprobadas / Verificadas</option>
-                <option value="todos">Todas las Asignaturas</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="trayecto-block">
-            <div class="trayecto-header">
-              <div class="trayecto-title">Listado de Asignaturas Seleccionadas</div>
-            </div>
-            <div class="subject-table-wrapper">
-              <table class="subject-table">
-                <thead>
-                  <tr>
-                    <th>Asignatura</th>
-                    <th>Trayecto</th>
-                    <th>Estatus Actual</th>
-                    <th>Nota Verificada</th>
-                    <th>Soportes / Observaciones</th>
-                    <th>Acción</th>
-                  </tr>
-                </thead>
-                <tbody id="tabla-consultas-body"></tbody>
-              </table>
-            </div>
-          </div>
-        </section>
-
-        <!-- TAB 5: HORARIO SEMANAL -->
+        <!-- ====================================================================
+             MÓDULO 3: HORARIO & TAREAS
+             ==================================================================== -->
         <section id="tab-horario" class="tab-section" style="display: none;">
-          <div class="section-toolbar" style="flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between;">
-            <h2>Horario de Clases - <span id="horario-week-title">Semana A</span></h2>
-            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+          <div class="section-toolbar">
+            <h2>Horario Semanal - <span id="horario-week-title">Semana A</span></h2>
+            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
               <button class="btn-secondary" onclick="app.toggleWeek()">Cambiar Semana (A / B)</button>
-              <button class="btn-secondary" style="color: #C0392B; border-color: #FDEDEC;" onclick="app.clearCurrentSchedule()">Limpiar Horario</button>
+              <button class="btn-secondary" style="color: #BE123C; border-color: #FECDD3;" onclick="app.clearCurrentSchedule()">Limpiar Horario</button>
               <button class="btn-primary" onclick="app.openAddScheduleModal()">+ Agregar Clase</button>
             </div>
           </div>
 
           <div id="schedule-cards-container" class="schedule-grid"></div>
-        </section>
 
-        <!-- TAB 6: ALERTAS & NOTIFICACIONES -->
-        <section id="tab-notificaciones" class="tab-section" style="display: none;">
-          <div class="section-toolbar">
-            <h2>Tareas, Recordatorios & Alertas Académicas</h2>
-            <button class="btn-primary" onclick="app.openAddTaskModal()">+ Nueva Alerta</button>
+          <div class="trayecto-block" style="margin-top: 14px;">
+            <div class="trayecto-header" style="justify-content: space-between;">
+              <div class="trayecto-title">Tareas & Recordatorios Académicos</div>
+              <button class="btn-primary" style="padding: 4px 10px; font-size: 0.72rem;" onclick="app.openAddTaskModal()">+ Nueva Alerta</button>
+            </div>
+            <div style="padding: 10px 12px;">
+              <div id="notif-list-container"></div>
+            </div>
           </div>
-
-          <div id="notif-list-container"></div>
         </section>
 
       </main>
@@ -319,8 +254,37 @@
         <p>Sistema Universitario Personal • PNF Administración & Informática UNEXCA</p>
       </footer>
 
+      <!-- Botón Flotante de Acción Rápida (FAB) -->
+      <button type="button" class="mobile-fab" onclick="app.triggerFabAction()" aria-label="Acción rápida">+</button>
+
+      <!-- Barra de Navegación Inferior Fija para Móvil (3 Módulos Claros) -->
+      <nav class="mobile-bottom-nav">
+        <button type="button" class="bottom-nav-item active" onclick="app.switchTab('dashboard')">
+          <span class="bottom-nav-icon">Inicio</span>
+        </button>
+        <button type="button" class="bottom-nav-item" onclick="app.switchTab('pensum')">
+          <span class="bottom-nav-icon">Asignaturas</span>
+        </button>
+        <button type="button" class="bottom-nav-item" onclick="app.switchTab('horario')">
+          <span class="bottom-nav-icon">Horario</span>
+        </button>
+      </nav>
+
     </div>
 
+  </div>
+
+  <!-- ====================================================================
+       MODAL DE DETALLES DE ASIGNATURA & PLAN DE NOTAS (UNIFICADO)
+       ==================================================================== -->
+  <div id="modal-subject-detail" class="modal-overlay">
+    <div class="modal-card" style="max-width: 650px;">
+      <div class="modal-header">
+        <h3 id="detail-subject-title" class="modal-title">Ficha de Asignatura</h3>
+        <button type="button" class="modal-close-btn" onclick="app.closeModal('modal-subject-detail')" aria-label="Cerrar">&times;</button>
+      </div>
+      <div id="detail-subject-content"></div>
+    </div>
   </div>
 
   <!-- MODALES DIALOGS -->
@@ -518,12 +482,12 @@
   </div>
 
   <!-- Scripts & Service Worker registration for PWA -->
-  <script src="pensumData.js?v=6.0"></script>
-  <script src="app.js?v=6.0"></script>
+  <script src="pensumData.js"></script>
+  <script src="app.js"></script>
   <script>
-    if ('serviceWorker' in navigator) {
+    if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=6.0').catch(err => console.log('SW error', err));
+        navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW error', err));
       });
     }
   </script>

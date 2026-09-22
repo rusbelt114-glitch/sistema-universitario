@@ -311,7 +311,7 @@ body {
 }
 
 /* ==========================================================================
-   SEGMENTED CONTROL BAR (PESTAÑAS PILL COMPACTAS)
+   SEGMENTED CONTROL BAR (PESTAÑAS SUPERIORES & INFERIORES)
    ========================================================================== */
 .nav-tabs {
   display: flex;
@@ -359,6 +359,92 @@ body {
   background: var(--primary-blue);
   color: white;
   box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+}
+
+/* Barra de Navegación Inferior Móvil Fija */
+.mobile-bottom-nav {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #FFFFFF;
+  border-top: 1px solid var(--border-color);
+  box-shadow: 0 -2px 12px rgba(15, 23, 42, 0.08);
+  z-index: 999;
+  padding: 6px 4px;
+  justify-content: space-around;
+  align-items: center;
+}
+
+.bottom-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  padding: 4px 6px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: 0.68rem;
+  font-weight: 700;
+  border-radius: var(--radius-sm);
+  transition: var(--transition);
+  flex: 1;
+}
+
+.bottom-nav-item.active {
+  color: var(--primary-blue);
+  background: var(--pastel-blue-bg);
+}
+
+.bottom-nav-icon {
+  font-size: 0.78rem;
+  font-weight: 800;
+  margin-bottom: 2px;
+}
+
+/* Botón Flotante de Acción Rápida (FAB) */
+.mobile-fab {
+  display: none;
+  position: fixed;
+  bottom: 70px;
+  right: 18px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--primary-blue);
+  color: white;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  font-weight: bold;
+  border: none;
+  cursor: pointer;
+  box-shadow: var(--shadow-primary);
+  z-index: 998;
+  transition: var(--transition);
+}
+
+.mobile-fab:hover {
+  transform: scale(1.05);
+  background: var(--primary-dark);
+}
+
+@media (max-width: 768px) {
+  .nav-tabs {
+    display: none;
+  }
+  .mobile-bottom-nav {
+    display: flex;
+  }
+  .mobile-fab {
+    display: flex;
+  }
+  #tab-content-area {
+    padding-bottom: 75px;
+  }
 }
 
 .badge-num {
@@ -1213,4 +1299,109 @@ footer {
     padding: 3px 6px;
     font-size: 0.68rem;
   }
+
+  #main-app-screen {
+    padding-bottom: 74px;
+  }
 }
+
+/* ==========================================================================
+   BARRA DE NAVEGACIÓN INFERIOR FIJA PARA MÓVIL (APP NATIVA)
+   ========================================================================== */
+.mobile-bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 56px;
+  background: #FFFFFF;
+  border-top: 1px solid #E2E8F0;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  z-index: 1000;
+  box-shadow: 0 -2px 10px rgba(15, 23, 42, 0.06);
+  padding: 0 8px;
+}
+
+.bottom-nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 0.76rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--transition);
+  padding: 4px 0;
+  user-select: none;
+}
+
+.bottom-nav-item:hover {
+  color: var(--primary-blue);
+  background: var(--bg-surface-hover);
+}
+
+.bottom-nav-item.active {
+  color: var(--primary-blue);
+  position: relative;
+}
+
+.bottom-nav-item.active::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 20%;
+  right: 20%;
+  height: 3px;
+  background: var(--primary-blue);
+  border-radius: 0 0 4px 4px;
+}
+
+.bottom-nav-icon {
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+}
+
+/* Botón de Acción Rápida Flotante (+ FAB) */
+.mobile-fab {
+  position: fixed;
+  bottom: 68px;
+  right: 16px;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: var(--primary-blue);
+  color: white;
+  border: none;
+  font-size: 1.5rem;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+  cursor: pointer;
+  z-index: 999;
+  transition: transform 0.15s ease, background 0.15s ease;
+  line-height: 1;
+}
+
+.mobile-fab:active {
+  transform: scale(0.92);
+}
+
+@media (min-width: 769px) {
+  .mobile-bottom-nav {
+    display: none;
+  }
+  .mobile-fab {
+    display: none;
+  }
+}
+
