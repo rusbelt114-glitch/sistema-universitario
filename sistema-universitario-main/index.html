@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema Universitario - Gestor Académico Interactivo</title>
+  
+  <!-- Configuración PWA (Aplicación Instalable con Icono de Birrete) -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0A4D40">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Sistema Universitario">
+  <link rel="apple-touch-icon" href="icon.jpg">
+  <link rel="icon" type="image/jpeg" href="icon.jpg">
+
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <div id="app-container">
+
+    <!-- ====================================================================
+         PANTALLA INICIAL / LANDING DE SELECCIÓN DE CARRERA
+         ==================================================================== -->
+    <div id="landing-screen" class="landing-wrapper">
+      <div class="landing-header">
+        <span class="brand-badge">UNEXCA • APPLICACIÓN INSTALABLE</span>
+        <h1 class="landing-title">Gestión de Estudios Universitarios</h1>
+        <p class="landing-subtitle">
+          Sistema personal interactivo para control de asignaturas, plan de evaluaciones, notas y alternancia por semanas.
+        </p>
+      </div>
+
+      <!-- Barra de Indicación de Semana Actual -->
+      <div class="week-indicator-bar">
+        <span>ESTATUS ACADÉMICO ACTUAL:</span>
+        <span id="landing-week-badge" class="week-badge">SEMANA A (ADMINISTRACIÓN)</span>
+        <button id="btn-toggle-week-landing" type="button" class="week-toggle-btn" onclick="app.toggleWeek()">Cambiar a Semana B</button>
+      </div>
+
+
+      <!-- Selección de Carrera Inicial -->
+      <div class="career-select-grid">
+        <button type="button" id="card-select-adm" class="career-card active-career" onclick="app.selectCareer('ADM')">
+          <div class="career-icon">ADM</div>
+          <h2 class="career-name">PNF Administración</h2>
+          <p class="career-meta">Trayecto II - Fase II (2-2) En Curso • TSU & Licenciatura</p>
+          <span class="career-btn">Gestión Administración →</span>
+        </button>
+
+        <button type="button" id="card-select-inf" class="career-card" onclick="app.selectCareer('INF')">
+          <div class="career-icon">INF</div>
+          <h2 class="career-name">PNF Informática</h2>
+          <p class="career-meta">Trayecto I - Fase I (1-1) • Modalidad Paralela</p>
+          <span class="career-btn">Gestión Informática →</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ====================================================================
+         PANTALLA PRINCIPAL INTERACTIVA DEL SISTEMA
+         ==================================================================== -->
+    <div id="main-app-screen" style="display: none;">
+      
+      <!-- Top Navigation Header -->
+      <header class="app-header">
+        <div class="header-brand">
+          <img src="icon.jpg" style="width: 42px; height: 42px; border-radius: 10px; border: 2px solid white;" alt="Logo UNEXCA">
+          <div class="header-title-text">
+            <h1>SISTEMA UNIVERSITARIO INTERACTIVO</h1>
+            <span id="header-career-title">PNF EN ADMINISTRACIÓN</span>
+          </div>
+        </div>
+
+        <div class="header-actions">
+          <button type="button" class="career-pill" onclick="app.openPrintRecordModal()" title="Generar Récord de Notas Oficial">
+            <strong>Récord de Notas</strong>
+          </button>
+
+          <button type="button" id="header-week-pill" class="career-pill" onclick="app.toggleWeek()">
+            <strong id="header-week-text">SEMANA A</strong>
+          </button>
+
+          <button type="button" id="btn-toggle-career-header" class="career-pill" onclick="app.toggleCareer()" title="Alternar entre Administración e Informática">
+            <span id="btn-toggle-career-text">Cambiar a Informática</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Pestañas de Navegación Seleccionables (Sin scroll horizontal) -->
+      <nav class="nav-tabs">
+        <button type="button" class="tab-btn active" onclick="app.switchTab('dashboard')">Inicio</button>
+        <button type="button" class="tab-btn" onclick="app.switchTab('pensum')">Materias</button>
+        <button type="button" class="tab-btn" onclick="app.switchTab('evaluaciones')">Notas</button>
+        <button type="button" class="tab-btn" onclick="app.switchTab('consultas')">Consultas</button>
+        <button type="button" class="tab-btn" onclick="app.switchTab('horario')">Horario</button>
+        <button type="button" class="tab-btn" onclick="app.switchTab('notificaciones')">
+          Alertas <span id="badge-notif-count" class="badge-num" style="display:none;">0</span>
+        </button>
+      </nav>
+
+      <!-- CONTENIDO PRINCIPAL -->
+      <main id="tab-content-area">
+
+        <!-- TAB 1: INICIO -->
+        <section id="tab-dashboard" class="tab-section">
+          <div class="home-summary-card">
+            <div class="home-summary-header">
+              <div>
+                <div id="home-career-badge" class="home-career-badge">PNF EN ADMINISTRACIÓN (ADM)</div>
+                <div id="home-phase-desc" style="font-size: 0.85rem; opacity: 0.9; margin-top: 2px;">Trayecto II - Fase II (2-2) En Curso</div>
+              </div>
+              <button type="button" id="home-week-pill" class="week-badge" style="cursor: pointer;" onclick="app.toggleWeek()">
+                <span id="home-week-text">SEMANA A (ADM)</span>
+              </button>
+            </div>
+
+            <div class="home-metrics-grid">
+              <div class="home-metric-item">
+                <div id="stat-materias-curso" class="home-metric-num">8</div>
+                <div class="home-metric-label">En Curso</div>
+              </div>
+              <div class="home-metric-item">
+                <div id="stat-materias-repetir" class="home-metric-num" style="color: #FF8A8A;">6</div>
+                <div class="home-metric-label">Por Repetir</div>
+              </div>
+              <div class="home-metric-item">
+                <div id="stat-consultas-count" class="home-metric-num">5</div>
+                <div class="home-metric-label">En Consulta</div>
+              </div>
+              <div class="home-metric-item">
+                <div id="stat-eval-pendientes" class="home-metric-num">3</div>
+                <div class="home-metric-label">Alertas</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Módulo de Índices Académicos & Promedios (IRA) -->
+          <div class="gpa-summary-strip">
+            <div class="gpa-card">
+              <div>
+                <div class="gpa-card-title">Promedio Ponderado (IRA)</div>
+                <div id="stat-promedio-ponderado" class="gpa-card-val">0.00</div>
+                <div id="stat-promedio-sub" class="gpa-card-sub">Base ponderada por UC</div>
+              </div>
+            </div>
+
+            <div class="gpa-card">
+              <div>
+                <div class="gpa-card-title">Promedio Simple</div>
+                <div id="stat-promedio-simple" class="gpa-card-val">0.00</div>
+                <div id="stat-materias-evaluadas" class="gpa-card-sub">0 materias evaluadas</div>
+              </div>
+            </div>
+
+            <div class="gpa-card">
+              <div>
+                <div class="gpa-card-title">Eficiencia Académica</div>
+                <div id="stat-eficiencia-val" class="gpa-card-val">0%</div>
+                <div id="stat-eficiencia-sub" class="gpa-card-sub">Aprobadas vs Cursadas</div>
+              </div>
+            </div>
+
+            <div class="gpa-card">
+              <div>
+                <div class="gpa-card-title">Progreso Titulación</div>
+                <div id="stat-uc-tsu-val" class="gpa-card-val" style="font-size: 1.25rem;">0 / 110 UC</div>
+                <div id="stat-uc-tsu-pct" class="gpa-card-sub">0% completado TSU</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="trayecto-block" style="margin-top: 20px;">
+            <div class="trayecto-header">
+              <div class="trayecto-title">Historial & Resumen de Trayectos Académicos</div>
+            </div>
+            <div style="padding: 16px;">
+              <div id="dashboard-trayectos-summary"></div>
+            </div>
+          </div>
+
+          <div class="trayecto-block" style="margin-top: 20px;">
+            <div class="trayecto-header">
+              <div class="trayecto-title">Estado Académico & Novedades</div>
+            </div>
+            <div style="padding: 16px;">
+              <div id="dashboard-alerts-list"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB 2: PENSUM & MATERIAS -->
+        <section id="tab-pensum" class="tab-section" style="display: none;">
+          <div class="section-toolbar">
+            <div class="search-box">
+              <input type="text" id="search-subject-input" class="search-input" placeholder="Buscar materia por nombre o código..." aria-label="Buscar materia" oninput="app.filterSubjects()">
+            </div>
+            
+            <div class="filter-group">
+              <select id="filter-status-select" class="filter-select" aria-label="Filtrar por estatus" onchange="app.filterSubjects()">
+                <option value="todos">Todos los Estatus</option>
+                <option value="en_curso">En Curso (Fase Activa)</option>
+                <option value="aprobada">Aprobadas / Registradas</option>
+                <option value="repetir">Por Repetir</option>
+                <option value="intensivo_verano">Intensivo Verano</option>
+                <option value="pendiente_consulta">Pendiente Consulta</option>
+                <option value="por_cursar">Por Cursar</option>
+              </select>
+
+              <select id="filter-trayecto-select" class="filter-select" aria-label="Filtrar por trayecto" onchange="app.filterSubjects()">
+                <option value="todos">Todos los Trayectos</option>
+                <option value="1-1">Trayecto 1-1</option>
+                <option value="1-2">Trayecto 1-2</option>
+                <option value="2-1">Trayecto 2-1</option>
+                <option value="2-2">Trayecto 2-2 (Actual)</option>
+                <option value="3-1">Trayecto 3-1</option>
+                <option value="3-2">Trayecto 3-2</option>
+                <option value="4-1">Trayecto 4-1</option>
+                <option value="4-2">Trayecto 4-2</option>
+              </select>
+
+              <button class="btn-primary" onclick="app.openAddSubjectModal()">+ Nueva Materia</button>
+            </div>
+          </div>
+
+          <div id="pensum-trayectos-container"></div>
+        </section>
+
+        <!-- TAB 3: PLAN DE EVALUACIONES -->
+        <section id="tab-evaluaciones" class="tab-section" style="display: none;">
+          <div class="section-toolbar" style="flex-wrap: wrap; gap: 15px; align-items: flex-end;">
+            <div style="flex: 1; min-width: 220px;">
+              <label class="form-label" for="eval-filter-scope">Filtro de Materias:</label>
+              <select id="eval-filter-scope" class="form-control" onchange="app.renderEvaluationsSection()">
+                <option value="actuales" selected>Solo Materias Activas (En Curso / Repetir)</option>
+                <option value="todas">Todas las Materias del Pensum (Carrera Completa)</option>
+              </select>
+            </div>
+            <div style="flex: 2; min-width: 280px;">
+              <label class="form-label" for="eval-subject-picker">Seleccionar Asignatura:</label>
+              <select id="eval-subject-picker" class="form-control" onchange="app.loadEvaluationsForSubject(this.value)"></select>
+            </div>
+            <div>
+              <button class="btn-primary" onclick="app.openAddEvalModal()">+ Nueva Evaluación</button>
+            </div>
+          </div>
+
+          <div id="eval-panel-container"></div>
+        </section>
+
+        <!-- TAB 4: CONSULTAS & CONTROL ACADÉMICO -->
+        <section id="tab-consultas" class="tab-section" style="display: none;">
+          <div class="section-toolbar" style="flex-wrap: wrap; gap: 15px; align-items: center; justify-content: space-between;">
+            <h2>Control de Asignaturas & Verificación de Notas</h2>
+            <div class="filter-group" style="align-items: center;">
+              <label class="form-label" for="consultas-filter-select" style="margin-bottom: 0;">Filtrar por estado:</label>
+              <select id="consultas-filter-select" class="filter-select" aria-label="Filtrar por estado" onchange="app.renderConsultas()">
+                <option value="pendiente_consulta" selected>Pendientes por Consulta Oficial</option>
+                <option value="repetir">Por Repetir / Recuperar</option>
+                <option value="intensivo_verano">Intensivo Verano</option>
+                <option value="por_cursar">Por Cursar</option>
+                <option value="aprobada">Aprobadas / Verificadas</option>
+                <option value="todos">Todas las Asignaturas</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="trayecto-block">
+            <div class="trayecto-header">
+              <div class="trayecto-title">Listado de Asignaturas Seleccionadas</div>
+            </div>
+            <div class="subject-table-wrapper">
+              <table class="subject-table">
+                <thead>
+                  <tr>
+                    <th>Asignatura</th>
+                    <th>Trayecto</th>
+                    <th>Estatus Actual</th>
+                    <th>Nota Verificada</th>
+                    <th>Soportes / Observaciones</th>
+                    <th>Acción</th>
+                  </tr>
+                </thead>
+                <tbody id="tabla-consultas-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB 5: HORARIO SEMANAL -->
+        <section id="tab-horario" class="tab-section" style="display: none;">
+          <div class="section-toolbar" style="flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between;">
+            <h2>Horario de Clases - <span id="horario-week-title">Semana A</span></h2>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+              <button class="btn-secondary" onclick="app.toggleWeek()">Cambiar Semana (A / B)</button>
+              <button class="btn-secondary" style="color: #C0392B; border-color: #FDEDEC;" onclick="app.clearCurrentSchedule()">Limpiar Horario</button>
+              <button class="btn-primary" onclick="app.openAddScheduleModal()">+ Agregar Clase</button>
+            </div>
+          </div>
+
+          <div id="schedule-cards-container" class="schedule-grid"></div>
+        </section>
+
+        <!-- TAB 6: ALERTAS & NOTIFICACIONES -->
+        <section id="tab-notificaciones" class="tab-section" style="display: none;">
+          <div class="section-toolbar">
+            <h2>Tareas, Recordatorios & Alertas Académicas</h2>
+            <button class="btn-primary" onclick="app.openAddTaskModal()">+ Nueva Alerta</button>
+          </div>
+
+          <div id="notif-list-container"></div>
+        </section>
+
+      </main>
+
+      <footer>
+        <p>Sistema Universitario Personal • PNF Administración & Informática UNEXCA</p>
+      </footer>
+
+    </div>
+
+  </div>
+
+  <!-- MODALES DIALOGS -->
+  <div id="modal-edit-subject" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="modal-subject-title" class="modal-title">Editar Asignatura</h3>
+        <button type="button" class="modal-close-btn" onclick="app.closeModal('modal-edit-subject')" aria-label="Cerrar">&times;</button>
+      </div>
+      <form id="form-edit-subject" onsubmit="app.saveSubjectEdit(event)">
+        <input type="hidden" id="edit-subject-id">
+        <div class="form-group">
+          <label class="form-label" for="edit-subject-name">Nombre de la Asignatura:</label>
+          <input type="text" id="edit-subject-name" class="form-control" required>
+        </div>
+        <div style="display: flex; gap: 10px;">
+          <div class="form-group" style="flex:1;">
+            <label class="form-label" for="edit-subject-code">Código:</label>
+            <input type="text" id="edit-subject-code" class="form-control" required>
+          </div>
+          <div class="form-group" style="flex:1;">
+            <label class="form-label" for="edit-subject-uc">UC (Créditos):</label>
+            <input type="number" min="1" max="15" id="edit-subject-uc" class="form-control" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="edit-subject-trayecto">Trayecto:</label>
+          <select id="edit-subject-trayecto" class="form-control">
+            <option value="1-1">Trayecto 1-1</option>
+            <option value="1-2">Trayecto 1-2</option>
+            <option value="2-1">Trayecto 2-1</option>
+            <option value="2-2">Trayecto 2-2</option>
+            <option value="3-1">Trayecto 3-1</option>
+            <option value="3-2">Trayecto 3-2</option>
+            <option value="4-1">Trayecto 4-1</option>
+            <option value="4-2">Trayecto 4-2</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="edit-subject-status">Estatus Académico:</label>
+          <select id="edit-subject-status" class="form-control">
+            <option value="en_curso">En Curso</option>
+            <option value="aprobada">Aprobada</option>
+            <option value="repetir">Por Repetir</option>
+            <option value="intensivo_verano">Intensivo de Verano</option>
+            <option value="pendiente_consulta">Pendiente por Consulta</option>
+            <option value="por_cursar">Por Cursar</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="edit-subject-grade">Nota Definitiva (0 a 20):</label>
+          <input type="number" step="0.1" min="0" max="20" id="edit-subject-grade" class="form-control" placeholder="Ej: 16.5">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="edit-subject-ref">Documento o Hoja de Actuación de Referencia:</label>
+          <input type="text" id="edit-subject-ref" class="form-control" placeholder="Ej: NOTAS1-2026 ALTAGRACIA.xlsx">
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn-secondary" onclick="app.closeModal('modal-edit-subject')">Cancelar</button>
+          <button type="submit" class="btn-primary">Guardar Asignatura</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="modal-edit-eval" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="modal-eval-title" class="modal-title">Agregar Evaluación</h3>
+        <button type="button" class="modal-close-btn" onclick="app.closeModal('modal-edit-eval')" aria-label="Cerrar">&times;</button>
+      </div>
+      <form id="form-edit-eval" onsubmit="app.saveEvaluation(event)">
+        <input type="hidden" id="edit-eval-id">
+        <div class="form-group">
+          <label class="form-label" for="edit-eval-name">Nombre de la Evaluación / Taller:</label>
+          <input type="text" id="edit-eval-name" class="form-control" required placeholder="Ej: Parcial I, Taller, Proyecto...">
+        </div>
+        <div style="display: flex; gap: 10px;">
+          <div class="form-group" style="flex:1;">
+            <label class="form-label" for="edit-eval-weight">Ponderación (%):</label>
+            <input type="number" step="1" min="1" max="100" id="edit-eval-weight" class="form-control" required placeholder="25">
+          </div>
+          <div class="form-group" style="flex:1;">
+            <label class="form-label" for="edit-eval-score">Nota Obtenida (0-20):</label>
+            <input type="number" step="0.1" min="0" max="20" id="edit-eval-score" class="form-control" placeholder="Ej: 17">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="edit-eval-date">Fecha de Entrega / Presentación:</label>
+          <input type="date" id="edit-eval-date" class="form-control">
+        </div>
+        <div class="form-group" style="display: flex; align-items: center; gap: 8px;">
+          <input type="checkbox" id="edit-eval-completed">
+          <label for="edit-eval-completed" style="font-size: 0.9rem;">Marcar como entregada / evaluada</label>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn-secondary" onclick="app.closeModal('modal-edit-eval')">Cancelar</button>
+          <button type="submit" class="btn-primary">Guardar Evaluación</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="modal-add-schedule" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">Agregar Clase al Horario</h3>
+        <button type="button" class="modal-close-btn" onclick="app.closeModal('modal-add-schedule')" aria-label="Cerrar">&times;</button>
+      </div>
+      <form id="form-add-schedule" onsubmit="app.saveScheduleClass(event)">
+        <div class="form-group">
+          <label class="form-label" for="sched-day">Día de la semana:</label>
+          <select id="sched-day" class="form-control">
+            <option value="Lunes">Lunes</option>
+            <option value="Martes">Martes</option>
+            <option value="Miércoles">Miércoles</option>
+            <option value="Jueves">Jueves</option>
+            <option value="Viernes">Viernes</option>
+            <option value="Sábado">Sábado</option>
+            <option value="Domingo">Domingo</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="sched-shift">Turno:</label>
+          <select id="sched-shift" class="form-control">
+            <option value="Mañana">Mañana</option>
+            <option value="Tarde">Tarde</option>
+            <option value="Noche">Noche</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="sched-time">Hora:</label>
+          <input type="text" id="sched-time" class="form-control" placeholder="Ej: 08:00 - 10:00" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="sched-subject">Materia / Asignatura:</label>
+          <input type="text" id="sched-subject" class="form-control" required placeholder="Ej: Administración de Costos I">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="sched-room">Aula / Laboratorio:</label>
+          <input type="text" id="sched-room" class="form-control" placeholder="Ej: Lab 3 / Aula 08">
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn-secondary" onclick="app.closeModal('modal-add-schedule')">Cancelar</button>
+          <button type="submit" class="btn-primary">Guardar Clase</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="modal-add-task" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">Nueva Alerta / Tarea</h3>
+        <button type="button" class="modal-close-btn" onclick="app.closeModal('modal-add-task')" aria-label="Cerrar">&times;</button>
+      </div>
+      <form id="form-add-task" onsubmit="app.saveTaskNotification(event)">
+        <div class="form-group">
+          <label class="form-label" for="task-title">Título de la Notificación:</label>
+          <input type="text" id="task-title" class="form-control" required placeholder="Ej: Entregar Avance PSI II">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="task-desc">Descripción / Asignatura:</label>
+          <textarea id="task-desc" class="form-control" rows="3" placeholder="Detalles de la entrega o recordatorio..."></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="task-priority">Prioridad:</label>
+          <select id="task-priority" class="form-control">
+            <option value="normal">Normal</option>
+            <option value="urgente">Urgente / Importante</option>
+          </select>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn-secondary" onclick="app.closeModal('modal-add-task')">Cancelar</button>
+          <button type="submit" class="btn-primary">Guardar Notificación</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="modal-print-record" class="modal-overlay">
+    <div class="modal-card" style="max-width: 900px;">
+      <div class="modal-header">
+        <h3 class="modal-title">Récord Académico & Constancia de Calificaciones</h3>
+        <button type="button" class="modal-close-btn" onclick="app.closeModal('modal-print-record')" aria-label="Cerrar">&times;</button>
+      </div>
+      <div class="print-record-modal-body">
+        <div id="print-record-content"></div>
+      </div>
+      <div class="form-actions" style="margin-top: 15px; border-top: 1px solid var(--border-color); padding-top: 15px;">
+        <button type="button" class="btn-secondary" onclick="app.closeModal('modal-print-record')">Cerrar</button>
+        <button type="button" class="btn-primary" onclick="window.print()">Imprimir / Guardar en PDF</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts & Service Worker registration for PWA -->
+  <script src="pensumData.js"></script>
+  <script src="app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW error', err));
+      });
+    }
+  </script>
+</body>
+</html>
+
