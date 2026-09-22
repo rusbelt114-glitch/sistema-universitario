@@ -238,6 +238,15 @@ class UniversityApp {
           toggleCareerBtn.title = "Cambiar a PNF en Administración";
         }
       }
+
+      const filterTrayectoSelect = document.getElementById("filter-trayecto-select");
+      if (filterTrayectoSelect) {
+        let opts = '<option value="todos">Todos los Trayectos</option>';
+        activeData.trayectos.forEach(t => {
+          opts += `<option value="${t.id}">${t.nombre}</option>`;
+        });
+        filterTrayectoSelect.innerHTML = opts;
+      }
     }
   }
 
@@ -841,12 +850,20 @@ class UniversityApp {
   }
 
   openAddSubjectModal() {
+    const pensum = this.state.pensum[this.currentCareer];
     document.getElementById("edit-subject-id").value = "";
-    document.getElementById("modal-subject-title").textContent = "Agregar Nueva Asignatura";
+    document.getElementById("modal-subject-title").textContent = `Agregar Nueva Asignatura (${this.currentCareer})`;
     document.getElementById("edit-subject-name").value = "";
     document.getElementById("edit-subject-code").value = "";
     document.getElementById("edit-subject-uc").value = "2";
-    document.getElementById("edit-subject-trayecto").value = "2-2";
+
+    const trayectoSelect = document.getElementById("edit-subject-trayecto");
+    if (trayectoSelect && pensum) {
+      trayectoSelect.innerHTML = pensum.trayectos.map(t => `<option value="${t.id}">${t.nombre}</option>`).join("");
+      const activeT = pensum.trayectos.find(t => t.actual) || pensum.trayectos[0];
+      if (activeT) trayectoSelect.value = activeT.id;
+    }
+
     document.getElementById("edit-subject-status").value = "en_curso";
     document.getElementById("edit-subject-grade").value = "";
     document.getElementById("edit-subject-ref").value = "";
@@ -857,10 +874,14 @@ class UniversityApp {
   openEditSubjectModal(subjectId) {
     const pensum = this.state.pensum[this.currentCareer];
     let foundMat = null;
+    let foundTrayecto = null;
 
     pensum.trayectos.forEach(t => {
       t.materias.forEach(m => {
-        if (m.id === subjectId) foundMat = m;
+        if (m.id === subjectId) {
+          foundMat = m;
+          foundTrayecto = t;
+        }
       });
     });
 
@@ -871,6 +892,13 @@ class UniversityApp {
     document.getElementById("edit-subject-name").value = foundMat.nombre;
     document.getElementById("edit-subject-code").value = foundMat.codigo;
     document.getElementById("edit-subject-uc").value = foundMat.uc;
+
+    const trayectoSelect = document.getElementById("edit-subject-trayecto");
+    if (trayectoSelect && pensum) {
+      trayectoSelect.innerHTML = pensum.trayectos.map(t => `<option value="${t.id}">${t.nombre}</option>`).join("");
+      if (foundTrayecto) trayectoSelect.value = foundTrayecto.id;
+    }
+
     document.getElementById("edit-subject-status").value = foundMat.estatus;
     document.getElementById("edit-subject-grade").value = foundMat.nota !== null ? foundMat.nota : "";
     document.getElementById("edit-subject-ref").value = foundMat.refDoc || "";
@@ -883,16 +911,25 @@ class UniversityApp {
     const scrollPos = window.scrollY;
 
     const id = document.getElementById("edit-subject-id").value;
-    const name = document.getElementById("edit-subject-name").value;
-    const code = document.getElementById("edit-subject-code").value;
-    const uc = Number.parseInt(document.getElementById("edit-subject-uc").value, 10);
+    const name = (document.getElementById("edit-subject-name").value || "").trim();
+    let code = (document.getElementById("edit-subject-code").value || "").trim();
+    const ucVal = document.getElementById("edit-subject-uc").value;
+    const uc = ucVal ? Number.parseInt(ucVal, 10) : 2;
     const trayectoTarget = document.getElementById("edit-subject-trayecto").value;
     const newStatus = document.getElementById("edit-subject-status").value;
     const newGradeVal = document.getElementById("edit-subject-grade").value;
-    const newRef = document.getElementById("edit-subject-ref").value;
+    const newRef = (document.getElementById("edit-subject-ref").value || "").trim();
+
+    if (!name) {
+      alert("Por favor ingresa el nombre de la asignatura.");
+      return;
+    }
+
+    if (!code) {
+      code = name.substring(0, 3).toUpperCase() + "-" + Math.floor(100 + Math.random() * 900);
+    }
 
     const pensum = this.state.pensum[this.currentCareer];
-
     const isProyecto = name.toLowerCase().includes("proyecto socio") || code.toLowerCase().includes("psi") || code.toLowerCase().includes("pst");
     const minPass = isProyecto ? 16 : 13;
     let finalStatus = newStatus;
@@ -908,21 +945,36 @@ class UniversityApp {
     }
 
     if (id !== "") {
+      let existingMat = null;
+      let currentTrayecto = null;
+
       pensum.trayectos.forEach(t => {
         t.materias.forEach(m => {
           if (m.id === id) {
-            m.nombre = name;
-            m.codigo = code;
-            m.uc = uc;
-            m.estatus = finalStatus;
-            m.nota = gradeNum;
-            m.refDoc = newRef;
+            existingMat = m;
+            currentTrayecto = t;
           }
         });
       });
+
+      if (existingMat) {
+        existingMat.nombre = name;
+        existingMat.codigo = code;
+        existingMat.uc = uc;
+        existingMat.estatus = finalStatus;
+        existingMat.nota = gradeNum;
+        existingMat.refDoc = newRef;
+
+        if (currentTrayecto && currentTrayecto.id !== trayectoTarget) {
+          currentTrayecto.materias = currentTrayecto.materias.filter(m => m.id !== id);
+          let newTrayectoObj = pensum.trayectos.find(t => t.id === trayectoTarget);
+          if (!newTrayectoObj) newTrayectoObj = currentTrayecto;
+          newTrayectoObj.materias.push(existingMat);
+        }
+      }
     } else {
       const newSubject = {
-        id: "mat-" + Date.now(),
+        id: (this.currentCareer === "ADM" ? "adm-" : "inf-") + Date.now(),
         codigo: code,
         nombre: name,
         uc: uc,
@@ -931,7 +983,10 @@ class UniversityApp {
         refDoc: newRef
       };
 
-      const targetTrayectoObj = pensum.trayectos.find(t => t.id === trayectoTarget);
+      let targetTrayectoObj = pensum.trayectos.find(t => t.id === trayectoTarget);
+      if (!targetTrayectoObj) {
+        targetTrayectoObj = pensum.trayectos.find(t => t.actual) || pensum.trayectos[0];
+      }
       if (targetTrayectoObj) {
         targetTrayectoObj.materias.push(newSubject);
       }
@@ -941,6 +996,7 @@ class UniversityApp {
     this.closeModal("modal-edit-subject");
     this.renderPensum();
     this.renderDashboard();
+
     if (id && this.selectedEvalSubjectId === id) {
       this.renderSubjectDetailContent(id);
     }
@@ -1406,6 +1462,7 @@ class UniversityApp {
     });
 
     container.innerHTML = html;
+    this.renderNotifications();
   }
 
   clearCurrentSchedule() {
@@ -1433,6 +1490,19 @@ class UniversityApp {
     document.getElementById("sched-time").value = "";
     document.getElementById("sched-subject").value = "";
     document.getElementById("sched-room").value = "";
+
+    const datalist = document.getElementById("sched-subjects-datalist");
+    if (datalist) {
+      const pensum = this.state.pensum[this.currentCareer];
+      let opts = "";
+      pensum.trayectos.forEach(t => {
+        t.materias.forEach(m => {
+          opts += `<option value="${m.nombre} (${m.codigo})">`;
+        });
+      });
+      datalist.innerHTML = opts;
+    }
+
     this.openModal("modal-add-schedule");
   }
 
@@ -1461,6 +1531,7 @@ class UniversityApp {
 
   renderNotifications() {
     const container = document.getElementById("notif-list-container");
+    if (!container) return;
     const notifs = this.state.notificaciones || [];
     const badge = document.getElementById("badge-notif-count");
 
@@ -1471,18 +1542,18 @@ class UniversityApp {
 
     let html = "";
     if (notifs.length === 0) {
-      html = '<div style="padding:30px; text-align:center; color:var(--text-muted);">No tienes notificaciones o tareas registradas.</div>';
+      html = '<div style="padding:20px; text-align:center; color:var(--text-muted); font-size:0.8rem;">No tienes alertas o tareas pendientes registradas. Toca <strong>+ Nueva Alerta</strong> para agregar una.</div>';
     } else {
       notifs.forEach(n => {
         const urgentClass = n.prioridad === "urgente" ? "urgent" : "";
         html += `
-          <div class="notification-item ${urgentClass}">
+          <div class="notification-item ${urgentClass}" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; padding:8px 10px; border-radius:8px; background:white; border:1px solid var(--border-color);">
             <div>
-              <div class="notification-title">${n.titulo}</div>
-              <div class="notification-desc">${n.desc}</div>
+              <div class="notification-title" style="font-weight:800; font-size:0.85rem; color:var(--text-primary);">${n.titulo}</div>
+              <div class="notification-desc" style="font-size:0.75rem; color:var(--text-secondary); margin-top:2px;">${n.desc}</div>
             </div>
             <div>
-              <button class="btn-action" style="color:#C0392B; border-color:#FDEDEC;" onclick="app.deleteNotification('${n.id}')">Completada &times;</button>
+              <button type="button" class="btn-action" style="color:#C0392B; border-color:#FECDD3; font-size:0.72rem; padding:3px 8px;" onclick="app.deleteNotification('${n.id}')">Completada &times;</button>
             </div>
           </div>
         `;
@@ -1515,6 +1586,7 @@ class UniversityApp {
     this.saveState();
     this.closeModal("modal-add-task");
     this.renderNotifications();
+    this.renderDashboard();
   }
 
   deleteNotification(notifId) {
@@ -1526,6 +1598,7 @@ class UniversityApp {
     }
     this.saveState();
     this.renderNotifications();
+    this.renderDashboard();
   }
 
   openPrintRecordModal() {

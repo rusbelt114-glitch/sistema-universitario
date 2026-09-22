@@ -298,16 +298,16 @@
         <input type="hidden" id="edit-subject-id">
         <div class="form-group">
           <label class="form-label" for="edit-subject-name">Nombre de la Asignatura:</label>
-          <input type="text" id="edit-subject-name" class="form-control" required>
+          <input type="text" id="edit-subject-name" class="form-control" placeholder="Ej: Inglés Técnico" required>
         </div>
         <div style="display: flex; gap: 10px;">
           <div class="form-group" style="flex:1;">
-            <label class="form-label" for="edit-subject-code">Código:</label>
-            <input type="text" id="edit-subject-code" class="form-control" required>
+            <label class="form-label" for="edit-subject-code">Código (Opcional):</label>
+            <input type="text" id="edit-subject-code" class="form-control" placeholder="Ej: ING-11">
           </div>
           <div class="form-group" style="flex:1;">
             <label class="form-label" for="edit-subject-uc">UC (Créditos):</label>
-            <input type="number" min="1" max="15" id="edit-subject-uc" class="form-control" required>
+            <input type="number" min="1" max="15" id="edit-subject-uc" class="form-control" value="2" required>
           </div>
         </div>
         <div class="form-group">
@@ -421,7 +421,8 @@
         </div>
         <div class="form-group">
           <label class="form-label" for="sched-subject">Materia / Asignatura:</label>
-          <input type="text" id="sched-subject" class="form-control" required placeholder="Ej: Administración de Costos I">
+          <input type="text" id="sched-subject" list="sched-subjects-datalist" class="form-control" required placeholder="Ej: Administración de Costos I">
+          <datalist id="sched-subjects-datalist"></datalist>
         </div>
         <div class="form-group">
           <label class="form-label" for="sched-room">Aula / Laboratorio:</label>
