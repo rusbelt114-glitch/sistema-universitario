@@ -181,6 +181,16 @@
               <div id="dashboard-trayectos-summary"></div>
             </div>
           </div>
+
+          <!-- Barra de Respaldo y Actualización Rápida -->
+          <div style="display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; margin-top: 14px; margin-bottom: 6px;">
+            <button type="button" class="btn-secondary" style="font-size: 0.72rem; padding: 5px 10px;" onclick="app.exportDataJSON()" title="Descargar archivo JSON con todas tus notas y asignaturas">Guardar Respaldo (JSON)</button>
+            <label class="btn-secondary" style="font-size: 0.72rem; padding: 5px 10px; cursor: pointer; display: inline-flex; align-items: center;" title="Cargar archivo de respaldo JSON en este dispositivo">
+              Cargar Respaldo (JSON)
+              <input type="file" accept=".json" style="display: none;" onchange="app.importDataJSON(event)">
+            </label>
+            <button type="button" class="btn-secondary" style="font-size: 0.72rem; padding: 5px 10px; color: var(--primary-blue); font-weight: bold;" onclick="app.forceReloadUpdate()" title="Elimina la caché del teléfono y carga la última versión subida">Actualizar App / Limpiar Caché</button>
+          </div>
         </section>
 
         <!-- ====================================================================

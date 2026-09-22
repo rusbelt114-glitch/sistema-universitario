@@ -1739,6 +1739,26 @@ class UniversityApp {
     if (modal) modal.classList.remove("active");
   }
 
+  async forceReloadUpdate() {
+    try {
+      if ('serviceWorker' in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        for (const registration of registrations) {
+          await registration.unregister();
+        }
+      }
+      if ('caches' in window) {
+        const keys = await caches.keys();
+        for (const key of keys) {
+          await caches.delete(key);
+        }
+      }
+    } catch (e) {
+      console.warn("Error al limpiar caché:", e);
+    }
+    window.location.reload(true);
+  }
+
   exportDataJSON() {
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.state, null, 2));
     const downloadAnchor = document.createElement("a");
