@@ -253,26 +253,105 @@ const PENSUM_INFORMATICA = {
   ]
 };
 
-// Seed Evaluaciones Iniciales para Asignaturas en Curso 2-2
+// Seed Evaluaciones Iniciales para Asignaturas en Curso (Administración 2-2 e Informática 1-1)
 const EVALUACIONES_INICIALES = {
+  // PNF Administración 2-2
   "adm-221": [
     { id: "eval-1", nombre: "Avance Capítulo I - PSI II", ponderacion: 25, nota: 18, fecha: "2026-09-20", completada: true },
     { id: "eval-2", nombre: "Avance Capítulo II - Diagnóstico", ponderacion: 25, nota: null, fecha: "2026-10-15", completada: false },
     { id: "eval-3", nombre: "Defensa Parcial", ponderacion: 50, nota: null, fecha: "2026-11-10", completada: false }
+  ],
+  "adm-222": [
+    { id: "eval-adm-fsc1", nombre: "Ensayo Crítico Geopolítica y Soberanía", ponderacion: 30, nota: null, fecha: "2026-10-05", completada: false },
+    { id: "eval-adm-fsc2", nombre: "Debate Participación Comunitaria", ponderacion: 35, nota: null, fecha: "2026-10-25", completada: false },
+    { id: "eval-adm-fsc3", nombre: "Informe Final de Vinculación Social", ponderacion: 35, nota: null, fecha: "2026-11-18", completada: false }
   ],
   "adm-223": [
     { id: "eval-4", nombre: "Taller Sistema de Costos por Órdenes", ponderacion: 30, nota: 17, fecha: "2026-09-10", completada: true },
     { id: "eval-5", nombre: "Examen Parcial Costos por Procesos", ponderacion: 40, nota: null, fecha: "2026-09-28", completada: false },
     { id: "eval-6", nombre: "Trabajo Práctico Análisis Costo-Volumen", ponderacion: 30, nota: null, fecha: "2026-10-20", completada: false }
   ],
+  "adm-224": [
+    { id: "eval-adm-gea1", nombre: "Diagnóstico Ambiental Organizacional", ponderacion: 30, nota: null, fecha: "2026-10-08", completada: false },
+    { id: "eval-adm-gea2", nombre: "Plan de Gestión de Residuos y Huella", ponderacion: 35, nota: null, fecha: "2026-10-28", completada: false },
+    { id: "eval-adm-gea3", nombre: "Exposición Marco Legal Ambiental", ponderacion: 35, nota: null, fecha: "2026-11-15", completada: false }
+  ],
   "adm-225": [
     { id: "eval-7", nombre: "Ensayo Presupuesto Público Ley ONAPRE", ponderacion: 30, nota: 16, fecha: "2026-09-08", completada: true },
-    { id: "eval-8", nombre: "Caso Práctico Presupuesto de Ventas y Producción", ponderacion: 35, nota: null, fecha: "2026-10-02", completada: false }
+    { id: "eval-8", nombre: "Caso Práctico Presupuesto de Ventas y Producción", ponderacion: 35, nota: null, fecha: "2026-10-02", completada: false },
+    { id: "eval-adm-ppp3", nombre: "Defensa Cédulas Presupuestarias", ponderacion: 35, nota: null, fecha: "2026-11-05", completada: false }
+  ],
+  "adm-226": [
+    { id: "eval-adm-hdi1", nombre: "Dinámica de Liderazgo y Equipos", ponderacion: 30, nota: null, fecha: "2026-10-12", completada: false },
+    { id: "eval-adm-hdi2", nombre: "Simulación de Negociación y Conflictos", ponderacion: 35, nota: null, fecha: "2026-10-30", completada: false },
+    { id: "eval-adm-hdi3", nombre: "Test y Plan de Desarrollo Directivo", ponderacion: 35, nota: null, fecha: "2026-11-20", completada: false }
+  ],
+  "adm-227": [
+    { id: "eval-adm-df21", nombre: "Declaración Retenciones IVA / ISLR", ponderacion: 35, nota: null, fecha: "2026-10-10", completada: false },
+    { id: "eval-adm-df22", nombre: "Caso Práctico Libros Fiscales", ponderacion: 35, nota: null, fecha: "2026-10-29", completada: false },
+    { id: "eval-adm-df23", nombre: "Prueba Teórico-Práctica COT", ponderacion: 30, nota: null, fecha: "2026-11-12", completada: false }
+  ],
+  "adm-228": [
+    { id: "eval-adm-el21", nombre: "Taller Práctico Aplicado", ponderacion: 50, nota: null, fecha: "2026-10-20", completada: false },
+    { id: "eval-adm-el22", nombre: "Proyecto Integrador Electiva", ponderacion: 50, nota: null, fecha: "2026-11-18", completada: false }
+  ],
+
+  // PNF Informática 1-1 (Inicio de Cursado)
+  "inf-111": [
+    { id: "eval-inf-psi1", nombre: "Diagnóstico y Abordaje Comunitario", ponderacion: 25, nota: null, fecha: "2026-10-10", completada: false },
+    { id: "eval-inf-psi2", nombre: "Levantamiento de Requerimientos del Sistema", ponderacion: 35, nota: null, fecha: "2026-11-05", completada: false },
+    { id: "eval-inf-psi3", nombre: "Prototipo Inicial y Defensa de Avance", ponderacion: 40, nota: null, fecha: "2026-11-28", completada: false }
+  ],
+  "inf-112": [
+    { id: "eval-inf-aed1", nombre: "Taller de Diagramas de Flujo y Pseudocódigo", ponderacion: 25, nota: null, fecha: "2026-10-02", completada: false },
+    { id: "eval-inf-aed2", nombre: "Parcial I: Estructuras de Control y Bucles", ponderacion: 35, nota: null, fecha: "2026-10-22", completada: false },
+    { id: "eval-inf-aed3", nombre: "Parcial II: Arreglos, Matrices y Funciones", ponderacion: 40, nota: null, fecha: "2026-11-19", completada: false }
+  ],
+  "inf-113": [
+    { id: "eval-inf-soc1", nombre: "Laboratorio I: Comandos Shell Linux / Bash", ponderacion: 30, nota: null, fecha: "2026-10-08", completada: false },
+    { id: "eval-inf-soc2", nombre: "Examen: Gestión de Procesos y Memoria", ponderacion: 35, nota: null, fecha: "2026-10-29", completada: false },
+    { id: "eval-inf-soc3", nombre: "Laboratorio II: Permisos y Sistemas de Archivos", ponderacion: 35, nota: null, fecha: "2026-11-17", completada: false }
+  ],
+  "inf-114": [
+    { id: "eval-inf-mat1", nombre: "Prueba Corta: Álgebra, Ecuaciones y Funciones", ponderacion: 30, nota: null, fecha: "2026-10-06", completada: false },
+    { id: "eval-inf-mat2", nombre: "Examen Parcial: Matrices, Determinantes y Sistemas", ponderacion: 35, nota: null, fecha: "2026-10-27", completada: false },
+    { id: "eval-inf-mat3", nombre: "Taller Práctico: Lógica Proposicional y Conjuntos", ponderacion: 35, nota: null, fecha: "2026-11-21", completada: false }
+  ],
+  "inf-115": [
+    { id: "eval-inf-arq1", nombre: "Informe Técnico: Arquitectura de Von Neumann y Buses", ponderacion: 30, nota: null, fecha: "2026-10-09", completada: false },
+    { id: "eval-inf-arq2", nombre: "Taller: Sistemas de Numeración y Álgebra Booleana", ponderacion: 35, nota: null, fecha: "2026-10-31", completada: false },
+    { id: "eval-inf-arq3", nombre: "Práctica: Ensamble, Mantenimiento y Microprocesadores", ponderacion: 35, nota: null, fecha: "2026-11-24", completada: false }
+  ],
+  "inf-116": [
+    { id: "eval-inf-fsc1", nombre: "Ensayo: Tecnologías Libres y Soberanía Nacional", ponderacion: 30, nota: null, fecha: "2026-10-14", completada: false },
+    { id: "eval-inf-fsc2", nombre: "Mesa Redonda: Ética y Ley de Delitos Informáticos", ponderacion: 35, nota: null, fecha: "2026-11-04", completada: false },
+    { id: "eval-inf-fsc3", nombre: "Proyecto Comunitario de Alfabetización Digital", ponderacion: 35, nota: null, fecha: "2026-11-26", completada: false }
   ]
 };
 
-// Horario por defecto en blanco para personalización total
+// Mapa de Prelaciones Académicas UNEXCA
+const MAPA_PRELACIONES = {
+  ADM: {
+    "adm-113": { prelaA: ["adm-123", "adm-213", "adm-223"], nombre: "Contabilidad I - MI" },
+    "adm-123": { prelaA: ["adm-213", "adm-223"], nombre: "Contabilidad I - MII" },
+    "adm-114": { prelaA: ["adm-124", "adm-215", "adm-314"], nombre: "Fundamentos de la Adm MI" },
+    "adm-124": { prelaA: ["adm-215", "adm-314"], nombre: "Fundamentos de la Adm MII" },
+    "adm-111": { prelaA: ["adm-121", "adm-211", "adm-221"], nombre: "Proyecto Socio Integrador I" },
+    "adm-112": { prelaA: ["adm-122", "adm-212", "adm-222"], nombre: "Formación Socio Crítica I" }
+  },
+  INF: {
+    "inf-112": { prelaA: ["inf-122", "inf-212", "inf-222"], nombre: "Algorítmica y Programación I" },
+    "inf-122": { prelaA: ["inf-212", "inf-222"], nombre: "Algorítmica y Programación II" },
+    "inf-114": { prelaA: ["inf-210", "inf-312", "inf-412"], nombre: "Matemática I" },
+    "inf-111": { prelaA: ["inf-121", "inf-211", "inf-221"], nombre: "Proyecto Socio Tecnológico I" },
+    "inf-113": { prelaA: ["inf-124", "inf-224"], nombre: "Sistemas Operativos" },
+    "inf-123": { prelaA: ["inf-213"], nombre: "Bases de Datos I" }
+  }
+};
+
+// Horario por defecto
 const HORARIO_DEFECTO = {
   ADM: { A: [], B: [] },
   INF: { A: [], B: [] }
 };
+
