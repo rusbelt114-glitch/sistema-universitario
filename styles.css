@@ -1,10 +1,10 @@
 /* ==========================================================================
-   SISTEMA UNIVERSITARIO DE GESTIÓN ACADÉMICA - ESTILO MODERNO APP (BLUE & PASTEL)
-   Inspirado en UI moderna: Azul Real Vibrante, Tarjetas Pastel, Sombras Suaves y Pills
+   SISTEMA UNIVERSITARIO DE GESTIÓN ACADÉMICA - HIGH END MOBILE-FIRST UI
+   Diseño Compacto, Sin Scroll Excesivo, Azul Real Vibrante & Tarjetas Pastel
    ========================================================================== */
 
 :root {
-  /* Paleta Primaria Azul Real & Cielo */
+  /* Paleta Primaria Azul Real */
   --primary-gradient: linear-gradient(135deg, #1D4ED8 0%, #2563EB 50%, #3B82F6 100%);
   --primary-blue: #2563EB;
   --primary-dark: #1E40AF;
@@ -19,7 +19,7 @@
   --border-color: #E2E8F0;
   --border-subtle: #F1F5F9;
 
-  /* Paleta Pastel Suave (como en las tarjetas de la app) */
+  /* Paleta Pastel Suave */
   --pastel-blue-bg: #EFF6FF;
   --pastel-blue-border: #BFDBFE;
   --pastel-blue-text: #1D4ED8;
@@ -40,7 +40,7 @@
   --pastel-rose-border: #FECDD3;
   --pastel-rose-text: #BE123C;
 
-  /* Estados Académicos Pastel */
+  /* Estados Académicos */
   --status-aprobada-bg: #DCFCE7;
   --status-aprobada-text: #166534;
   --status-en-curso-bg: #DBEAFE;
@@ -54,25 +54,25 @@
   --status-por-cursar-bg: #F1F5F9;
   --status-por-cursar-text: #475569;
 
-  /* Tipografía y Textos */
+  /* Tipografía */
   --text-primary: #0F172A;
   --text-secondary: #475569;
   --text-muted: #94A3B8;
 
-  /* Sombras Modernas Ultra-Suaves */
+  /* Sombras Suaves */
   --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
-  --shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.05);
-  --shadow-md: 0 6px 18px rgba(15, 23, 42, 0.07);
-  --shadow-lg: 0 12px 30px rgba(15, 23, 42, 0.1);
-  --shadow-primary: 0 8px 20px rgba(37, 99, 235, 0.28);
+  --shadow-sm: 0 2px 6px rgba(15, 23, 42, 0.05);
+  --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.07);
+  --shadow-lg: 0 10px 24px rgba(15, 23, 42, 0.09);
+  --shadow-primary: 0 4px 14px rgba(37, 99, 235, 0.25);
 
-  /* Radios de Esquina Modernos */
-  --radius-sm: 10px;
-  --radius-md: 16px;
-  --radius-lg: 22px;
+  /* Radios */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
   --radius-pill: 9999px;
 
-  --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition: all 0.15s ease-in-out;
 }
 
 /* Reset y Base */
@@ -87,10 +87,9 @@ body, button, input, select, textarea {
 }
 
 body {
-  font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
   background-color: var(--bg-app);
   color: var(--text-primary);
-  line-height: 1.5;
+  line-height: 1.4;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -99,65 +98,194 @@ body {
 
 #app-container {
   width: 100%;
-  max-width: 1200px;
+  max-width: 1100px;
   margin: 0 auto;
-  padding: 16px;
+  padding: 10px 12px;
   flex: 1;
 }
 
 /* ==========================================================================
-   CABECERA PRINCIPAL ESTILO APP MODERNA
+   LANDING DE SELECCIÓN INICIAL
+   ========================================================================== */
+.landing-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 80vh;
+  text-align: center;
+  padding: 14px;
+}
+
+.brand-badge {
+  background: var(--pastel-blue-bg);
+  color: var(--pastel-blue-text);
+  border: 1px solid var(--pastel-blue-border);
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  display: inline-block;
+  margin-bottom: 8px;
+}
+
+.landing-title {
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: var(--primary-deep);
+  margin-bottom: 6px;
+}
+
+.landing-subtitle {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  max-width: 500px;
+  margin-bottom: 14px;
+}
+
+.week-indicator-bar {
+  background: white;
+  border: 1px solid var(--border-color);
+  padding: 8px 14px;
+  border-radius: var(--radius-pill);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 18px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  box-shadow: var(--shadow-xs);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.week-toggle-btn {
+  background: var(--primary-blue);
+  color: white;
+  border: none;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  font-size: 0.74rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.career-select-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+  width: 100%;
+  max-width: 600px;
+}
+
+.career-card {
+  background: white;
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  cursor: pointer;
+  transition: var(--transition);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: var(--shadow-sm);
+}
+
+.career-card:hover {
+  border-color: var(--primary-blue);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.career-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  background: var(--pastel-blue-bg);
+  color: var(--primary-blue);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+  font-weight: 900;
+  margin-bottom: 8px;
+}
+
+.career-name {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--primary-deep);
+  margin-bottom: 4px;
+}
+
+.career-meta {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+}
+
+.career-btn {
+  background: var(--primary-blue);
+  color: white;
+  padding: 6px 14px;
+  border-radius: var(--radius-pill);
+  font-size: 0.78rem;
+  font-weight: 700;
+  display: inline-block;
+}
+
+/* ==========================================================================
+   CABECERA PRINCIPAL ESTILO APP (COMPACTA)
    ========================================================================== */
 .app-header {
   background: var(--primary-gradient);
   color: white;
-  border-radius: var(--radius-lg);
-  padding: 18px 24px;
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   box-shadow: var(--shadow-primary);
-  margin-bottom: 18px;
+  margin-bottom: 8px;
   flex-wrap: wrap;
-  gap: 14px;
+  gap: 8px;
 }
 
 .header-brand {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 10px;
 }
 
 .header-brand img {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  border: 2px solid rgba(255, 255, 255, 0.8);
-  box-shadow: var(--shadow-sm);
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  border: 1.5px solid rgba(255, 255, 255, 0.85);
 }
 
 .header-title-text h1 {
-  font-size: 1.15rem;
+  font-size: 0.92rem;
   font-weight: 800;
-  letter-spacing: -0.3px;
-  line-height: 1.2;
+  line-height: 1.15;
 }
 
 .header-title-text span {
-  font-size: 0.8rem;
-  opacity: 0.9;
-  font-weight: 500;
+  font-size: 0.72rem;
+  opacity: 0.92;
+  font-weight: 600;
   background: rgba(255, 255, 255, 0.18);
-  padding: 2px 8px;
-  border-radius: 6px;
+  padding: 1px 6px;
+  border-radius: 4px;
   display: inline-block;
-  margin-top: 3px;
+  margin-top: 1px;
 }
 
 .header-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   flex-wrap: wrap;
 }
 
@@ -166,45 +294,50 @@ body {
   color: var(--primary-dark);
   border: none;
   border-radius: var(--radius-pill);
-  padding: 8px 16px;
-  font-size: 0.82rem;
+  padding: 5px 11px;
+  font-size: 0.74rem;
   font-weight: 700;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   cursor: pointer;
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-xs);
   transition: var(--transition);
 }
 
 .career-pill:hover {
   background: #FFFFFF;
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
 }
 
 /* ==========================================================================
-   PESTAÑAS DE NAVEGACIÓN EN FORMATO PILL BAR (SEGMENTED CONTROL)
+   SEGMENTED CONTROL BAR (PESTAÑAS PILL COMPACTAS)
    ========================================================================== */
 .nav-tabs {
   display: flex;
   background: #FFFFFF;
-  padding: 6px;
+  padding: 4px;
   border-radius: var(--radius-pill);
-  gap: 6px;
-  box-shadow: var(--shadow-sm);
+  gap: 4px;
+  box-shadow: var(--shadow-xs);
   border: 1px solid var(--border-color);
-  margin-bottom: 20px;
+  margin-bottom: 10px;
   overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.nav-tabs::-webkit-scrollbar {
+  display: none;
 }
 
 .tab-btn {
   flex: 1;
-  min-width: 100px;
+  min-width: 65px;
   background: transparent;
   border: none;
-  padding: 10px 16px;
-  font-size: 0.86rem;
+  padding: 6px 12px;
+  font-size: 0.78rem;
   font-weight: 700;
   color: var(--text-secondary);
   border-radius: var(--radius-pill);
@@ -212,7 +345,7 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 4px;
   transition: var(--transition);
   white-space: nowrap;
 }
@@ -225,254 +358,230 @@ body {
 .tab-btn.active {
   background: var(--primary-blue);
   color: white;
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
 }
 
 .badge-num {
   background: #EF4444;
   color: white;
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 800;
-  padding: 2px 6px;
-  border-radius: 10px;
+  padding: 1px 5px;
+  border-radius: 8px;
 }
 
 /* ==========================================================================
-   TARJETA RESUMEN INICIAL (HOME DASHBOARD BANNER)
+   TARJETA RESUMEN INICIAL (HERO BANNER COMPACTO)
    ========================================================================== */
 .home-summary-card {
   background: #FFFFFF;
-  border-radius: var(--radius-lg);
-  padding: 22px 26px;
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
   border: 1px solid var(--border-color);
-  box-shadow: var(--shadow-sm);
-  margin-bottom: 18px;
+  box-shadow: var(--shadow-xs);
+  margin-bottom: 8px;
 }
 
 .home-summary-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin-bottom: 18px;
+  gap: 8px;
+  margin-bottom: 10px;
   border-bottom: 1px solid var(--border-subtle);
-  padding-bottom: 14px;
+  padding-bottom: 8px;
+  flex-wrap: wrap;
 }
 
 .home-career-badge {
-  font-size: 1.2rem;
+  font-size: 0.98rem;
   font-weight: 800;
   color: var(--primary-deep);
-  letter-spacing: -0.3px;
 }
 
 .week-badge {
   background: var(--pastel-blue-bg);
   color: var(--pastel-blue-text);
   border: 1px solid var(--pastel-blue-border);
-  padding: 6px 14px;
+  padding: 3px 10px;
   border-radius: var(--radius-pill);
-  font-size: 0.8rem;
+  font-size: 0.72rem;
   font-weight: 800;
 }
 
-/* Grilla de Métricas Rápidas Pastel */
+/* Grilla de Métricas en 1 Fila */
 .home-metrics-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
 }
 
 .home-metric-item {
   background: var(--bg-app);
-  border-radius: var(--radius-md);
-  padding: 14px 10px;
+  border-radius: var(--radius-sm);
+  padding: 8px 4px;
   text-align: center;
   border: 1px solid var(--border-color);
-  transition: var(--transition);
-}
-
-.home-metric-item:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-sm);
 }
 
 .home-metric-num {
-  font-size: 1.6rem;
+  font-size: 1.25rem;
   font-weight: 900;
   color: var(--primary-blue);
-  line-height: 1.1;
+  line-height: 1;
 }
 
 .home-metric-label {
-  font-size: 0.76rem;
+  font-size: 0.65rem;
   color: var(--text-secondary);
   font-weight: 700;
-  margin-top: 4px;
+  margin-top: 2px;
   text-transform: uppercase;
 }
 
 /* ==========================================================================
-   WIDGETS DE PROMEDIOS & ÍNDICES ACADÉMICOS (IRA)
+   WIDGETS DE PROMEDIOS & ÍNDICES (2x2 COMPACTO)
    ========================================================================== */
 .gpa-summary-strip {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-  gap: 14px;
-  margin-bottom: 20px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-bottom: 8px;
 }
 
 .gpa-card {
   background: #FFFFFF;
-  border-radius: var(--radius-lg);
-  padding: 16px 20px;
+  border-radius: var(--radius-md);
+  padding: 8px 10px;
   border: 1px solid var(--border-color);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-xs);
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  transition: var(--transition);
+  flex-direction: column;
+  justify-content: center;
 }
 
-.gpa-card:hover {
-  transform: translateY(-3px);
-  box-shadow: var(--shadow-md);
-}
-
-.gpa-card:nth-child(1) {
-  background: var(--pastel-blue-bg);
-  border-color: var(--pastel-blue-border);
-}
+.gpa-card:nth-child(1) { background: var(--pastel-blue-bg); border-color: var(--pastel-blue-border); }
 .gpa-card:nth-child(1) .gpa-card-val { color: var(--pastel-blue-text); }
 
-.gpa-card:nth-child(2) {
-  background: var(--pastel-green-bg);
-  border-color: var(--pastel-green-border);
-}
+.gpa-card:nth-child(2) { background: var(--pastel-green-bg); border-color: var(--pastel-green-border); }
 .gpa-card:nth-child(2) .gpa-card-val { color: var(--pastel-green-text); }
 
-.gpa-card:nth-child(3) {
-  background: var(--pastel-amber-bg);
-  border-color: var(--pastel-amber-border);
-}
+.gpa-card:nth-child(3) { background: var(--pastel-amber-bg); border-color: var(--pastel-amber-border); }
 .gpa-card:nth-child(3) .gpa-card-val { color: var(--pastel-amber-text); }
 
-.gpa-card:nth-child(4) {
-  background: var(--pastel-purple-bg);
-  border-color: var(--pastel-purple-border);
-}
+.gpa-card:nth-child(4) { background: var(--pastel-purple-bg); border-color: var(--pastel-purple-border); }
 .gpa-card:nth-child(4) .gpa-card-val { color: var(--pastel-purple-text); }
 
 .gpa-card-title {
-  font-size: 0.74rem;
+  font-size: 0.65rem;
   color: var(--text-secondary);
   font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.2px;
+  line-height: 1.1;
 }
 
 .gpa-card-val {
-  font-size: 1.55rem;
+  font-size: 1.15rem;
   font-weight: 900;
-  margin: 2px 0;
+  margin: 1px 0;
+  line-height: 1.1;
 }
 
 .gpa-card-sub {
-  font-size: 0.74rem;
+  font-size: 0.65rem;
   color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* ==========================================================================
-   ACORDEONES & BLOQUES DE TRAYECTOS ACADÉMICOS
+   ACORDEONES Y BLOQUES DE TRAYECTO (COMPACTOS)
    ========================================================================== */
 .trayecto-block {
   background: #FFFFFF;
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   border: 1px solid var(--border-color);
-  box-shadow: var(--shadow-sm);
-  margin-bottom: 16px;
+  box-shadow: var(--shadow-xs);
+  margin-bottom: 8px;
   overflow: hidden;
-  transition: var(--transition);
 }
 
 .trayecto-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 14px 20px;
+  padding: 9px 12px;
   background: #FFFFFF;
   cursor: pointer;
   user-select: none;
-  border-bottom: 1px solid transparent;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 6px;
 }
 
 details[open] > .trayecto-header {
-  border-bottom-color: var(--border-color);
+  border-bottom: 1px solid var(--border-color);
   background: #FAFBFD;
 }
 
 .trayecto-title {
   display: flex;
   align-items: center;
-  gap: 10px;
-  font-size: 1rem;
+  gap: 6px;
+  font-size: 0.88rem;
   font-weight: 800;
   color: var(--text-primary);
   flex-wrap: wrap;
 }
 
 .trayecto-badge-uc {
-  font-size: 0.8rem;
+  font-size: 0.72rem;
   font-weight: 800;
   background: var(--pastel-blue-bg);
   color: var(--pastel-blue-text);
-  padding: 4px 10px;
+  padding: 2px 7px;
   border-radius: var(--radius-pill);
 }
 
 /* ==========================================================================
-   TABLAS Y LISTADOS DE ASIGNATURAS
+   TABLAS Y LISTADOS (AJUSTADOS)
    ========================================================================== */
 .subject-table-wrapper {
   overflow-x: auto;
-  padding: 8px 12px;
+  padding: 4px 8px;
+  -webkit-overflow-scrolling: touch;
 }
 
 .subject-table {
   width: 100%;
   border-collapse: separate;
-  border-spacing: 0 4px;
+  border-spacing: 0 2px;
 }
 
 .subject-table th {
-  padding: 10px 14px;
+  padding: 6px 8px;
   text-align: left;
-  font-size: 0.74rem;
+  font-size: 0.68rem;
   font-weight: 800;
   text-transform: uppercase;
   color: var(--text-muted);
-  letter-spacing: 0.5px;
+  letter-spacing: 0.3px;
 }
 
 .subject-table td {
-  padding: 12px 14px;
-  font-size: 0.85rem;
+  padding: 8px 8px;
+  font-size: 0.78rem;
   background: #FFFFFF;
   border-top: 1px solid var(--border-subtle);
   border-bottom: 1px solid var(--border-subtle);
-}
-
-.subject-table tr:hover td {
-  background: #F8FAFC;
 }
 
 .subject-code {
   font-family: monospace;
   font-weight: 800;
   color: var(--primary-blue);
+  font-size: 0.76rem;
 }
 
 .subject-name {
@@ -480,15 +589,36 @@ details[open] > .trayecto-header {
   color: var(--text-primary);
 }
 
-/* Insignias de Estado (Badges Pastel) */
+.prela-tag {
+  font-size: 0.68rem;
+  background: var(--pastel-blue-bg);
+  color: var(--pastel-blue-text);
+  padding: 1px 5px;
+  border-radius: 4px;
+  display: inline-block;
+  margin-top: 2px;
+}
+
+.prela-warning-tag {
+  font-size: 0.68rem;
+  background: var(--pastel-amber-bg);
+  color: var(--pastel-amber-text);
+  padding: 1px 5px;
+  border-radius: 4px;
+  display: inline-block;
+  margin-top: 2px;
+}
+
+/* Insignias de Estado */
 .status-badge {
   display: inline-block;
-  padding: 4px 10px;
+  padding: 2px 7px;
   border-radius: var(--radius-pill);
-  font-size: 0.74rem;
+  font-size: 0.68rem;
   font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
 }
 
 .status-aprobada { background: var(--status-aprobada-bg); color: var(--status-aprobada-text); }
@@ -503,52 +633,51 @@ details[open] > .trayecto-header {
   background: #FFFFFF;
   border: 1px solid var(--border-color);
   color: var(--text-secondary);
-  padding: 5px 12px;
+  padding: 3px 8px;
   border-radius: var(--radius-pill);
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   font-weight: 700;
   cursor: pointer;
   transition: var(--transition);
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
+  white-space: nowrap;
 }
 
 .btn-action:hover {
   background: var(--bg-surface-hover);
   color: var(--primary-blue);
   border-color: var(--primary-light);
-  transform: translateY(-1px);
 }
 
 .btn-primary {
   background: var(--primary-blue);
   color: white;
   border: none;
-  padding: 10px 20px;
+  padding: 7px 14px;
   border-radius: var(--radius-pill);
-  font-size: 0.85rem;
+  font-size: 0.78rem;
   font-weight: 800;
   cursor: pointer;
   box-shadow: var(--shadow-primary);
   transition: var(--transition);
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
 }
 
 .btn-primary:hover {
   background: var(--primary-dark);
-  transform: translateY(-2px);
 }
 
 .btn-secondary {
   background: #FFFFFF;
   color: var(--text-secondary);
   border: 1px solid var(--border-color);
-  padding: 10px 18px;
+  padding: 7px 12px;
   border-radius: var(--radius-pill);
-  font-size: 0.85rem;
+  font-size: 0.78rem;
   font-weight: 700;
   cursor: pointer;
   transition: var(--transition);
@@ -566,77 +695,65 @@ details[open] > .trayecto-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 18px;
+  gap: 6px;
+  margin-bottom: 10px;
   flex-wrap: wrap;
 }
 
-.search-box {
-  position: relative;
-  flex: 1;
-  min-width: 240px;
+.section-toolbar h2 {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--primary-deep);
 }
 
-.search-icon {
-  position: absolute;
-  left: 14px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 0.9rem;
-  color: var(--text-muted);
+.search-box {
+  flex: 1;
+  min-width: 180px;
 }
 
 .search-input {
   width: 100%;
-  padding: 10px 16px 10px 38px;
+  padding: 6px 12px;
   border-radius: var(--radius-pill);
   border: 1px solid var(--border-color);
   background: #FFFFFF;
-  font-size: 0.85rem;
-  font-family: inherit;
+  font-size: 0.78rem;
   outline: none;
   transition: var(--transition);
 }
 
 .search-input:focus {
   border-color: var(--primary-blue);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
 }
 
 .filter-group {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   flex-wrap: wrap;
   align-items: center;
 }
 
 .filter-select {
-  padding: 9px 14px;
+  padding: 6px 10px;
   border-radius: var(--radius-pill);
   border: 1px solid var(--border-color);
   background: #FFFFFF;
-  font-size: 0.82rem;
+  font-size: 0.76rem;
   font-weight: 700;
   color: var(--text-secondary);
   outline: none;
   cursor: pointer;
-  transition: var(--transition);
-}
-
-.filter-select:focus {
-  border-color: var(--primary-blue);
 }
 
 /* ==========================================================================
-   SIMULADOR PREDICTIVO DE NOTAS & EVALUACIONES
+   SIMULADOR PREDICTIVO & EVALUACIONES
    ========================================================================== */
 .eval-predictive-box {
   background: var(--pastel-green-bg);
   border: 1px solid var(--pastel-green-border);
-  border-radius: var(--radius-lg);
-  padding: 18px 22px;
-  margin-bottom: 20px;
-  box-shadow: var(--shadow-sm);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  margin-bottom: 10px;
 }
 
 .predictive-header {
@@ -644,127 +761,122 @@ details[open] > .trayecto-header {
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 10px;
-  margin-bottom: 14px;
+  gap: 6px;
+  margin-bottom: 8px;
   border-bottom: 1px solid #DCFCE7;
-  padding-bottom: 10px;
+  padding-bottom: 6px;
 }
 
 .predictive-title {
-  font-size: 0.95rem;
+  font-size: 0.82rem;
   font-weight: 800;
   color: var(--pastel-green-text);
-  display: flex;
-  align-items: center;
-  gap: 6px;
 }
 
 .predictive-targets-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 6px;
 }
 
 .predictive-target-card {
   background: #FFFFFF;
-  padding: 12px 16px;
-  border-radius: var(--radius-md);
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
   border: 1px solid #DCFCE7;
-  box-shadow: var(--shadow-xs);
 }
 
 .predictive-target-name {
-  font-size: 0.74rem;
+  font-size: 0.68rem;
   color: var(--text-secondary);
   font-weight: 700;
 }
 
 .predictive-target-score {
-  font-size: 1.25rem;
+  font-size: 1.1rem;
   font-weight: 900;
   color: var(--primary-deep);
-  margin-top: 2px;
+  margin-top: 1px;
 }
 
 .eval-summary-bar {
   background: #FFFFFF;
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
-  padding: 14px 20px;
-  margin-bottom: 16px;
+  padding: 8px 12px;
+  margin-bottom: 8px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 6px;
   font-weight: 700;
-  font-size: 0.88rem;
+  font-size: 0.78rem;
 }
 
 .eval-score-total {
-  font-size: 1.05rem;
+  font-size: 0.95rem;
   font-weight: 900;
   color: var(--primary-blue);
 }
 
 /* ==========================================================================
-   HORARIO Y ALERTAS EN TARJETAS LIMPIAS
+   HORARIO Y ALERTAS
    ========================================================================== */
 .schedule-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 8px;
 }
 
 .schedule-day-card {
   background: #FFFFFF;
-  border-radius: var(--radius-lg);
-  padding: 16px 18px;
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
   border: 1px solid var(--border-color);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-xs);
 }
 
 .schedule-day-title {
-  font-size: 0.92rem;
+  font-size: 0.84rem;
   font-weight: 800;
   color: var(--primary-blue);
-  margin-bottom: 12px;
+  margin-bottom: 6px;
   border-bottom: 1px solid var(--border-subtle);
-  padding-bottom: 6px;
+  padding-bottom: 4px;
 }
 
 .schedule-item {
   background: var(--bg-app);
-  border-radius: var(--radius-md);
-  padding: 10px 14px;
-  margin-bottom: 8px;
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  margin-bottom: 6px;
   border: 1px solid var(--border-color);
 }
 
 .schedule-item-time {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 700;
   color: var(--text-muted);
 }
 
 .schedule-item-title {
-  font-size: 0.86rem;
+  font-size: 0.8rem;
   font-weight: 800;
   color: var(--text-primary);
-  margin-top: 2px;
 }
 
 .notification-item {
   background: #FFFFFF;
-  border-radius: var(--radius-md);
-  padding: 14px 18px;
-  margin-bottom: 10px;
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  margin-bottom: 6px;
   border: 1px solid var(--border-color);
   display: flex;
   justify-content: space-between;
   align-items: center;
   box-shadow: var(--shadow-xs);
-  gap: 12px;
+  gap: 8px;
 }
 
 .notification-item.urgent {
@@ -773,15 +885,14 @@ details[open] > .trayecto-header {
 }
 
 .notification-title {
-  font-size: 0.88rem;
+  font-size: 0.82rem;
   font-weight: 800;
   color: var(--text-primary);
 }
 
 .notification-desc {
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   color: var(--text-secondary);
-  margin-top: 2px;
 }
 
 /* ==========================================================================
@@ -790,13 +901,13 @@ details[open] > .trayecto-header {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.45);
+  background: rgba(15, 23, 42, 0.5);
   backdrop-filter: blur(4px);
   display: none;
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  padding: 16px;
+  padding: 10px;
 }
 
 .modal-overlay.active {
@@ -806,10 +917,10 @@ details[open] > .trayecto-header {
 .modal-card {
   background: #FFFFFF;
   border-radius: var(--radius-lg);
-  max-width: 550px;
+  max-width: 480px;
   width: 100%;
   box-shadow: var(--shadow-lg);
-  padding: 24px;
+  padding: 16px 18px;
   border: 1px solid var(--border-color);
   max-height: 90vh;
   overflow-y: auto;
@@ -819,13 +930,13 @@ details[open] > .trayecto-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 18px;
+  margin-bottom: 12px;
   border-bottom: 1px solid var(--border-subtle);
-  padding-bottom: 12px;
+  padding-bottom: 8px;
 }
 
 .modal-title {
-  font-size: 1.15rem;
+  font-size: 1rem;
   font-weight: 800;
   color: var(--text-primary);
 }
@@ -833,185 +944,63 @@ details[open] > .trayecto-header {
 .modal-close-btn {
   background: var(--bg-app);
   border: none;
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   font-weight: bold;
   color: var(--text-muted);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: var(--transition);
-}
-
-.modal-close-btn:hover {
-  background: var(--pastel-rose-bg);
-  color: var(--pastel-rose-text);
 }
 
 .form-group {
-  margin-bottom: 14px;
+  margin-bottom: 10px;
 }
 
 .form-label {
   display: block;
-  font-size: 0.8rem;
-  font-weight: 700;
+  font-size: 0.75rem;
+  font-weight: 800;
   color: var(--text-secondary);
-  margin-bottom: 6px;
+  margin-bottom: 3px;
 }
 
 .form-control {
   width: 100%;
-  padding: 10px 14px;
-  border-radius: var(--radius-md);
+  padding: 7px 10px;
+  border-radius: var(--radius-sm);
   border: 1px solid var(--border-color);
-  font-size: 0.85rem;
-  font-family: inherit;
+  font-size: 0.8rem;
   outline: none;
-  transition: var(--transition);
-  background: #FFFFFF;
 }
 
 .form-control:focus {
   border-color: var(--primary-blue);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
 }
 
 .form-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 10px;
-  margin-top: 20px;
+  gap: 6px;
+  margin-top: 12px;
 }
 
-/* Prelaciones Tags */
-.prela-tag {
-  display: inline-block;
-  font-size: 0.72rem;
-  padding: 2px 8px;
-  border-radius: var(--radius-pill);
-  background: var(--pastel-blue-bg);
-  color: var(--pastel-blue-text);
-  margin-top: 4px;
-  border: 1px solid var(--pastel-blue-border);
-  font-weight: 700;
-}
-
-.prela-warning-tag {
-  display: inline-block;
-  font-size: 0.72rem;
-  padding: 2px 8px;
-  border-radius: var(--radius-pill);
-  background: var(--pastel-rose-bg);
-  color: var(--pastel-rose-text);
-  margin-top: 4px;
-  border: 1px solid var(--pastel-rose-border);
-  font-weight: 700;
-}
-
-/* ==========================================================================
-   LANDING / SELECCIÓN INICIAL
-   ========================================================================== */
-.landing-wrapper {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 80vh;
+footer {
   text-align: center;
-  padding: 20px;
-}
-
-.brand-badge {
-  display: inline-block;
-  background: var(--pastel-blue-bg);
-  color: var(--primary-blue);
-  padding: 6px 16px;
-  border-radius: var(--radius-pill);
-  font-size: 0.8rem;
-  font-weight: 800;
-  letter-spacing: 0.8px;
-  margin-bottom: 12px;
-}
-
-.landing-title {
-  font-size: 2.2rem;
-  font-weight: 900;
-  color: var(--primary-deep);
-  margin-bottom: 10px;
-  letter-spacing: -0.5px;
-}
-
-.landing-subtitle {
-  color: var(--text-secondary);
-  font-size: 1rem;
-  max-width: 600px;
-  margin: 0 auto 25px;
-}
-
-.career-select-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 20px;
-  width: 100%;
-  max-width: 750px;
-  margin-top: 15px;
-}
-
-.career-card {
-  background: #FFFFFF;
-  border: 2px solid var(--border-color);
-  border-radius: var(--radius-lg);
-  padding: 28px 24px;
-  text-align: center;
-  cursor: pointer;
-  box-shadow: var(--shadow-sm);
-  transition: var(--transition);
-}
-
-.career-card:hover {
-  border-color: var(--primary-blue);
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-lg);
-}
-
-.career-icon {
-  font-size: 2.8rem;
-  margin-bottom: 14px;
-}
-
-.career-name {
-  font-size: 1.25rem;
-  font-weight: 800;
-  color: var(--text-primary);
-  margin-bottom: 6px;
-}
-
-.career-meta {
-  font-size: 0.8rem;
+  font-size: 0.72rem;
   color: var(--text-muted);
-  margin-bottom: 16px;
-}
-
-.career-btn {
-  display: inline-block;
-  background: var(--primary-blue);
-  color: white;
-  padding: 8px 18px;
-  border-radius: var(--radius-pill);
-  font-size: 0.84rem;
-  font-weight: 800;
+  padding: 14px 0 8px;
 }
 
 /* ==========================================================================
-   RÉCORD IMPRIMIBLE (@media print)
+   RÉCORD IMPRIMIBLE
    ========================================================================== */
 .academic-record-sheet {
   background: white;
-  padding: 24px;
+  padding: 18px;
   color: #0F172A;
   font-family: Arial, sans-serif;
 }
@@ -1019,49 +1008,49 @@ details[open] > .trayecto-header {
 .record-header {
   text-align: center;
   border-bottom: 2px solid var(--primary-blue);
-  padding-bottom: 14px;
-  margin-bottom: 18px;
+  padding-bottom: 10px;
+  margin-bottom: 12px;
 }
 
 .record-institution {
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   font-weight: 800;
   color: var(--primary-blue);
 }
 
 .record-title {
-  font-size: 1.25rem;
+  font-size: 1.1rem;
   font-weight: 900;
-  margin: 6px 0;
+  margin: 4px 0;
 }
 
 .record-meta-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 10px;
+  gap: 8px;
   background: #F8FAFC;
-  padding: 12px 16px;
-  border-radius: var(--radius-md);
-  margin-bottom: 18px;
-  font-size: 0.84rem;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  margin-bottom: 12px;
+  font-size: 0.78rem;
 }
 
 .record-table {
   width: 100%;
   border-collapse: collapse;
-  margin-bottom: 18px;
-  font-size: 0.82rem;
+  margin-bottom: 12px;
+  font-size: 0.76rem;
 }
 
 .record-table th {
   background: var(--primary-blue);
   color: white;
-  padding: 8px 10px;
+  padding: 6px 8px;
   text-align: left;
 }
 
 .record-table td {
-  padding: 7px 10px;
+  padding: 5px 8px;
   border-bottom: 1px solid #E2E8F0;
 }
 
@@ -1070,11 +1059,13 @@ details[open] > .trayecto-header {
   justify-content: space-between;
   background: var(--pastel-blue-bg);
   border: 1px solid var(--pastel-blue-border);
-  padding: 12px 16px;
-  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
   font-weight: 800;
-  font-size: 0.88rem;
+  font-size: 0.8rem;
   color: var(--pastel-blue-text);
+  flex-wrap: wrap;
+  gap: 6px;
 }
 
 @media print {
@@ -1111,32 +1102,115 @@ details[open] > .trayecto-header {
   }
 }
 
-/* Responsive Mobile Optimizations */
-@media (max-width: 650px) {
+/* ==========================================================================
+   OPTIMIZACIONES MÓVILES DE ALTA GAMA (NO-SCROLL / HIGH DENSITY)
+   ========================================================================== */
+@media (max-width: 768px) {
   #app-container {
-    padding: 8px;
+    padding: 4px 6px;
   }
+
   .app-header {
-    padding: 14px 16px;
-    border-radius: var(--radius-md);
+    padding: 8px 10px;
+    border-radius: var(--radius-sm);
+    margin-bottom: 6px;
   }
+
+  .header-brand img {
+    width: 30px;
+    height: 30px;
+  }
+
+  .header-title-text h1 {
+    font-size: 0.82rem;
+  }
+
+  .career-pill {
+    padding: 4px 8px;
+    font-size: 0.7rem;
+  }
+
   .nav-tabs {
-    padding: 4px;
+    padding: 3px;
+    gap: 3px;
+    margin-bottom: 6px;
+  }
+
+  .tab-btn {
+    padding: 5px 8px;
+    font-size: 0.74rem;
+    min-width: 55px;
+  }
+
+  .home-summary-card {
+    padding: 10px 10px;
+    margin-bottom: 6px;
+  }
+
+  .home-career-badge {
+    font-size: 0.88rem;
+  }
+
+  .home-metrics-grid {
+    grid-template-columns: repeat(4, 1fr);
     gap: 4px;
   }
-  .tab-btn {
-    padding: 8px 10px;
-    font-size: 0.76rem;
-    min-width: 70px;
+
+  .home-metric-item {
+    padding: 6px 2px;
   }
+
+  .home-metric-num {
+    font-size: 1.1rem;
+  }
+
+  .home-metric-label {
+    font-size: 0.6rem;
+  }
+
   .gpa-summary-strip {
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 5px;
+    margin-bottom: 6px;
   }
+
   .gpa-card {
-    padding: 12px 14px;
+    padding: 6px 8px;
   }
+
+  .gpa-card-title {
+    font-size: 0.6rem;
+  }
+
   .gpa-card-val {
-    font-size: 1.3rem;
+    font-size: 1.05rem;
+  }
+
+  .gpa-card-sub {
+    font-size: 0.58rem;
+  }
+
+  .trayecto-block {
+    margin-bottom: 6px;
+  }
+
+  .trayecto-header {
+    padding: 7px 10px;
+    font-size: 0.82rem;
+  }
+
+  .subject-table th {
+    padding: 4px 6px;
+    font-size: 0.65rem;
+  }
+
+  .subject-table td {
+    padding: 6px 6px;
+    font-size: 0.74rem;
+  }
+
+  .btn-action {
+    padding: 3px 6px;
+    font-size: 0.68rem;
   }
 }
