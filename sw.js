@@ -1,12 +1,12 @@
 /* global self, caches */
 // Service Worker para Sistema Universitario PWA
-const CACHE_NAME = "sistema-univ-v4";
+const CACHE_NAME = "sistema-univ-v5";
 const ASSETS = [
   "./",
   "./index.html",
-  "./styles.css",
-  "./pensumData.js",
-  "./app.js",
+  "./styles.css?v=5.0",
+  "./pensumData.js?v=5.0",
+  "./app.js?v=5.0",
   "./icon.jpg",
   "./manifest.json"
 ];

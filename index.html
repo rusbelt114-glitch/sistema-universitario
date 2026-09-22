@@ -15,7 +15,7 @@
   <link rel="apple-touch-icon" href="icon.jpg">
   <link rel="icon" type="image/jpeg" href="icon.jpg">
 
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=5.0">
 </head>
 <body>
 
@@ -518,12 +518,12 @@
   </div>
 
   <!-- Scripts & Service Worker registration for PWA -->
-  <script src="pensumData.js"></script>
-  <script src="app.js"></script>
+  <script src="pensumData.js?v=5.0"></script>
+  <script src="app.js?v=5.0"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW error', err));
+        navigator.serviceWorker.register('./sw.js?v=5.0').catch(err => console.log('SW error', err));
       });
     }
   </script>
