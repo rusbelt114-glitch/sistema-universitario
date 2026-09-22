@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sistema Universitario - Gestor Académico Interactivo</title>
-  
+
   <!-- Configuración PWA (Aplicación Instalable con Icono de Birrete) -->
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0A4D40">
@@ -17,6 +18,7 @@
 
   <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
 
   <div id="app-container">
@@ -29,7 +31,8 @@
         <span class="brand-badge">UNEXCA • APPLICACIÓN INSTALABLE</span>
         <h1 class="landing-title">Gestión de Estudios Universitarios</h1>
         <p class="landing-subtitle">
-          Sistema personal interactivo para control de asignaturas, plan de evaluaciones, notas y alternancia por semanas.
+          Sistema personal interactivo para control de asignaturas, plan de evaluaciones, notas y alternancia por
+          semanas.
         </p>
       </div>
 
@@ -37,7 +40,8 @@
       <div class="week-indicator-bar">
         <span>ESTATUS ACADÉMICO ACTUAL:</span>
         <span id="landing-week-badge" class="week-badge">SEMANA A (ADMINISTRACIÓN)</span>
-        <button id="btn-toggle-week-landing" type="button" class="week-toggle-btn" onclick="app.toggleWeek()">Cambiar a Semana B</button>
+        <button id="btn-toggle-week-landing" type="button" class="week-toggle-btn" onclick="app.toggleWeek()">Cambiar a
+          Semana B</button>
       </div>
 
 
@@ -63,11 +67,12 @@
          PANTALLA PRINCIPAL INTERACTIVA DEL SISTEMA
          ==================================================================== -->
     <div id="main-app-screen" style="display: none;">
-      
+
       <!-- Top Navigation Header -->
       <header class="app-header">
         <div class="header-brand">
-          <img src="icon.jpg" style="width: 42px; height: 42px; border-radius: 10px; border: 2px solid white;" alt="Logo UNEXCA">
+          <img src="icon.jpg" style="width: 42px; height: 42px; border-radius: 10px; border: 2px solid white;"
+            alt="Logo UNEXCA">
           <div class="header-title-text">
             <h1>SISTEMA UNIVERSITARIO INTERACTIVO</h1>
             <span id="header-career-title">PNF EN ADMINISTRACIÓN</span>
@@ -75,7 +80,8 @@
         </div>
 
         <div class="header-actions">
-          <button type="button" class="career-pill" onclick="app.openPrintRecordModal()" title="Generar Récord de Notas Oficial">
+          <button type="button" class="career-pill" onclick="app.openPrintRecordModal()"
+            title="Generar Récord de Notas Oficial">
             <strong>Récord de Notas</strong>
           </button>
 
@@ -83,7 +89,8 @@
             <strong id="header-week-text">SEMANA A</strong>
           </button>
 
-          <button type="button" id="btn-toggle-career-header" class="career-pill" onclick="app.toggleCareer()" title="Alternar entre Administración e Informática">
+          <button type="button" id="btn-toggle-career-header" class="career-pill" onclick="app.toggleCareer()"
+            title="Alternar entre Administración e Informática">
             <span id="btn-toggle-career-text">Cambiar a Informática</span>
           </button>
         </div>
@@ -107,9 +114,11 @@
             <div class="home-summary-header">
               <div>
                 <div id="home-career-badge" class="home-career-badge">PNF EN ADMINISTRACIÓN (ADM)</div>
-                <div id="home-phase-desc" style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 2px;">Trayecto II - Fase II (2-2) En Curso</div>
+                <div id="home-phase-desc" style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 2px;">
+                  Trayecto II - Fase II (2-2) En Curso</div>
               </div>
-              <button type="button" id="home-week-pill" class="week-badge" style="cursor: pointer;" onclick="app.toggleWeek()">
+              <button type="button" id="home-week-pill" class="week-badge" style="cursor: pointer;"
+                onclick="app.toggleWeek()">
                 <span id="home-week-text">SEMANA A (ADM)</span>
               </button>
             </div>
@@ -181,16 +190,6 @@
               <div id="dashboard-trayectos-summary"></div>
             </div>
           </div>
-
-          <!-- Barra de Respaldo y Actualización Rápida -->
-          <div style="display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; margin-top: 14px; margin-bottom: 6px;">
-            <button type="button" class="btn-secondary" style="font-size: 0.72rem; padding: 5px 10px;" onclick="app.exportDataJSON()" title="Descargar archivo JSON con todas tus notas y asignaturas">Guardar Respaldo (JSON)</button>
-            <label class="btn-secondary" style="font-size: 0.72rem; padding: 5px 10px; cursor: pointer; display: inline-flex; align-items: center;" title="Cargar archivo de respaldo JSON en este dispositivo">
-              Cargar Respaldo (JSON)
-              <input type="file" accept=".json" style="display: none;" onchange="app.importDataJSON(event)">
-            </label>
-            <button type="button" class="btn-secondary" style="font-size: 0.72rem; padding: 5px 10px; color: var(--primary-blue); font-weight: bold;" onclick="app.forceReloadUpdate()" title="Elimina la caché del teléfono y carga la última versión subida">Actualizar App / Limpiar Caché</button>
-          </div>
         </section>
 
         <!-- ====================================================================
@@ -199,11 +198,14 @@
         <section id="tab-pensum" class="tab-section" style="display: none;">
           <div class="section-toolbar">
             <div class="search-box">
-              <input type="text" id="search-subject-input" class="search-input" placeholder="Buscar materia por nombre o código..." aria-label="Buscar materia" oninput="app.filterSubjects()">
+              <input type="text" id="search-subject-input" class="search-input"
+                placeholder="Buscar materia por nombre o código..." aria-label="Buscar materia"
+                oninput="app.filterSubjects()">
             </div>
-            
+
             <div class="filter-group">
-              <select id="filter-status-select" class="filter-select" aria-label="Filtrar por estatus" onchange="app.filterSubjects()">
+              <select id="filter-status-select" class="filter-select" aria-label="Filtrar por estatus"
+                onchange="app.filterSubjects()">
                 <option value="todos">Todos los Estatus</option>
                 <option value="en_curso">En Curso (Fase Activa)</option>
                 <option value="aprobada">Aprobadas</option>
@@ -213,7 +215,8 @@
                 <option value="por_cursar">Por Cursar</option>
               </select>
 
-              <select id="filter-trayecto-select" class="filter-select" aria-label="Filtrar por trayecto" onchange="app.filterSubjects()">
+              <select id="filter-trayecto-select" class="filter-select" aria-label="Filtrar por trayecto"
+                onchange="app.filterSubjects()">
                 <option value="todos">Todos los Trayectos</option>
                 <option value="1-1">Trayecto 1-1</option>
                 <option value="1-2">Trayecto 1-2</option>
@@ -240,7 +243,8 @@
             <h2>Horario Semanal - <span id="horario-week-title">Semana A</span></h2>
             <div style="display: flex; gap: 6px; flex-wrap: wrap;">
               <button class="btn-secondary" onclick="app.toggleWeek()">Cambiar Semana (A / B)</button>
-              <button class="btn-secondary" style="color: #BE123C; border-color: #FECDD3;" onclick="app.clearCurrentSchedule()">Limpiar Horario</button>
+              <button class="btn-secondary" style="color: #BE123C; border-color: #FECDD3;"
+                onclick="app.clearCurrentSchedule()">Limpiar Horario</button>
               <button class="btn-primary" onclick="app.openAddScheduleModal()">+ Agregar Clase</button>
             </div>
           </div>
@@ -250,7 +254,8 @@
           <div class="trayecto-block" style="margin-top: 14px;">
             <div class="trayecto-header" style="justify-content: space-between;">
               <div class="trayecto-title">Tareas & Recordatorios Académicos</div>
-              <button class="btn-primary" style="padding: 4px 10px; font-size: 0.72rem;" onclick="app.openAddTaskModal()">+ Nueva Alerta</button>
+              <button class="btn-primary" style="padding: 4px 10px; font-size: 0.72rem;"
+                onclick="app.openAddTaskModal()">+ Nueva Alerta</button>
             </div>
             <div style="padding: 10px 12px;">
               <div id="notif-list-container"></div>
@@ -291,7 +296,8 @@
     <div class="modal-card" style="max-width: 650px;">
       <div class="modal-header">
         <h3 id="detail-subject-title" class="modal-title">Ficha de Asignatura</h3>
-        <button type="button" class="modal-close-btn" onclick="app.closeModal('modal-subject-detail')" aria-label="Cerrar">&times;</button>
+        <button type="button" class="modal-close-btn" onclick="app.closeModal('modal-subject-detail')"
+          aria-label="Cerrar">&times;</button>
       </div>
       <div id="detail-subject-content"></div>
     </div>
@@ -302,7 +308,8 @@
     <div class="modal-card">
       <div class="modal-header">
         <h3 id="modal-subject-title" class="modal-title">Editar Asignatura</h3>
-        <button type="button" class="modal-close-btn" onclick="app.closeModal('modal-edit-subject')" aria-label="Cerrar">&times;</button>
+        <button type="button" class="modal-close-btn" onclick="app.closeModal('modal-edit-subject')"
+          aria-label="Cerrar">&times;</button>
       </div>
       <form id="form-edit-subject" onsubmit="app.saveSubjectEdit(event)">
         <input type="hidden" id="edit-subject-id">
@@ -346,7 +353,8 @@
         </div>
         <div class="form-group">
           <label class="form-label" for="edit-subject-grade">Nota Definitiva (0 a 20):</label>
-          <input type="number" step="0.1" min="0" max="20" id="edit-subject-grade" class="form-control" placeholder="Ej: 16.5">
+          <input type="number" step="0.1" min="0" max="20" id="edit-subject-grade" class="form-control"
+            placeholder="Ej: 16.5">
         </div>
         <div class="form-group">
           <label class="form-label" for="edit-subject-ref">Documento o Hoja de Actuación de Referencia:</label>
@@ -364,22 +372,26 @@
     <div class="modal-card">
       <div class="modal-header">
         <h3 id="modal-eval-title" class="modal-title">Agregar Evaluación</h3>
-        <button type="button" class="modal-close-btn" onclick="app.closeModal('modal-edit-eval')" aria-label="Cerrar">&times;</button>
+        <button type="button" class="modal-close-btn" onclick="app.closeModal('modal-edit-eval')"
+          aria-label="Cerrar">&times;</button>
       </div>
       <form id="form-edit-eval" onsubmit="app.saveEvaluation(event)">
         <input type="hidden" id="edit-eval-id">
         <div class="form-group">
           <label class="form-label" for="edit-eval-name">Nombre de la Evaluación / Taller:</label>
-          <input type="text" id="edit-eval-name" class="form-control" required placeholder="Ej: Parcial I, Taller, Proyecto...">
+          <input type="text" id="edit-eval-name" class="form-control" required
+            placeholder="Ej: Parcial I, Taller, Proyecto...">
         </div>
         <div style="display: flex; gap: 10px;">
           <div class="form-group" style="flex:1;">
             <label class="form-label" for="edit-eval-weight">Ponderación (%):</label>
-            <input type="number" step="1" min="1" max="100" id="edit-eval-weight" class="form-control" required placeholder="25">
+            <input type="number" step="1" min="1" max="100" id="edit-eval-weight" class="form-control" required
+              placeholder="25">
           </div>
           <div class="form-group" style="flex:1;">
             <label class="form-label" for="edit-eval-score">Nota Obtenida (0-20):</label>
-            <input type="number" step="0.1" min="0" max="20" id="edit-eval-score" class="form-control" placeholder="Ej: 17">
+            <input type="number" step="0.1" min="0" max="20" id="edit-eval-score" class="form-control"
+              placeholder="Ej: 17">
           </div>
         </div>
         <div class="form-group">
@@ -402,7 +414,8 @@
     <div class="modal-card">
       <div class="modal-header">
         <h3 class="modal-title">Agregar Clase al Horario</h3>
-        <button type="button" class="modal-close-btn" onclick="app.closeModal('modal-add-schedule')" aria-label="Cerrar">&times;</button>
+        <button type="button" class="modal-close-btn" onclick="app.closeModal('modal-add-schedule')"
+          aria-label="Cerrar">&times;</button>
       </div>
       <form id="form-add-schedule" onsubmit="app.saveScheduleClass(event)">
         <div class="form-group">
@@ -431,7 +444,8 @@
         </div>
         <div class="form-group">
           <label class="form-label" for="sched-subject">Materia / Asignatura:</label>
-          <input type="text" id="sched-subject" list="sched-subjects-datalist" class="form-control" required placeholder="Ej: Administración de Costos I">
+          <input type="text" id="sched-subject" list="sched-subjects-datalist" class="form-control" required
+            placeholder="Ej: Administración de Costos I">
           <datalist id="sched-subjects-datalist"></datalist>
         </div>
         <div class="form-group">
@@ -450,7 +464,8 @@
     <div class="modal-card">
       <div class="modal-header">
         <h3 class="modal-title">Nueva Alerta / Tarea</h3>
-        <button type="button" class="modal-close-btn" onclick="app.closeModal('modal-add-task')" aria-label="Cerrar">&times;</button>
+        <button type="button" class="modal-close-btn" onclick="app.closeModal('modal-add-task')"
+          aria-label="Cerrar">&times;</button>
       </div>
       <form id="form-add-task" onsubmit="app.saveTaskNotification(event)">
         <div class="form-group">
@@ -459,7 +474,8 @@
         </div>
         <div class="form-group">
           <label class="form-label" for="task-desc">Descripción / Asignatura:</label>
-          <textarea id="task-desc" class="form-control" rows="3" placeholder="Detalles de la entrega o recordatorio..."></textarea>
+          <textarea id="task-desc" class="form-control" rows="3"
+            placeholder="Detalles de la entrega o recordatorio..."></textarea>
         </div>
         <div class="form-group">
           <label class="form-label" for="task-priority">Prioridad:</label>
@@ -480,7 +496,8 @@
     <div class="modal-card" style="max-width: 900px;">
       <div class="modal-header">
         <h3 class="modal-title">Récord Académico & Constancia de Calificaciones</h3>
-        <button type="button" class="modal-close-btn" onclick="app.closeModal('modal-print-record')" aria-label="Cerrar">&times;</button>
+        <button type="button" class="modal-close-btn" onclick="app.closeModal('modal-print-record')"
+          aria-label="Cerrar">&times;</button>
       </div>
       <div class="print-record-modal-body">
         <div id="print-record-content"></div>
@@ -498,10 +515,22 @@
   <script>
     if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW error', err));
+        navigator.serviceWorker.register('./sw.js').then(reg => {
+          reg.onupdatefound = () => {
+            const installingWorker = reg.installing;
+            if (installingWorker) {
+              installingWorker.onstatechange = () => {
+                if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  window.location.reload();
+                }
+              };
+            }
+          };
+          if (reg.update) reg.update();
+        }).catch(err => console.log('SW error', err));
       });
     }
   </script>
 </body>
-</html>
 
+</html>

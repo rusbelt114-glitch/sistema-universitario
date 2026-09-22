@@ -74,8 +74,24 @@ class UniversityApp {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        if (parsed.pensum) this.state.pensum = parsed.pensum;
-        if (parsed.evaluaciones) this.state.evaluaciones = parsed.evaluaciones;
+        if (parsed.pensum) {
+          ['ADM', 'INF'].forEach(c => {
+            const seedCareer = c === 'ADM' ? PENSUM_ADMINISTRACION : PENSUM_INFORMATICA;
+            if (!this.state.pensum[c]) this.state.pensum[c] = structuredClone(seedCareer);
+            if (parsed.pensum[c] && parsed.pensum[c].trayectos) {
+              seedCareer.trayectos.forEach(seedT => {
+                const existingT = parsed.pensum[c].trayectos.find(t => t.id === seedT.id);
+                if (!existingT) {
+                  parsed.pensum[c].trayectos.push(structuredClone(seedT));
+                }
+              });
+              this.state.pensum[c] = parsed.pensum[c];
+            }
+          });
+        }
+        if (parsed.evaluaciones) {
+          this.state.evaluaciones = { ...structuredClone(EVALUACIONES_INICIALES), ...parsed.evaluaciones };
+        }
         if (parsed.horario) this.state.horario = parsed.horario;
         if (parsed.notificaciones) this.state.notificaciones = parsed.notificaciones;
         if (parsed.currentCareer) this.currentCareer = parsed.currentCareer;
@@ -97,7 +113,7 @@ class UniversityApp {
     };
     localStorage.setItem(this.storageKey, JSON.stringify(toSave));
 
-    fetch('/api/git-sync', { method: 'POST' }).catch(() => {});
+    fetch('/api/git-sync', { method: 'POST' }).catch(() => { });
   }
 
   // --- CONTROL DE NAVEGACIÓN Y CARRERA ---
@@ -994,6 +1010,12 @@ class UniversityApp {
 
     this.saveState();
     this.closeModal("modal-edit-subject");
+
+    const searchInput = document.getElementById("search-subject-input");
+    if (searchInput) searchInput.value = "";
+    const statusFilter = document.getElementById("filter-status-select");
+    if (statusFilter) statusFilter.value = "todos";
+
     this.renderPensum();
     this.renderDashboard();
 
@@ -1001,6 +1023,7 @@ class UniversityApp {
       this.renderSubjectDetailContent(id);
     }
     window.scrollTo({ top: scrollPos, behavior: "instant" });
+    alert(`¡Asignatura "${name}" guardada con éxito!`);
   }
 
   deleteSubject(subjectId) {
