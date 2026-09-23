@@ -1,0 +1,158 @@
+Created At: 2026-09-23T10:24:31-04:00
+Completed At: 2026-09-23T10:24:31-04:00
+File Path: `file:///c:/Users/Usuario/Desktop/sistema-universitario-main/styles.css`
+Total Lines: 1408
+Total Bytes: 29567
+Showing lines 1 to 150
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+1: /* ==========================================================================
+2:    SISTEMA UNIVERSITARIO DE GESTIÓN ACADÉMICA - HIGH END MOBILE-FIRST UI
+3:    Diseño Compacto, Sin Scroll Excesivo, Azul Real Vibrante & Tarjetas Pastel
+4:    ========================================================================== */
+5: 
+6: :root {
+7:   /* Paleta Primaria Azul Real */
+8:   --primary-gradient: linear-gradient(135deg, #1D4ED8 0%, #2563EB 50%, #3B82F6 100%);
+9:   --primary-blue: #2563EB;
+10:   --primary-dark: #1E40AF;
+11:   --primary-deep: #0F172A;
+12:   --primary-light: #60A5FA;
+13:   --primary-subtle: #EFF6FF;
+14: 
+15:   /* Fondos y Superficies */
+16:   --bg-app: #F8FAFC;
+17:   --bg-card: #FFFFFF;
+18:   --bg-surface-hover: #F1F5F9;
+19:   --border-color: #E2E8F0;
+20:   --border-subtle: #F1F5F9;
+21: 
+22:   /* Paleta Pastel Suave */
+23:   --pastel-blue-bg: #EFF6FF;
+24:   --pastel-blue-border: #BFDBFE;
+25:   --pastel-blue-text: #1D4ED8;
+26: 
+27:   --pastel-green-bg: #F0FDF4;
+28:   --pastel-green-border: #BBF7D0;
+29:   --pastel-green-text: #15803D;
+30: 
+31:   --pastel-amber-bg: #FFFBEB;
+32:   --pastel-amber-border: #FDE68A;
+33:   --pastel-amber-text: #B45309;
+34: 
+35:   --pastel-purple-bg: #FAF5FF;
+36:   --pastel-purple-border: #E9D5FF;
+37:   --pastel-purple-text: #7E22CE;
+38: 
+39:   --pastel-rose-bg: #FFF1F2;
+40:   --pastel-rose-border: #FECDD3;
+41:   --pastel-rose-text: #BE123C;
+42: 
+43:   /* Estados Académicos */
+44:   --status-aprobada-bg: #DCFCE7;
+45:   --status-aprobada-text: #166534;
+46:   --status-en-curso-bg: #DBEAFE;
+47:   --status-en-curso-text: #1E40AF;
+48:   --status-repetir-bg: #FFE4E6;
+49:   --status-repetir-text: #9F1239;
+50:   --status-intensivo-bg: #FEF3C7;
+51:   --status-intensivo-text: #92400E;
+52:   --status-pendiente-bg: #F3E8FF;
+53:   --status-pendiente-text: #6B21A8;
+54:   --status-por-cursar-bg: #F1F5F9;
+55:   --status-por-cursar-text: #475569;
+56: 
+57:   /* Tipografía */
+58:   --text-primary: #0F172A;
+59:   --text-secondary: #475569;
+60:   --text-muted: #94A3B8;
+61: 
+62:   /* Sombras Suaves */
+63:   --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
+64:   --shadow-sm: 0 2px 6px rgba(15, 23, 42, 0.05);
+65:   --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.07);
+66:   --shadow-lg: 0 10px 24px rgba(15, 23, 42, 0.09);
+67:   --shadow-primary: 0 4px 14px rgba(37, 99, 235, 0.25);
+68: 
+69:   /* Radios */
+70:   --radius-sm: 8px;
+71:   --radius-md: 12px;
+72:   --radius-lg: 16px;
+73:   --radius-pill: 9999px;
+74: 
+75:   --transition: all 0.15s ease-in-out;
+76: }
+77: 
+78: /* Reset y Base */
+79: * {
+80:   box-sizing: border-box;
+81:   margin: 0;
+82:   padding: 0;
+83: }
+84: 
+85: body, button, input, select, textarea {
+86:   font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+87: }
+88: 
+89: body {
+90:   background-color: var(--bg-app);
+91:   color: var(--text-primary);
+92:   line-height: 1.4;
+93:   min-height: 100vh;
+94:   display: flex;
+95:   flex-direction: column;
+96:   -webkit-font-smoothing: antialiased;
+97: }
+98: 
+99: #app-container {
+100:   width: 100%;
+101:   max-width: 1100px;
+102:   margin: 0 auto;
+103:   padding: 10px 12px;
+104:   flex: 1;
+105: }
+106: 
+107: /* ==========================================================================
+108:    LANDING DE SELECCIÓN INICIAL
+109:    ========================================================================== */
+110: .landing-wrapper {
+111:   display: flex;
+112:   flex-direction: column;
+113:   align-items: center;
+114:   justify-content: center;
+115:   min-height: 80vh;
+116:   text-align: center;
+117:   padding: 14px;
+118: }
+119: 
+120: .brand-badge {
+121:   background: var(--pastel-blue-bg);
+122:   color: var(--pastel-blue-text);
+123:   border: 1px solid var(--pastel-blue-border);
+124:   font-size: 0.72rem;
+125:   font-weight: 800;
+126:   padding: 4px 10px;
+127:   border-radius: var(--radius-pill);
+128:   display: inline-block;
+129:   margin-bottom: 8px;
+130: }
+131: 
+132: .landing-title {
+133:   font-size: 1.45rem;
+134:   font-weight: 800;
+135:   color: var(--primary-deep);
+136:   margin-bottom: 6px;
+137: }
+138: 
+139: .landing-subtitle {
+140:   font-size: 0.85rem;
+141:   color: var(--text-secondary);
+142:   max-width: 500px;
+143:   margin-bottom: 14px;
+144: }
+145: 
+146: .week-indicator-bar {
+147:   background: white;
+148:   border: 1px solid var(--border-color);
+149:   padding: 8px 14px;
+150:   border-radius: var(--radius-pill);
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

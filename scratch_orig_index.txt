@@ -1,0 +1,128 @@
+Created At: 2026-09-23T10:19:36-04:00
+Completed At: 2026-09-23T10:19:37-04:00
+File Path: `file:///c:/Users/Usuario/Desktop/sistema-universitario-main/index.html`
+Total Lines: 536
+Total Bytes: 25554
+Showing lines 1 to 120
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+1: <!DOCTYPE html>
+2: <html lang="es">
+3: 
+4: <head>
+5:   <meta charset="UTF-8">
+6:   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+7:   <title>Sistema Universitario - Gestor Académico Interactivo</title>
+8: 
+9:   <!-- Configuración PWA (Aplicación Instalable con Icono de Birrete) -->
+10:   <link rel="manifest" href="manifest.json">
+11:   <meta name="theme-color" content="#0A4D40">
+12:   <meta name="mobile-web-app-capable" content="yes">
+13:   <meta name="apple-mobile-web-app-capable" content="yes">
+14:   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+15:   <meta name="apple-mobile-web-app-title" content="Sistema Universitario">
+16:   <link rel="apple-touch-icon" href="icon.jpg">
+17:   <link rel="icon" type="image/jpeg" href="icon.jpg">
+18: 
+19:   <link rel="stylesheet" href="styles.css">
+20: </head>
+21: 
+22: <body>
+23: 
+24:   <div id="app-container">
+25: 
+26:     <!-- ====================================================================
+27:          PANTALLA INICIAL / LANDING DE SELECCIÓN DE CARRERA
+28:          ==================================================================== -->
+29:     <div id="landing-screen" class="landing-wrapper">
+30:       <div class="landing-header">
+31:         <span class="brand-badge">UNEXCA • APPLICACIÓN INSTALABLE</span>
+32:         <h1 class="landing-title">Gestión de Estudios Universitarios</h1>
+33:         <p class="landing-subtitle">
+34:           Sistema personal interactivo para control de asignaturas, plan de evaluaciones, notas y alternancia por
+35:           semanas.
+36:         </p>
+37:       </div>
+38: 
+39:       <!-- Barra de Indicación de Semana Actual -->
+40:       <div class="week-indicator-bar">
+41:         <span>ESTATUS ACADÉMICO ACTUAL:</span>
+42:         <span id="landing-week-badge" class="week-badge">SEMANA A (ADMINISTRACIÓN)</span>
+43:         <button id="btn-toggle-week-landing" type="button" class="week-toggle-btn" onclick="app.toggleWeek()">Cambiar a
+44:           Semana B</button>
+45:       </div>
+46: 
+47: 
+48:       <!-- Selección de Carrera Inicial -->
+49:       <div class="career-select-grid">
+50:         <button type="button" id="card-select-adm" class="career-card active-career" onclick="app.selectCareer('ADM')">
+51:           <div class="career-icon">ADM</div>
+52:           <h2 class="career-name">PNF Administración</h2>
+53:           <p class="career-meta">Trayecto II - Fase II (2-2) En Curso • TSU & Licenciatura</p>
+54:           <span class="career-btn">Gestión Administración →</span>
+55:         </button>
+56: 
+57:         <button type="button" id="card-select-inf" class="career-card" onclick="app.selectCareer('INF')">
+58:           <div class="career-icon">INF</div>
+59:           <h2 class="career-name">PNF Informática</h2>
+60:           <p class="career-meta">Trayecto I - Fase I (1-1) • Modalidad Paralela</p>
+61:           <span class="career-btn">Gestión Informática →</span>
+62:         </button>
+63:       </div>
+64:     </div>
+65: 
+66:     <!-- ====================================================================
+67:          PANTALLA PRINCIPAL INTERACTIVA DEL SISTEMA
+68:          ==================================================================== -->
+69:     <div id="main-app-screen" style="display: none;">
+70: 
+71:       <!-- Top Navigation Header -->
+72:       <header class="app-header">
+73:         <div class="header-brand">
+74:           <img src="icon.jpg" style="width: 42px; height: 42px; border-radius: 10px; border: 2px solid white;"
+75:             alt="Logo UNEXCA">
+76:           <div class="header-title-text">
+77:             <h1>SISTEMA UNIVERSITARIO INTERACTIVO</h1>
+78:             <span id="header-career-title">PNF EN ADMINISTRACIÓN</span>
+79:           </div>
+80:         </div>
+81: 
+82:         <div class="header-actions">
+83:           <button type="button" class="career-pill" onclick="app.openPrintRecordModal()"
+84:             title="Generar Récord de Notas Oficial">
+85:             <strong>Récord de Notas</strong>
+86:           </button>
+87: 
+88:           <button type="button" id="header-week-pill" class="career-pill" onclick="app.toggleWeek()">
+89:             <strong id="header-week-text">SEMANA A</strong>
+90:           </button>
+91: 
+92:           <button type="button" id="btn-toggle-career-header" class="career-pill" onclick="app.toggleCareer()"
+93:             title="Alternar entre Administración e Informática">
+94:             <span id="btn-toggle-career-text">Cambiar a Informática</span>
+95:           </button>
+96:         </div>
+97:       </header>
+98: 
+99:       <!-- Pestañas de Navegación Seleccionables (3 Módulos Claros) -->
+100:       <nav class="nav-tabs">
+101:         <button type="button" class="tab-btn active" onclick="app.switchTab('dashboard')">Inicio</button>
+102:         <button type="button" class="tab-btn" onclick="app.switchTab('pensum')">Asignaturas & Notas</button>
+103:         <button type="button" class="tab-btn" onclick="app.switchTab('horario')">Horario & Tareas</button>
+104:       </nav>
+105: 
+106:       <!-- CONTENIDO PRINCIPAL -->
+107:       <main id="tab-content-area">
+108: 
+109:         <!-- ====================================================================
+110:              MÓDULO 1: INICIO & RESUMEN ACADÉMICO
+111:              ==================================================================== -->
+112:         <section id="tab-dashboard" class="tab-section">
+113:           <div class="home-summary-card">
+114:             <div class="home-summary-header">
+115:               <div>
+116:                 <div id="home-career-badge" class="home-career-badge">PNF EN ADMINISTRACIÓN (ADM)</div>
+117:                 <div id="home-phase-desc" style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 2px;">
+118:                   Trayecto II - Fase II (2-2) En Curso</div>
+119:               </div>
+120:               <button type="button" id="home-week-pill" class="week-badge" style="cursor: pointer;"
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

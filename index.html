@@ -16,7 +16,12 @@
   <link rel="apple-touch-icon" href="icon.jpg">
   <link rel="icon" type="image/jpeg" href="icon.jpg">
 
-  <link rel="stylesheet" href="styles.css">
+  <!-- Tipografía Open Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="styles.css?v=10">
 </head>
 
 <body>
@@ -24,42 +29,65 @@
   <div id="app-container">
 
     <!-- ====================================================================
-         PANTALLA INICIAL / LANDING DE SELECCIÓN DE CARRERA
+         PANTALLA INICIAL / USER LOGIN CARD
          ==================================================================== -->
     <div id="landing-screen" class="landing-wrapper">
-      <div class="landing-header">
-        <span class="brand-badge">UNEXCA • APPLICACIÓN INSTALABLE</span>
-        <h1 class="landing-title">Gestión de Estudios Universitarios</h1>
-        <p class="landing-subtitle">
-          Sistema personal interactivo para control de asignaturas, plan de evaluaciones, notas y alternancia por
-          semanas.
-        </p>
-      </div>
+      <div class="user-login-card">
+        <!-- Foto de Perfil Masculino Diseño Limpio -->
+        <div class="user-login-avatar-wrap">
+          <div class="user-login-avatar">
+            <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" class="login-avatar-svg">
+              <circle cx="40" cy="40" r="38" fill="#F1F5F9" stroke="#E2E8F0" stroke-width="2"/>
+              <!-- Male student head / hair -->
+              <ellipse cx="40" cy="38" rx="17" ry="19" fill="#FDE68A"/>
+              <path d="M22 30C22 20 30 14 40 14C50 14 58 20 58 30C58 33 55 33 53 28C50 22 45 20 40 20C35 20 30 22 27 28C25 33 22 33 22 30Z" fill="#1E293B"/>
+              <!-- Eyes & Eyebrows -->
+              <rect x="30" y="27" width="7" height="2" rx="1" fill="#0F172A"/>
+              <rect x="43" y="27" width="7" height="2" rx="1" fill="#0F172A"/>
+              <circle cx="33.5" cy="35" r="2.8" fill="#0F172A"/>
+              <circle cx="46.5" cy="35" r="2.8" fill="#0F172A"/>
+              <circle cx="34.5" cy="34" r="0.9" fill="#FFFFFF"/>
+              <circle cx="47.5" cy="34" r="0.9" fill="#FFFFFF"/>
+              <!-- Smile -->
+              <path d="M35 44C37 47 43 47 45 44" stroke="#0F172A" stroke-width="2" stroke-linecap="round"/>
+              <!-- Body / Clothes (Modern polo / collar in signature teal & blue) -->
+              <path d="M20 74C20 58 29 53 40 53C51 53 60 58 60 74" fill="#0A4D40"/>
+              <!-- Inner Collar / Tie -->
+              <path d="M36 53L40 61L44 53" stroke="#FFFFFF" stroke-width="2.5" fill="#FFFFFF"/>
+              <polygon points="38,61 42,61 43,72 40,75 37,72" fill="#2563EB"/>
+            </svg>
+          </div>
+        </div>
 
-      <!-- Barra de Indicación de Semana Actual -->
-      <div class="week-indicator-bar">
-        <span>ESTATUS ACADÉMICO ACTUAL:</span>
-        <span id="landing-week-badge" class="week-badge">SEMANA A (ADMINISTRACIÓN)</span>
-        <button id="btn-toggle-week-landing" type="button" class="week-toggle-btn" onclick="app.toggleWeek()">Cambiar a
-          Semana B</button>
-      </div>
+        <div class="user-login-info">
+          <span class="user-login-badge">PORTAL ESTUDIANTIL UNEXCA</span>
+          <h1 class="user-login-title">Inicio de Sesión</h1>
+          <p class="user-login-sub">Selecciona tu carrera para acceder a tu control académico:</p>
+        </div>
 
+        <div class="user-login-actions">
+          <button type="button" class="btn-login-career btn-career-adm" onclick="app.selectCareer('ADM')">
+            <div class="btn-login-career-content">
+              <span class="btn-career-tag">ADM</span>
+              <div class="btn-career-texts">
+                <strong>PNF en Administración</strong>
+                <span>Trayecto II - Fase II (2-2) • En Curso</span>
+              </div>
+            </div>
+            <span class="btn-career-arrow">→</span>
+          </button>
 
-      <!-- Selección de Carrera Inicial -->
-      <div class="career-select-grid">
-        <button type="button" id="card-select-adm" class="career-card active-career" onclick="app.selectCareer('ADM')">
-          <div class="career-icon">ADM</div>
-          <h2 class="career-name">PNF Administración</h2>
-          <p class="career-meta">Trayecto II - Fase II (2-2) En Curso • TSU & Licenciatura</p>
-          <span class="career-btn">Gestión Administración →</span>
-        </button>
-
-        <button type="button" id="card-select-inf" class="career-card" onclick="app.selectCareer('INF')">
-          <div class="career-icon">INF</div>
-          <h2 class="career-name">PNF Informática</h2>
-          <p class="career-meta">Trayecto I - Fase I (1-1) • Modalidad Paralela</p>
-          <span class="career-btn">Gestión Informática →</span>
-        </button>
+          <button type="button" class="btn-login-career btn-career-inf" onclick="app.selectCareer('INF')">
+            <div class="btn-login-career-content">
+              <span class="btn-career-tag tag-inf">INF</span>
+              <div class="btn-career-texts">
+                <strong>PNF en Informática</strong>
+                <span>Trayecto I - Fase I (1-1) • Modalidad Paralela</span>
+              </div>
+            </div>
+            <span class="btn-career-arrow">→</span>
+          </button>
+        </div>
       </div>
     </div>
 
@@ -93,13 +121,19 @@
             title="Alternar entre Administración e Informática">
             <span id="btn-toggle-career-text">Cambiar a Informática</span>
           </button>
+
+          <button type="button" class="career-pill" onclick="app.logout()"
+            title="Cerrar sesión y volver al login" style="background: rgba(239, 68, 68, 0.15); border-color: rgba(239, 68, 68, 0.3);">
+            <span>Salir ↵</span>
+          </button>
         </div>
       </header>
 
-      <!-- Pestañas de Navegación Seleccionables (3 Módulos Claros) -->
+      <!-- Pestañas de Navegación Seleccionables -->
       <nav class="nav-tabs">
         <button type="button" class="tab-btn active" onclick="app.switchTab('dashboard')">Inicio</button>
-        <button type="button" class="tab-btn" onclick="app.switchTab('pensum')">Asignaturas & Notas</button>
+        <button type="button" class="tab-btn" onclick="app.switchTab('semestre')">Mi Semestre</button>
+        <button type="button" class="tab-btn" onclick="app.switchTab('pensum')">Pensum Completo</button>
         <button type="button" class="tab-btn" onclick="app.switchTab('horario')">Horario & Tareas</button>
       </nav>
 
@@ -171,13 +205,20 @@
             </div>
           </div>
 
-          <!-- Materias Activas en Curso -->
-          <div class="trayecto-block" style="margin-top: 10px;">
-            <div class="trayecto-header">
-              <div class="trayecto-title">Materias en Curso Actuales</div>
-            </div>
-            <div style="padding: 8px 12px;">
-              <div id="dashboard-active-subjects-list"></div>
+          <!-- Resumen de Semestre Activo -->
+          <div id="home-semester-status-card" class="trayecto-block" style="margin-top: 10px; background: white; border: 1.5px solid var(--border-color); border-radius: 10px; padding: 14px 16px; box-shadow: var(--shadow-xs);">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+              <div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span style="font-size: 0.72rem; font-weight: 800; color: #1E40AF; background: #DBEAFE; padding: 2px 8px; border-radius: 4px; text-transform: uppercase;">Semestre Actual</span>
+                  <span id="home-semester-active-badge" class="status-badge status-en_curso">En Curso</span>
+                </div>
+                <h3 id="home-semester-name" style="margin: 4px 0 2px 0; font-size: 1.05rem; color: var(--text-primary); font-weight: 800;">Trayecto II - Fase II (2-2)</h3>
+                <p id="home-semester-details" style="font-size: 0.8rem; color: var(--text-secondary); margin: 0;">8 materias en curso • 3 materias por repetir</p>
+              </div>
+              <button type="button" class="btn-primary" style="padding: 8px 16px; font-weight: 700; font-size: 0.82rem; border-radius: 6px;" onclick="app.switchTab('semestre')">
+                Abrir Mi Semestre →
+              </button>
             </div>
           </div>
 
@@ -193,7 +234,14 @@
         </section>
 
         <!-- ====================================================================
-             MÓDULO 2: ASIGNATURAS & NOTAS (UNIFICADO)
+             MÓDULO 2: MI SEMESTRE ACTUAL (ORGANIZADO Y SEPARADO)
+             ==================================================================== -->
+        <section id="tab-semestre" class="tab-section" style="display: none;">
+          <div id="semestre-view-container"></div>
+        </section>
+
+        <!-- ====================================================================
+             MÓDULO 3: PENSUM COMPLETO & NOTAS
              ==================================================================== -->
         <section id="tab-pensum" class="tab-section" style="display: none;">
           <div class="section-toolbar">
@@ -272,13 +320,16 @@
       <!-- Botón Flotante de Acción Rápida (FAB) -->
       <button type="button" class="mobile-fab" onclick="app.triggerFabAction()" aria-label="Acción rápida">+</button>
 
-      <!-- Barra de Navegación Inferior Fija para Móvil (3 Módulos Claros) -->
+      <!-- Barra de Navegación Inferior Fija para Móvil -->
       <nav class="mobile-bottom-nav">
         <button type="button" class="bottom-nav-item active" onclick="app.switchTab('dashboard')">
           <span class="bottom-nav-icon">Inicio</span>
         </button>
+        <button type="button" class="bottom-nav-item" onclick="app.switchTab('semestre')">
+          <span class="bottom-nav-icon">Mi Semestre</span>
+        </button>
         <button type="button" class="bottom-nav-item" onclick="app.switchTab('pensum')">
-          <span class="bottom-nav-icon">Asignaturas</span>
+          <span class="bottom-nav-icon">Pensum</span>
         </button>
         <button type="button" class="bottom-nav-item" onclick="app.switchTab('horario')">
           <span class="bottom-nav-icon">Horario</span>
@@ -492,6 +543,55 @@
     </div>
   </div>
 
+  <!-- MODAL DE CONFIRMACIÓN VISUAL MODERNA (REEMPLAZO DE POPUP NATIVO) -->
+  <div id="modal-app-confirm" class="modal-overlay">
+    <div class="modal-card" style="max-width: 440px; text-align: center; padding: 28px 22px; border-radius: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.18);">
+      <div id="confirm-modal-icon-wrap" style="width: 64px; height: 64px; border-radius: 50%; background: #E6F4F1; color: #0A4D40; display: flex; align-items: center; justify-content: center; font-size: 2rem; margin: 0 auto 16px auto; box-shadow: 0 4px 12px rgba(10, 77, 64, 0.15);">
+        <span id="confirm-modal-icon">🎓</span>
+      </div>
+      <h3 id="confirm-modal-title" style="margin: 0 0 8px 0; font-size: 1.25rem; font-weight: 900; color: #0F172A; line-height: 1.3;">
+        ¿Deseas culminar este semestre?
+      </h3>
+      <p id="confirm-modal-message" style="margin: 0 0 22px 0; font-size: 0.88rem; color: #64748B; line-height: 1.5;">
+        Al culminar, este semestre se cerrará y podrás seleccionar tu siguiente semestre para iniciar.
+      </p>
+      <div style="display: flex; gap: 10px; justify-content: center;">
+        <button type="button" id="confirm-modal-btn-cancel" class="btn-secondary" style="flex: 1; padding: 12px; font-weight: 700; border-radius: 10px; font-size: 0.88rem;">
+          Cancelar
+        </button>
+        <button type="button" id="confirm-modal-btn-accept" class="btn-primary" style="flex: 1.2; padding: 12px; font-weight: 800; border-radius: 10px; font-size: 0.88rem; background: #0A4D40; border-color: #0A4D40;">
+          Confirmar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL PARA CAMBIAR SEMESTRE (REEMPLAZO DE PROMPT NATIVO) -->
+  <div id="modal-switch-semester" class="modal-overlay">
+    <div class="modal-card" style="max-width: 460px; padding: 24px 22px; border-radius: 18px;">
+      <div class="modal-header" style="margin-bottom: 14px;">
+        <h3 class="modal-title">Cambiar Semestre Activo</h3>
+        <button type="button" class="modal-close-btn" onclick="app.closeModal('modal-switch-semester')" aria-label="Cerrar">&times;</button>
+      </div>
+      <p style="font-size: 0.84rem; color: #64748B; margin: 0 0 16px 0; line-height: 1.4;">
+        Selecciona el trayecto o semestre que deseas marcar como en curso:
+      </p>
+      <div class="form-group" style="margin-bottom: 20px;">
+        <label class="form-label" for="select-switch-semester-picker">Semestre / Trayecto a cursar:</label>
+        <select id="select-switch-semester-picker" class="form-control" style="font-weight: 700; padding: 10px; font-size: 0.9rem;">
+          <!-- Dynamically populated -->
+        </select>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn-secondary" onclick="app.closeModal('modal-switch-semester')">Cancelar</button>
+        <button type="button" class="btn-primary" onclick="app.confirmSwitchSemesterFromModal()">Activar Este Semestre</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div id="app-toast-container" class="app-toast-container"></div>
+
   <div id="modal-print-record" class="modal-overlay">
     <div class="modal-card" style="max-width: 900px;">
       <div class="modal-header">
@@ -510,8 +610,8 @@
   </div>
 
   <!-- Scripts & Service Worker registration for PWA -->
-  <script src="pensumData.js"></script>
-  <script src="app.js"></script>
+  <script src="pensumData.js?v=11"></script>
+  <script src="app.js?v=11"></script>
   <script>
     if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
       window.addEventListener('load', () => {

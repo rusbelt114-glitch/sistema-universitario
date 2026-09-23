@@ -11,10 +11,11 @@ window.addEventListener('beforeinstallprompt', (e) => {
 });
 
 class UniversityApp {
-  storageKey = "SISTEMA_UNIVERSITARIO_DATA_V2";
+  storageKey = "SISTEMA_UNIVERSITARIO_DATA_V3";
   currentCareer = "ADM"; // "ADM" o "INF"
   currentWeek = "A"; // "A" (Administración) o "B" (Informática)
   currentTab = "dashboard";
+  hasEnteredApp = false;
   selectedEvalSubjectId = null;
 
   constructor() {
@@ -26,7 +27,7 @@ class UniversityApp {
       evaluaciones: structuredClone(EVALUACIONES_INICIALES),
       horario: structuredClone(HORARIO_DEFECTO),
       notificaciones: [
-        { id: "n1", titulo: "Materias por Repetir en Adm", desc: "Fundamentos de Adm I y II, Contabilidad I y II, Formación Socio Crítica I (MI y MII). Revisa reprogramación.", prioridad: "urgente" },
+        { id: "n1", titulo: "Materias por Repetir en Adm", desc: "Fundamentos de Adm I y II, Contabilidad I y II, Formación Sociocrítica I (Módulos I y II). Revisa reprogramación.", prioridad: "urgente" },
         { id: "n2", titulo: "Intensivo de Verano Próximo", desc: "Inscripción en Teoría y Práctica del Mercadeo y Deberes Formales del Contribuyente.", prioridad: "normal" },
         { id: "n3", titulo: "Consultar Notas Oficiales", desc: "Estadística, Expresión Oral, Marco Jurídico I y II, Electiva I, Fundamentos de Economía.", prioridad: "normal" }
       ]
@@ -37,9 +38,24 @@ class UniversityApp {
 
   init() {
     this.loadState();
+
+    const landing = document.getElementById("landing-screen");
+    const mainApp = document.getElementById("main-app-screen");
+
+    if (this.hasEnteredApp) {
+      if (landing) landing.style.display = "none";
+      if (mainApp) mainApp.style.display = "block";
+    } else {
+      if (landing) landing.style.display = "flex";
+      if (mainApp) mainApp.style.display = "none";
+    }
+
     this.updateWeekUI();
     this.setupModalDismiss();
     this.render();
+    if (this.hasEnteredApp) {
+      this.switchTab(this.currentTab || "dashboard");
+    }
   }
 
   setupModalDismiss() {
@@ -64,13 +80,64 @@ class UniversityApp {
           console.error("Error en instalación PWA:", err);
         });
     } else {
-      alert("PARA INSTALAR COMO APP EN TU DISPOSITIVO:\n\n• Android (Chrome): Toca los 3 puntos arriba a la derecha y presiona 'Agregar a la pantalla principal' o 'Instalar aplicación'.\n\n• iPhone (Safari): Toca el botón Compartir abajo y selecciona 'Agregar a inicio'.");
+      this.showToast("Para instalar: usa el menú de tu navegador > Agregar a inicio", "info");
     }
   }
 
   // --- PERSISTENCIA & AUTO-SYNC INSTANTÁNEO ---
   loadState() {
-    const saved = localStorage.getItem(this.storageKey);
+    let saved = localStorage.getItem(this.storageKey);
+
+    // Migración transparente desde V2 para incorporar nuevo pensum homologado sin perder personalizaciones
+    if (!saved) {
+      const oldV2 = localStorage.getItem("SISTEMA_UNIVERSITARIO_DATA_V2");
+      if (oldV2) {
+        try {
+          const parsedV2 = JSON.parse(oldV2);
+          const migrated = {
+            currentCareer: parsedV2.currentCareer || "ADM",
+            currentWeek: parsedV2.currentWeek || "A",
+            currentTab: parsedV2.currentTab || "dashboard",
+            hasEnteredApp: parsedV2.hasEnteredApp || false,
+            horario: parsedV2.horario || structuredClone(HORARIO_DEFECTO),
+            notificaciones: parsedV2.notificaciones || [],
+            pensum: {
+              ADM: structuredClone(PENSUM_ADMINISTRACION),
+              INF: structuredClone(PENSUM_INFORMATICA)
+            },
+            evaluaciones: { ...structuredClone(EVALUACIONES_INICIALES), ...(parsedV2.evaluaciones || {}) }
+          };
+
+          // Migrar notas o estatus personalizados previos por código de materia
+          if (parsedV2.pensum) {
+            ['ADM', 'INF'].forEach(c => {
+              if (parsedV2.pensum[c] && parsedV2.pensum[c].trayectos) {
+                parsedV2.pensum[c].trayectos.forEach(oldT => {
+                  if (oldT.materias) {
+                    oldT.materias.forEach(oldM => {
+                      migrated.pensum[c].trayectos.forEach(newT => {
+                        const newM = newT.materias.find(m => m.codigo === oldM.codigo);
+                        if (newM && oldM.estatus && oldM.estatus !== newM.estatus) {
+                          newM.estatus = oldM.estatus;
+                          newM.nota = oldM.nota;
+                          newM.refDoc = oldM.refDoc || newM.refDoc;
+                        }
+                      });
+                    });
+                  }
+                });
+              }
+            });
+          }
+
+          localStorage.setItem(this.storageKey, JSON.stringify(migrated));
+          saved = JSON.stringify(migrated);
+        } catch (e) {
+          console.error("Error en migración V2 a V3:", e);
+        }
+      }
+    }
+
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
@@ -79,12 +146,28 @@ class UniversityApp {
             const seedCareer = c === 'ADM' ? PENSUM_ADMINISTRACION : PENSUM_INFORMATICA;
             if (!this.state.pensum[c]) this.state.pensum[c] = structuredClone(seedCareer);
             if (parsed.pensum[c] && parsed.pensum[c].trayectos) {
-              seedCareer.trayectos.forEach(seedT => {
-                const existingT = parsed.pensum[c].trayectos.find(t => t.id === seedT.id);
-                if (!existingT) {
-                  parsed.pensum[c].trayectos.push(structuredClone(seedT));
-                }
-              });
+              // Validar que el pensum esté homologado (primer elemento siempre es Proyecto PSI/PST)
+              const isHomologated = parsed.pensum[c].trayectos.every(t =>
+                t.materias && t.materias.length > 0 &&
+                (t.materias[0].codigo.startsWith("PSI-") || t.materias[0].codigo.startsWith("PST-"))
+              );
+
+              if (!isHomologated) {
+                parsed.pensum[c] = structuredClone(seedCareer);
+              } else {
+                seedCareer.trayectos.forEach(seedT => {
+                  const existingT = parsed.pensum[c].trayectos.find(t => t.id === seedT.id);
+                  if (existingT) {
+                    existingT.nombre = seedT.nombre;
+                    existingT.nivel = seedT.nivel;
+                    existingT.totalUC = seedT.totalUC;
+                  } else {
+                    parsed.pensum[c].trayectos.push(structuredClone(seedT));
+                  }
+                });
+              }
+              parsed.pensum[c].metaUC_TSU = seedCareer.metaUC_TSU;
+              parsed.pensum[c].metaUC_Lic = seedCareer.metaUC_Lic;
               this.state.pensum[c] = parsed.pensum[c];
             }
           });
@@ -96,6 +179,8 @@ class UniversityApp {
         if (parsed.notificaciones) this.state.notificaciones = parsed.notificaciones;
         if (parsed.currentCareer) this.currentCareer = parsed.currentCareer;
         if (parsed.currentWeek) this.currentWeek = parsed.currentWeek;
+        if (parsed.currentTab) this.currentTab = parsed.currentTab;
+        if (parsed.hasEnteredApp !== undefined) this.hasEnteredApp = parsed.hasEnteredApp;
       } catch (e) {
         console.error("Error al cargar estado local", e);
       }
@@ -109,7 +194,9 @@ class UniversityApp {
       horario: this.state.horario,
       notificaciones: this.state.notificaciones,
       currentCareer: this.currentCareer,
-      currentWeek: this.currentWeek
+      currentWeek: this.currentWeek,
+      currentTab: this.currentTab,
+      hasEnteredApp: this.hasEnteredApp
     };
     localStorage.setItem(this.storageKey, JSON.stringify(toSave));
 
@@ -119,6 +206,7 @@ class UniversityApp {
   // --- CONTROL DE NAVEGACIÓN Y CARRERA ---
   selectCareer(careerCode) {
     this.currentCareer = careerCode;
+    this.hasEnteredApp = true;
     this.selectedEvalSubjectId = null;
     this.saveState();
 
@@ -128,7 +216,16 @@ class UniversityApp {
     if (mainApp) mainApp.style.display = "block";
 
     this.updateCareerHeaderUI();
-    this.switchTab("dashboard");
+    this.switchTab(this.currentTab || "dashboard");
+  }
+
+  logout() {
+    this.hasEnteredApp = false;
+    this.saveState();
+    const landing = document.getElementById("landing-screen");
+    if (landing) landing.style.display = "flex";
+    const mainApp = document.getElementById("main-app-screen");
+    if (mainApp) mainApp.style.display = "none";
   }
 
   goToSubjectEvaluations(subjectId) {
@@ -136,13 +233,21 @@ class UniversityApp {
     this.switchTab("evaluaciones");
   }
 
-  activateTrayecto(trayectoId, event) {
+  async activateTrayecto(trayectoId, event) {
     if (event) event.stopPropagation();
     const pensum = this.state.pensum[this.currentCareer];
     const targetTrayecto = pensum.trayectos.find(t => t.id === trayectoId);
     if (!targetTrayecto) return;
 
-    if (!confirm(`¿Deseas activar "${targetTrayecto.nombre}" como tu trayecto actual de cursado?`)) return;
+    const confirmed = await this.showConfirmDialog({
+      title: `¿Activar ${targetTrayecto.nombre}?`,
+      message: `Este trayecto se establecerá como tu semestre actual en curso. Sus materias se mostrarán en la pestaña 'Mi Semestre'.`,
+      icon: '📚',
+      acceptText: 'Sí, Iniciar Semestre',
+      cancelText: 'Cancelar',
+      acceptColor: '#104c91'
+    });
+    if (!confirmed) return;
 
     pensum.trayectos.forEach(t => {
       if (t.id === trayectoId) {
@@ -161,18 +266,26 @@ class UniversityApp {
     this.saveState();
     this.renderDashboard();
     this.renderPensum();
-    this.renderEvaluationsSection();
-    this.renderConsultas();
-    alert(`Has iniciado ${targetTrayecto.nombre}. Las materias correspondientes ahora están marcadas como En Curso.`);
+    this.renderSemestreActual();
+    this.showToast(`Has iniciado ${targetTrayecto.nombre}.`, "success");
   }
 
-  culminateTrayecto(trayectoId, event) {
+  async culminateTrayecto(trayectoId, event) {
     if (event) event.stopPropagation();
     const pensum = this.state.pensum[this.currentCareer];
-    const targetTrayecto = pensum.trayectos.find(t => t.id === trayectoId);
+    const activeTray = pensum.trayectos.find(t => t.actual);
+    const targetTrayecto = pensum.trayectos.find(t => t.id === (trayectoId || activeTray?.id));
     if (!targetTrayecto) return;
 
-    if (!confirm(`¿Deseas marcar como CULMINADO el "${targetTrayecto.nombre}"?`)) return;
+    const confirmed = await this.showConfirmDialog({
+      title: `¿Deseas culminar este semestre?`,
+      message: `¿Deseas marcar como CULMINADO "${targetTrayecto.nombre}"?\nAl culminar, este semestre se cerrará y podrás seleccionar tu siguiente semestre para iniciar.`,
+      icon: '🎓',
+      acceptText: 'Sí, Culminar Semestre',
+      cancelText: 'Cancelar',
+      acceptColor: '#0A4D40'
+    });
+    if (!confirmed) return;
 
     targetTrayecto.actual = false;
     targetTrayecto.culminado = true;
@@ -185,6 +298,9 @@ class UniversityApp {
           m.estatus = "aprobada";
         } else if (m.nota !== null && m.nota < minPass) {
           m.estatus = "repetir";
+        } else {
+          m.estatus = "aprobada";
+          m.nota = minPass;
         }
       }
     });
@@ -192,9 +308,33 @@ class UniversityApp {
     this.saveState();
     this.renderDashboard();
     this.renderPensum();
-    this.renderEvaluationsSection();
-    this.renderConsultas();
-    alert(`"${targetTrayecto.nombre}" marcado como CULMINADO.`);
+    this.renderSemestreActual();
+    this.showToast(`"${targetTrayecto.nombre}" marcado como CULMINADO con éxito.`, "success");
+  }
+
+  startSelectedSemester() {
+    const sel = document.getElementById("select-new-semester-to-start");
+    if (!sel || !sel.value) return;
+    this.activateTrayecto(sel.value);
+  }
+
+  promptSwitchSemester() {
+    const pensum = this.state.pensum[this.currentCareer];
+    const select = document.getElementById("select-switch-semester-picker");
+    if (!select) return;
+    select.innerHTML = pensum.trayectos.map(t => {
+      const statusText = t.actual ? " — [ACTIVO EN CURSO]" : (t.culminado ? " — [CULMINADO]" : "");
+      return `<option value="${t.id}" ${t.actual ? "selected" : ""}>${t.nombre}${statusText}</option>`;
+    }).join("");
+    this.openModal("modal-switch-semester");
+  }
+
+  confirmSwitchSemesterFromModal() {
+    const select = document.getElementById("select-switch-semester-picker");
+    if (!select || !select.value) return;
+    const chosenId = select.value;
+    this.closeModal("modal-switch-semester");
+    this.activateTrayecto(chosenId);
   }
 
   showLanding() {
@@ -268,6 +408,9 @@ class UniversityApp {
 
   switchTab(tabId) {
     this.currentTab = tabId;
+    if (this.hasEnteredApp) {
+      this.saveState();
+    }
 
     document.querySelectorAll(".nav-tabs .tab-btn").forEach(btn => {
       btn.classList.remove("active");
@@ -289,6 +432,7 @@ class UniversityApp {
     if (activeSec) activeSec.style.display = "block";
 
     if (tabId === "dashboard") this.renderDashboard();
+    if (tabId === "semestre") this.renderSemestreActual();
     if (tabId === "pensum") this.renderPensum();
     if (tabId === "evaluaciones") this.renderEvaluationsSection();
     if (tabId === "consultas") this.renderConsultas();
@@ -297,7 +441,7 @@ class UniversityApp {
   }
 
   triggerFabAction() {
-    if (this.currentTab === "pensum" || this.currentTab === "dashboard") {
+    if (this.currentTab === "pensum" || this.currentTab === "dashboard" || this.currentTab === "semestre") {
       this.openAddSubjectModal();
     } else if (this.currentTab === "evaluaciones") {
       this.openAddEvalModal();
@@ -373,6 +517,230 @@ class UniversityApp {
     };
   }
 
+  renderSemestreActual() {
+    const container = document.getElementById("semestre-view-container");
+    if (!container) return;
+
+    const pensum = this.state.pensum[this.currentCareer];
+    const activeTrayecto = pensum.trayectos.find(t => t.actual);
+
+    // 1. Materias del semestre activo (si hay semestre activo)
+    const currentSemesterMaterias = activeTrayecto ? activeTrayecto.materias : [];
+
+    // 2. Materias de semestres anteriores POR REPETIR (arrastres)
+    const repetirFromOtherTrayectos = [];
+    pensum.trayectos.forEach(t => {
+      if (activeTrayecto && t.id === activeTrayecto.id) return;
+      t.materias.forEach(m => {
+        if (m.estatus === "repetir") {
+          repetirFromOtherTrayectos.push({ materia: m, trayecto: t });
+        }
+      });
+    });
+
+    // 3. Materias en consulta oficial (si las hay)
+    const consultaMaterias = [];
+    pensum.trayectos.forEach(t => {
+      t.materias.forEach(m => {
+        if (m.estatus === "pendiente_consulta") {
+          consultaMaterias.push({ materia: m, trayecto: t });
+        }
+      });
+    });
+
+    let html = "";
+
+    // --- CABECERA DE CONTROL DE SEMESTRE ---
+    if (activeTrayecto) {
+      html += `
+        <div class="semestre-header-card" style="background: white; border: 1.5px solid var(--border-color); border-radius: 10px; padding: 14px 16px; margin-bottom: 14px; box-shadow: var(--shadow-xs);">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 10px;">
+            <div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span class="status-badge status-en_curso" style="font-size: 0.72rem; padding: 3px 8px;">ACTIVO EN CURSO</span>
+                <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700;">NIVEL ${activeTrayecto.nivel} • ${activeTrayecto.totalUC} UC TOTALES</span>
+              </div>
+              <h2 style="margin: 4px 0 2px 0; font-size: 1.25rem; color: var(--text-primary); font-weight: 900;">${activeTrayecto.nombre}</h2>
+              <p style="margin: 0; font-size: 0.8rem; color: var(--text-secondary);">
+                Gestiona tus asignaturas de este semestre. Al finalizar las evaluaciones, puedes marcar este semestre como culminado.
+              </p>
+            </div>
+            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+              <button type="button" class="btn-action" style="background: #117A65; color: white; border: none; font-weight: bold; font-size: 0.8rem; padding: 6px 12px; border-radius: 6px;" onclick="app.culminateTrayecto('${activeTrayecto.id}', event)">
+                ✓ Culminar Este Semestre
+              </button>
+              <button type="button" class="btn-action" style="color: var(--primary-blue); border-color: var(--primary-blue); font-weight: bold; font-size: 0.8rem; padding: 6px 12px; border-radius: 6px;" onclick="app.promptSwitchSemester()">
+                Cambiar Semestre
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    } else {
+      // No hay semestre activo: Semestre culminado o cerrado
+      let nextOptions = "";
+      pensum.trayectos.forEach(t => {
+        const isCulm = t.culminado ? "(Culminado)" : "";
+        nextOptions += `<option value="${t.id}">${t.nombre} ${isCulm}</option>`;
+      });
+
+      html += `
+        <div class="semestre-header-card" style="background: #F0FDF4; border: 1.5px solid #86EFAC; border-radius: 10px; padding: 16px 18px; margin-bottom: 14px; box-shadow: var(--shadow-xs);">
+          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
+            <span style="font-size: 1.4rem;">🎓</span>
+            <h2 style="margin: 0; font-size: 1.15rem; color: #166534; font-weight: 900;">Semestre Culminado / No Hay Semestre en Curso</h2>
+          </div>
+          <p style="margin: 0 0 12px 0; font-size: 0.85rem; color: #166534; line-height: 1.4;">
+            Has cerrado tu semestre anterior. Selecciona el siguiente semestre que vas a cursar y pulsa <strong>Iniciar Semestre</strong> para cargar sus asignaturas:
+          </p>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+            <select id="select-new-semester-to-start" class="filter-select" style="max-width: 320px; font-weight: 700;">
+              ${nextOptions}
+            </select>
+            <button type="button" class="btn-primary" style="padding: 8px 16px; font-weight: 800; font-size: 0.82rem;" onclick="app.startSelectedSemester()">
+              ▶ Iniciar Semestre Seleccionado
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    // --- BLOQUE 1: ASIGNATURAS DEL SEMESTRE EN CURSO ---
+    html += `
+      <div class="trayecto-block" style="margin-bottom: 14px; border-radius: 10px; overflow: hidden; border: 1px solid var(--border-color); background: white;">
+        <div class="trayecto-header" style="background: #F8FAFC; border-bottom: 1px solid var(--border-color); padding: 10px 14px; display: flex; justify-content: space-between; align-items: center;">
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <span style="font-size: 1rem;">📚</span>
+            <strong style="font-size: 0.9rem; color: var(--text-primary);">Materias del Semestre en Curso</strong>
+            <span class="status-badge status-en_curso" style="margin-left: 4px;">${currentSemesterMaterias.length} materias</span>
+          </div>
+          ${activeTrayecto ? `<span style="font-size: 0.72rem; color: var(--text-muted); font-weight: 700;">${activeTrayecto.nombre}</span>` : ''}
+        </div>
+        <div style="padding: 12px;">
+    `;
+
+    if (!activeTrayecto || currentSemesterMaterias.length === 0) {
+      html += `
+        <div style="text-align: center; padding: 24px 12px; color: var(--text-muted); font-size: 0.85rem;">
+          No hay asignaturas en curso actualmente. Inicia un nuevo semestre arriba para ver sus materias aquí.
+        </div>
+      `;
+    } else {
+      html += `<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 8px;">`;
+      currentSemesterMaterias.forEach(m => {
+        const statusTextMap = {
+          aprobada: "Aprobada",
+          en_curso: "En Curso",
+          repetir: "Por Repetir",
+          intensivo_verano: "Intensivo Verano",
+          pendiente_consulta: "Pendiente Consulta",
+          por_cursar: "Por Cursar"
+        };
+        html += `
+          <div class="schedule-item" style="display: flex; flex-direction: column; justify-content: space-between; padding: 10px 12px; margin-bottom: 0; border: 1px solid var(--border-color); border-radius: 8px; background: #FFFFFF; cursor: pointer; transition: transform 0.1s ease, box-shadow 0.1s ease;" onclick="app.openSubjectDetailModal('${m.id}')">
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                <span style="font-size: 0.72rem; font-weight: 800; color: #64748B;">${m.codigo} • ${m.uc} UC</span>
+                <div style="font-size: 1rem; font-weight: 900; color: var(--primary-blue);">${m.nota ? `${m.nota} pts` : '-'}</div>
+              </div>
+              <div style="font-size: 0.88rem; font-weight: 800; color: #0F172A; line-height: 1.25; margin-bottom: 8px;">${m.nombre}</div>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed #E2E8F0; padding-top: 6px; margin-top: 4px;">
+              <span class="status-badge status-${m.estatus}">${statusTextMap[m.estatus] || m.estatus}</span>
+              <button type="button" class="btn-action" style="font-size: 0.72rem; padding: 3px 8px;" onclick="event.stopPropagation(); app.openSubjectDetailModal('${m.id}')">Ficha / Notas →</button>
+            </div>
+          </div>
+        `;
+      });
+      html += `</div>`;
+    }
+    html += `</div></div>`;
+
+    // --- BLOQUE 2: MATERIAS DE SEMESTRES ANTERIORES POR REPETIR (SEPARADO Y CLARO) ---
+    html += `
+      <div class="trayecto-block" style="margin-bottom: 14px; border-radius: 10px; overflow: hidden; border: 1.5px solid ${repetirFromOtherTrayectos.length > 0 ? '#FECDD3' : 'var(--border-color)'}; background: white;">
+        <div class="trayecto-header" style="background: ${repetirFromOtherTrayectos.length > 0 ? '#FFF1F2' : '#F8FAFC'}; border-bottom: 1px solid ${repetirFromOtherTrayectos.length > 0 ? '#FECDD3' : 'var(--border-color)'}; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center;">
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <span style="font-size: 1rem;">⚠️</span>
+            <strong style="font-size: 0.9rem; color: ${repetirFromOtherTrayectos.length > 0 ? '#9F1239' : 'var(--text-primary)'};">Materias por Repetir de Semestres Anteriores</strong>
+            <span class="status-badge status-repetir" style="margin-left: 4px;">${repetirFromOtherTrayectos.length} pendientes</span>
+          </div>
+          <span style="font-size: 0.72rem; color: #9F1239; font-weight: 700;">Arrastres</span>
+        </div>
+        <div style="padding: 12px;">
+    `;
+
+    if (repetirFromOtherTrayectos.length === 0) {
+      html += `
+        <div style="display: flex; align-items: center; gap: 8px; padding: 14px; background: #F0FDF4; border-radius: 8px; color: #166534; font-size: 0.82rem; font-weight: 700;">
+          <span>✓</span>
+          <span>¡Excelente! No tienes materias pendientes por repetir de semestres anteriores. Todo tu historial está al día.</span>
+        </div>
+      `;
+    } else {
+      html += `
+        <p style="font-size: 0.78rem; color: #64748B; margin: 0 0 10px 0;">
+          Estas asignaturas pertenecen a semestres cursados previamente. Están separadas aquí para no mezclar tu carga académica del semestre actual:
+        </p>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 8px;">
+      `;
+      repetirFromOtherTrayectos.forEach(item => {
+        const m = item.materia;
+        const t = item.trayecto;
+        html += `
+          <div class="schedule-item" style="display: flex; flex-direction: column; justify-content: space-between; padding: 10px 12px; margin-bottom: 0; border: 1.5px solid #FECDD3; border-radius: 8px; background: #FFFBFB; cursor: pointer;" onclick="app.openSubjectDetailModal('${m.id}')">
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                <span style="font-size: 0.72rem; font-weight: 800; color: #BE123C;">Origen: ${t.nombre}</span>
+                <span style="font-size: 0.72rem; font-weight: 700; color: #64748B;">${m.uc} UC</span>
+              </div>
+              <div style="font-size: 0.88rem; font-weight: 800; color: #0F172A; line-height: 1.25; margin-bottom: 8px;">${m.nombre}</div>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed #FECDD3; padding-top: 6px; margin-top: 4px;">
+              <span class="status-badge status-repetir">POR REPETIR</span>
+              <button type="button" class="btn-action" style="font-size: 0.72rem; padding: 3px 8px; color: #BE123C; border-color: #FECDD3;" onclick="event.stopPropagation(); app.openSubjectDetailModal('${m.id}')">Ficha / Notas →</button>
+            </div>
+          </div>
+        `;
+      });
+      html += `</div>`;
+    }
+    html += `</div></div>`;
+
+    // --- BLOQUE 3: MATERIAS EN CONSULTA (SI APLICA) ---
+    if (consultaMaterias.length > 0) {
+      html += `
+        <details class="trayecto-block" style="border-radius: 10px; overflow: hidden; border: 1px solid #E2E8F0; background: white;">
+          <summary class="trayecto-header" style="background: #FAF5FF; border-bottom: 1px solid #E9D5FF; padding: 10px 14px; cursor: pointer; user-select: none;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span style="font-size: 1rem;">📋</span>
+              <strong style="font-size: 0.88rem; color: #6B21A8;">Materias en Consulta Oficial (${consultaMaterias.length})</strong>
+            </div>
+            <span style="font-size: 0.72rem; color: #7E22CE; font-weight: 700;">Toca para ver</span>
+          </summary>
+          <div style="padding: 10px 12px;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 6px;">
+      `;
+      consultaMaterias.forEach(item => {
+        const m = item.materia;
+        const t = item.trayecto;
+        html += `
+          <div class="schedule-item" style="display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; margin-bottom: 0; cursor: pointer;" onclick="app.openSubjectDetailModal('${m.id}')">
+            <div>
+              <div style="font-size: 0.68rem; color: #6B21A8; font-weight: 700;">${t.nombre} • ${m.uc} UC</div>
+              <div style="font-size: 0.82rem; font-weight: 800; color: #1E293B;">${m.nombre}</div>
+              <span class="status-badge status-pendiente_consulta">Pendiente Consulta</span>
+            </div>
+            <button type="button" class="btn-action" style="font-size: 0.68rem; padding: 2px 6px;" onclick="event.stopPropagation(); app.openSubjectDetailModal('${m.id}')">Asignar Nota →</button>
+          </div>
+        `;
+      });
+      html += `</div></div></details>`;
+    }
+
+    container.innerHTML = html;
+  }
+
   renderDashboard() {
     const stats = this.getCalculatedStats(this.currentCareer);
 
@@ -405,50 +773,31 @@ class UniversityApp {
     const notifsCount = document.getElementById("stat-eval-pendientes");
     if (notifsCount) notifsCount.textContent = String(this.state.notificaciones.length);
 
-    // Render Active Subjects Cards in Dashboard
-    const activeListContainer = document.getElementById("dashboard-active-subjects-list");
-    if (activeListContainer) {
-      const pensum = this.state.pensum[this.currentCareer];
-      const activeSubjects = [];
-      pensum.trayectos.forEach(t => {
-        t.materias.forEach(m => {
-          if (m.estatus === "en_curso" || m.estatus === "repetir") {
-            activeSubjects.push({ materia: m, trayecto: t });
-          }
-        });
-      });
+    // Actualizar Tarjeta de Estado del Semestre en Inicio (Limpio y sin saturación)
+    const pensum = this.state.pensum[this.currentCareer];
+    const activeTrayecto = pensum.trayectos.find(t => t.actual);
 
-      if (activeSubjects.length === 0) {
-        activeListContainer.innerHTML = `<div style="text-align:center; padding:12px; color:var(--text-muted); font-size:0.8rem;">No hay asignaturas marcadas en curso actualmente. Inicia un trayecto abajo o en Asignaturas.</div>`;
-      } else {
-        let actHtml = `<div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap:6px;">`;
-        activeSubjects.forEach(item => {
-          const m = item.materia;
-          const t = item.trayecto;
-          const statusTextMap = {
-            aprobada: "Aprobada",
-            en_curso: "En Curso",
-            repetir: "Por Repetir",
-            intensivo_verano: "Intensivo Verano",
-            pendiente_consulta: "Pendiente Consulta",
-            por_cursar: "Por Cursar"
-          };
-          actHtml += `
-            <div class="schedule-item" style="display:flex; justify-content:space-between; align-items:center; padding:8px 10px; margin-bottom:0; cursor:pointer;" onclick="app.openSubjectDetailModal('${m.id}')">
-              <div>
-                <div style="font-size:0.68rem; color:var(--text-muted); font-weight:700;">${t.nombre} • ${m.uc} UC</div>
-                <div style="font-size:0.82rem; font-weight:800; color:var(--text-primary); margin:1px 0;">${m.nombre}</div>
-                <span class="status-badge status-${m.estatus}">${statusTextMap[m.estatus] || m.estatus}</span>
-              </div>
-              <div style="text-align:right;">
-                <div style="font-size:0.95rem; font-weight:900; color:var(--primary-blue);">${m.nota ? `${m.nota} pts` : '-'}</div>
-                <button type="button" class="btn-action" style="margin-top:2px; font-size:0.68rem; padding:2px 6px;" onclick="event.stopPropagation(); app.openSubjectDetailModal('${m.id}')">Ficha / Notas →</button>
-              </div>
-            </div>
-          `;
-        });
-        actHtml += `</div>`;
-        activeListContainer.innerHTML = actHtml;
+    let countRepetir = 0;
+    pensum.trayectos.forEach(t => t.materias.forEach(m => { if (m.estatus === "repetir") countRepetir++; }));
+
+    const semNameEl = document.getElementById("home-semester-name");
+    const semDetailsEl = document.getElementById("home-semester-details");
+    const semBadgeEl = document.getElementById("home-semester-active-badge");
+
+    if (activeTrayecto) {
+      const enCursoCount = activeTrayecto.materias.filter(m => m.estatus === "en_curso").length;
+      if (semNameEl) semNameEl.textContent = activeTrayecto.nombre;
+      if (semDetailsEl) semDetailsEl.textContent = `${enCursoCount} materias en curso de este semestre • ${countRepetir} pendientes por repetir`;
+      if (semBadgeEl) {
+        semBadgeEl.className = "status-badge status-en_curso";
+        semBadgeEl.textContent = "En Curso";
+      }
+    } else {
+      if (semNameEl) semNameEl.textContent = "Semestre Culminado / Sin Semestre Activo";
+      if (semDetailsEl) semDetailsEl.textContent = `Selecciona tu próximo semestre en 'Mi Semestre' • ${countRepetir} pendientes por repetir`;
+      if (semBadgeEl) {
+        semBadgeEl.className = "status-badge status-aprobada";
+        semBadgeEl.textContent = "Culminado";
       }
     }
 
@@ -526,7 +875,7 @@ class UniversityApp {
           `;
         }
 
-        const isOpenAttr = (openTrayectos.has(t.id) || (openTrayectos.size === 0 && isCurrentActive)) ? "open" : "";
+        const isOpenAttr = openTrayectos.has(t.id) ? "open" : "";
 
         trayectosHtml += `
           <details data-trayecto-id="${t.id}" ${isOpenAttr} class="trayecto-block" style="margin-bottom: 6px; border-radius: 8px;">
@@ -576,7 +925,7 @@ class UniversityApp {
       if (filteredMaterias.length === 0) return;
 
       const isCurrentActive = t.actual || (filteredMaterias.some(m => m.estatus === "en_curso"));
-      const isOpenAttr = (openTrayectos.has(t.id) || (openTrayectos.size === 0 && isCurrentActive) || searchQuery !== "" || statusFilter !== "todos" || trayectoFilter !== "todos") ? "open" : "";
+      const isOpenAttr = (openTrayectos.has(t.id) || (searchQuery !== "" && filteredMaterias.length > 0) || statusFilter !== "todos" || trayectoFilter !== "todos") ? "open" : "";
 
       let trayectoActionBtn = "";
       if (isCurrentActive) {
@@ -937,7 +1286,7 @@ class UniversityApp {
     const newRef = (document.getElementById("edit-subject-ref").value || "").trim();
 
     if (!name) {
-      alert("Por favor ingresa el nombre de la asignatura.");
+      this.showToast("Por favor ingresa el nombre de la asignatura.", "warning");
       return;
     }
 
@@ -1016,18 +1365,22 @@ class UniversityApp {
     const statusFilter = document.getElementById("filter-status-select");
     if (statusFilter) statusFilter.value = "todos";
 
-    this.renderPensum();
+    // Actualización inmediata en vivo de todas las vistas
     this.renderDashboard();
+    this.renderPensum();
+    this.renderSemestreActual();
+    this.renderConsultas();
 
-    if (id && this.selectedEvalSubjectId === id) {
-      this.renderSubjectDetailContent(id);
+    const targetId = id || this.selectedEvalSubjectId;
+    if (targetId) {
+      this.renderSubjectDetailContent(targetId);
+      this.loadEvaluationsForSubject(targetId);
     }
     window.scrollTo({ top: scrollPos, behavior: "instant" });
-    alert(`¡Asignatura "${name}" guardada con éxito!`);
+    this.showToast(`¡Asignatura "${name}" guardada con éxito!`, "success");
   }
 
   deleteSubject(subjectId) {
-    if (!confirm("¿Deseas eliminar esta asignatura del pensum?")) return;
     const pensum = this.state.pensum[this.currentCareer];
     pensum.trayectos.forEach(t => {
       t.materias = t.materias.filter(m => m.id !== subjectId);
@@ -1036,6 +1389,9 @@ class UniversityApp {
     this.saveState();
     this.renderPensum();
     this.renderDashboard();
+    this.renderSemestreActual();
+    this.renderConsultas();
+    this.showToast("Asignatura eliminada del pensum.", "info");
   }
 
   renderConsultas() {
@@ -1352,14 +1708,16 @@ class UniversityApp {
     this.saveState();
     this.renderDashboard();
     this.renderPensum();
+    this.renderSemestreActual();
+    this.renderSubjectDetailContent(subjectId);
     this.loadEvaluationsForSubject(subjectId);
     window.scrollTo({ top: scrollPos, behavior: "instant" });
-    alert(`Nota de ${finalGrade} pts sincronizada al Pensum en "${found.nombre}". Estatus: ${found.estatus.toUpperCase()} (Mínimo exigido: ${minPass} pts).`);
+    this.showToast(`Nota de ${finalGrade} pts sincronizada en "${found.nombre}". (${found.estatus.toUpperCase()})`, "success");
   }
 
   openAddEvalModal() {
     if (!this.selectedEvalSubjectId) {
-      alert("Por favor selecciona una materia primero.");
+      this.showToast("Por favor selecciona una materia primero.", "warning");
       return;
     }
     document.getElementById("edit-eval-id").value = "";
@@ -1428,10 +1786,11 @@ class UniversityApp {
   }
 
   deleteEvaluation(index) {
-    if (!confirm("¿Deseas eliminar esta evaluación?")) return;
     this.state.evaluaciones[this.selectedEvalSubjectId].splice(index, 1);
     this.saveState();
     this.loadEvaluationsForSubject(this.selectedEvalSubjectId);
+    this.renderSubjectDetailContent(this.selectedEvalSubjectId);
+    this.showToast("Evaluación eliminada.", "info");
   }
 
   getScheduleList() {
@@ -1489,12 +1848,11 @@ class UniversityApp {
   }
 
   clearCurrentSchedule() {
-    const careerName = this.currentCareer === "ADM" ? "Administración" : "Informática";
-    if (!confirm(`¿Estás seguro de limpiar todo el horario de la Semana ${this.currentWeek} en ${careerName}?`)) return;
     const items = this.getScheduleList();
     items.length = 0;
     this.saveState();
     this.renderSchedule();
+    this.showToast("Horario limpiado correctamente.", "info");
   }
 
   deleteScheduleClass(classId) {
@@ -1752,6 +2110,119 @@ class UniversityApp {
     }
   }
 
+  showConfirmDialog({ title, message, icon = '🎓', acceptText = 'Confirmar', cancelText = 'Cancelar', acceptColor = '#0A4D40' }) {
+    return new Promise((resolve) => {
+      const modal = document.getElementById("modal-app-confirm");
+      const titleEl = document.getElementById("confirm-modal-title");
+      const msgEl = document.getElementById("confirm-modal-message");
+      const iconEl = document.getElementById("confirm-modal-icon");
+      const iconWrap = document.getElementById("confirm-modal-icon-wrap");
+      const btnAccept = document.getElementById("confirm-modal-btn-accept");
+      const btnCancel = document.getElementById("confirm-modal-btn-cancel");
+
+      if (!modal || !btnAccept || !btnCancel) {
+        resolve(window.confirm(`${title}\n\n${message}`));
+        return;
+      }
+
+      if (titleEl) titleEl.textContent = title;
+      if (msgEl) msgEl.innerHTML = message.replace(/\n/g, "<br>");
+      if (iconEl) iconEl.textContent = icon;
+      btnAccept.textContent = acceptText;
+      btnCancel.textContent = cancelText;
+
+      btnAccept.style.background = acceptColor;
+      btnAccept.style.borderColor = acceptColor;
+      btnAccept.style.color = "#FFFFFF";
+
+      if (iconWrap) {
+        if (acceptColor === "#EF4444" || acceptColor === "#DC2626") {
+          iconWrap.style.background = "#FEE2E2";
+          iconWrap.style.color = "#DC2626";
+          iconWrap.style.boxShadow = "0 4px 12px rgba(220, 38, 38, 0.15)";
+        } else if (acceptColor === "#1E40AF" || acceptColor === "#2563EB" || acceptColor === "#104c91") {
+          iconWrap.style.background = "#EFF6FF";
+          iconWrap.style.color = "#1E40AF";
+          iconWrap.style.boxShadow = "0 4px 12px rgba(30, 64, 175, 0.15)";
+        } else {
+          iconWrap.style.background = "#E6F4F1";
+          iconWrap.style.color = "#0A4D40";
+          iconWrap.style.boxShadow = "0 4px 12px rgba(10, 77, 64, 0.15)";
+        }
+      }
+
+      const cleanup = () => {
+        modal.classList.remove("active");
+        btnAccept.removeEventListener("click", onAccept);
+        btnCancel.removeEventListener("click", onCancel);
+        modal.removeEventListener("click", onOverlay);
+        document.removeEventListener("keydown", onKey);
+      };
+
+      const onAccept = () => {
+        cleanup();
+        resolve(true);
+      };
+
+      const onCancel = () => {
+        cleanup();
+        resolve(false);
+      };
+
+      const onOverlay = (e) => {
+        if (e.target === modal) {
+          cleanup();
+          resolve(false);
+        }
+      };
+
+      const onKey = (e) => {
+        if (e.key === "Escape") {
+          cleanup();
+          resolve(false);
+        }
+      };
+
+      btnAccept.addEventListener("click", onAccept);
+      btnCancel.addEventListener("click", onCancel);
+      modal.addEventListener("click", onOverlay);
+      document.addEventListener("keydown", onKey);
+
+      modal.classList.add("active");
+    });
+  }
+
+  showToast(message, type = "success", duration = 3500) {
+    let container = document.getElementById("app-toast-container");
+    if (!container) {
+      container = document.createElement("div");
+      container.id = "app-toast-container";
+      container.className = "app-toast-container";
+      document.body.appendChild(container);
+    }
+
+    const toast = document.createElement("div");
+    toast.className = `app-toast app-toast-${type}`;
+
+    let icon = "✓";
+    if (type === "warning") icon = "⚠️";
+    if (type === "error") icon = "✕";
+    if (type === "info") icon = "ℹ️";
+
+    toast.innerHTML = `
+      <span style="font-size: 1.15rem; line-height: 1;">${icon}</span>
+      <span style="flex: 1; line-height: 1.3;">${message}</span>
+    `;
+
+    container.appendChild(toast);
+    setTimeout(() => toast.classList.add("show"), 10);
+
+    setTimeout(() => {
+      toast.classList.remove("show");
+      setTimeout(() => toast.remove(), 300);
+    }, duration);
+  }
+
   openModal(modalId) {
     const modal = document.getElementById(modalId);
     if (modal) modal.classList.add("active");
@@ -1805,17 +2276,20 @@ class UniversityApp {
       if (imported.notificaciones) this.state.notificaciones = imported.notificaciones;
 
       this.saveState();
-      alert("¡Datos importados con éxito!");
+      this.showToast("¡Datos importados con éxito!", "success");
       this.render();
     } catch (err) {
       console.error("Error al importar datos:", err);
-      alert("Error al leer el archivo de respaldo JSON.");
+      this.showToast("Error al leer el archivo de respaldo JSON.", "error");
     }
   }
 
   render() {
     this.updateCareerHeaderUI();
     this.renderDashboard();
+    if (this.currentTab === "semestre") this.renderSemestreActual();
+    if (this.currentTab === "pensum") this.renderPensum();
+    if (this.currentTab === "horario") this.renderSchedule();
   }
 }
 
@@ -1825,6 +2299,14 @@ function initUniversityApp() {
     app = new UniversityApp();
     window.app = app;
   }
+  // Interceptar cualquier alert() nativo para mostrar toast visual en pantalla
+  window.alert = (msg) => {
+    if (window.app && typeof window.app.showToast === "function") {
+      window.app.showToast(msg, "info");
+    } else {
+      console.log("Alert:", msg);
+    }
+  };
 }
 
 if (typeof document !== "undefined") {

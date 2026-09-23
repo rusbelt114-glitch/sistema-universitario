@@ -28,7 +28,8 @@ if ($remote) {
     Write-Host "======================================================================" -ForegroundColor Green
     Write-Host " ¡Sincronización completada con éxito en GitHub! " -ForegroundColor Green
     Write-Host "======================================================================" -ForegroundColor Green
-} else {
+}
+else {
     Write-Host "======================================================================" -ForegroundColor Yellow
     Write-Host " ¡Guardado local completado! " -ForegroundColor Green
     Write-Host " Aún no has vinculado tu URL de GitHub. Para subir a tu GitHub ejecuta:" -ForegroundColor Yellow
