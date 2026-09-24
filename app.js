@@ -90,101 +90,136 @@ class UniversityApp {
 
     // Migración transparente desde V2 para incorporar nuevo pensum homologado sin perder personalizaciones
     if (!saved) {
-      const oldV2 = localStorage.getItem("SISTEMA_UNIVERSITARIO_DATA_V2");
-      if (oldV2) {
-        try {
-          const parsedV2 = JSON.parse(oldV2);
-          const migrated = {
-            currentCareer: parsedV2.currentCareer || "ADM",
-            currentWeek: parsedV2.currentWeek || "A",
-            currentTab: parsedV2.currentTab || "dashboard",
-            hasEnteredApp: parsedV2.hasEnteredApp || false,
-            horario: parsedV2.horario || structuredClone(HORARIO_DEFECTO),
-            notificaciones: parsedV2.notificaciones || [],
-            pensum: {
-              ADM: structuredClone(PENSUM_ADMINISTRACION),
-              INF: structuredClone(PENSUM_INFORMATICA)
-            },
-            evaluaciones: { ...structuredClone(EVALUACIONES_INICIALES), ...(parsedV2.evaluaciones || {}) }
-          };
-
-          // Migrar notas o estatus personalizados previos por código de materia
-          if (parsedV2.pensum) {
-            ['ADM', 'INF'].forEach(c => {
-              if (parsedV2.pensum[c] && parsedV2.pensum[c].trayectos) {
-                parsedV2.pensum[c].trayectos.forEach(oldT => {
-                  if (oldT.materias) {
-                    oldT.materias.forEach(oldM => {
-                      migrated.pensum[c].trayectos.forEach(newT => {
-                        const newM = newT.materias.find(m => m.codigo === oldM.codigo);
-                        if (newM && oldM.estatus && oldM.estatus !== newM.estatus) {
-                          newM.estatus = oldM.estatus;
-                          newM.nota = oldM.nota;
-                          newM.refDoc = oldM.refDoc || newM.refDoc;
-                        }
-                      });
-                    });
-                  }
-                });
-              }
-            });
-          }
-
-          localStorage.setItem(this.storageKey, JSON.stringify(migrated));
-          saved = JSON.stringify(migrated);
-        } catch (e) {
-          console.error("Error en migración V2 a V3:", e);
-        }
-      }
+      saved = this.migrateV2Data();
     }
 
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        if (parsed.pensum) {
-          ['ADM', 'INF'].forEach(c => {
-            const seedCareer = c === 'ADM' ? PENSUM_ADMINISTRACION : PENSUM_INFORMATICA;
-            if (!this.state.pensum[c]) this.state.pensum[c] = structuredClone(seedCareer);
-            if (parsed.pensum[c] && parsed.pensum[c].trayectos) {
-              // Validar que el pensum esté homologado (primer elemento siempre es Proyecto PSI/PST)
-              const isHomologated = parsed.pensum[c].trayectos.every(t =>
-                t.materias && t.materias.length > 0 &&
-                (t.materias[0].codigo.startsWith("PSI-") || t.materias[0].codigo.startsWith("PST-"))
-              );
-
-              if (!isHomologated) {
-                parsed.pensum[c] = structuredClone(seedCareer);
-              } else {
-                seedCareer.trayectos.forEach(seedT => {
-                  const existingT = parsed.pensum[c].trayectos.find(t => t.id === seedT.id);
-                  if (existingT) {
-                    existingT.nombre = seedT.nombre;
-                    existingT.nivel = seedT.nivel;
-                    existingT.totalUC = seedT.totalUC;
-                  } else {
-                    parsed.pensum[c].trayectos.push(structuredClone(seedT));
-                  }
-                });
-              }
-              parsed.pensum[c].metaUC_TSU = seedCareer.metaUC_TSU;
-              parsed.pensum[c].metaUC_Lic = seedCareer.metaUC_Lic;
-              this.state.pensum[c] = parsed.pensum[c];
-            }
-          });
-        }
-        if (parsed.evaluaciones) {
-          this.state.evaluaciones = { ...structuredClone(EVALUACIONES_INICIALES), ...parsed.evaluaciones };
-        }
-        if (parsed.horario) this.state.horario = parsed.horario;
-        if (parsed.notificaciones) this.state.notificaciones = parsed.notificaciones;
-        if (parsed.currentCareer) this.currentCareer = parsed.currentCareer;
-        if (parsed.currentWeek) this.currentWeek = parsed.currentWeek;
-        if (parsed.currentTab) this.currentTab = parsed.currentTab;
-        if (parsed.hasEnteredApp !== undefined) this.hasEnteredApp = parsed.hasEnteredApp;
+        this.applySavedState(parsed);
       } catch (e) {
         console.error("Error al cargar estado local", e);
       }
     }
+  }
+
+  migrateV2Data() {
+    const oldV2 = localStorage.getItem("SISTEMA_UNIVERSITARIO_DATA_V2");
+    if (!oldV2) return null;
+
+    try {
+      const parsedV2 = JSON.parse(oldV2);
+      const migrated = this.buildV2MigrationPayload(parsedV2);
+      this.migratePensumGrades(parsedV2.pensum, migrated.pensum);
+
+      const serialized = JSON.stringify(migrated);
+      localStorage.setItem(this.storageKey, serialized);
+      return serialized;
+    } catch (e) {
+      console.error("Error en migración V2 a V3:", e);
+      return null;
+    }
+  }
+
+  buildV2MigrationPayload(parsedV2) {
+    return {
+      currentCareer: parsedV2.currentCareer || "ADM",
+      currentWeek: parsedV2.currentWeek || "A",
+      currentTab: parsedV2.currentTab || "dashboard",
+      hasEnteredApp: parsedV2.hasEnteredApp || false,
+      horario: parsedV2.horario || structuredClone(HORARIO_DEFECTO),
+      notificaciones: parsedV2.notificaciones || [],
+      pensum: {
+        ADM: structuredClone(PENSUM_ADMINISTRACION),
+        INF: structuredClone(PENSUM_INFORMATICA)
+      },
+      evaluaciones: { ...structuredClone(EVALUACIONES_INICIALES), ...parsedV2.evaluaciones }
+    };
+  }
+
+  migratePensumGrades(oldPensum, newPensum) {
+    if (!oldPensum) return;
+
+    ['ADM', 'INF'].forEach(c => {
+      const oldCareer = oldPensum[c];
+      const newCareer = newPensum[c];
+      if (!oldCareer?.trayectos || !newCareer?.trayectos) return;
+
+      const oldSubjectsMap = new Map();
+      oldCareer.trayectos.forEach(t => {
+        (t.materias || []).forEach(m => {
+          if (m.codigo) oldSubjectsMap.set(m.codigo, m);
+        });
+      });
+
+      newCareer.trayectos.forEach(t => {
+        (t.materias || []).forEach(newM => {
+          const oldM = oldSubjectsMap.get(newM.codigo);
+          if (oldM?.estatus && oldM.estatus !== newM.estatus) {
+            newM.estatus = oldM.estatus;
+            newM.nota = oldM.nota;
+            newM.refDoc = oldM.refDoc || newM.refDoc;
+          }
+        });
+      });
+    });
+  }
+
+  applySavedState(parsed) {
+    if (parsed.pensum) {
+      this.restorePensums(parsed.pensum);
+    }
+    if (parsed.evaluaciones) {
+      this.state.evaluaciones = { ...structuredClone(EVALUACIONES_INICIALES), ...parsed.evaluaciones };
+    }
+    if (parsed.horario) this.state.horario = parsed.horario;
+    if (parsed.notificaciones) this.state.notificaciones = parsed.notificaciones;
+    if (parsed.currentCareer) this.currentCareer = parsed.currentCareer;
+    if (parsed.currentWeek) this.currentWeek = parsed.currentWeek;
+    if (parsed.currentTab) this.currentTab = parsed.currentTab;
+    if (parsed.hasEnteredApp !== undefined) this.hasEnteredApp = parsed.hasEnteredApp;
+  }
+
+  isPensumHomologated(trayectos) {
+    return trayectos.every(t =>
+      t.materias && t.materias.length > 0 &&
+      (t.materias[0].codigo.startsWith("PSI-") || t.materias[0].codigo.startsWith("PST-"))
+    );
+  }
+
+  syncTrayectosMetadata(targetTrayectos, seedTrayectos) {
+    seedTrayectos.forEach(seedT => {
+      const existingT = targetTrayectos.find(t => t.id === seedT.id);
+      if (existingT) {
+        existingT.nombre = seedT.nombre;
+        existingT.nivel = seedT.nivel;
+        existingT.totalUC = seedT.totalUC;
+      } else {
+        targetTrayectos.push(structuredClone(seedT));
+      }
+    });
+  }
+
+  restorePensums(parsedPensum) {
+    ['ADM', 'INF'].forEach(c => {
+      const seedCareer = c === 'ADM' ? PENSUM_ADMINISTRACION : PENSUM_INFORMATICA;
+      if (!this.state.pensum[c]) {
+        this.state.pensum[c] = structuredClone(seedCareer);
+      }
+
+      const careerData = parsedPensum[c];
+      if (!careerData?.trayectos) return;
+
+      if (!this.isPensumHomologated(careerData.trayectos)) {
+        careerData.trayectos = structuredClone(seedCareer.trayectos);
+      } else {
+        this.syncTrayectosMetadata(careerData.trayectos, seedCareer.trayectos);
+      }
+
+      careerData.metaUC_TSU = seedCareer.metaUC_TSU;
+      careerData.metaUC_Lic = seedCareer.metaUC_Lic;
+      this.state.pensum[c] = careerData;
+    });
   }
 
   saveState() {
@@ -314,7 +349,7 @@ class UniversityApp {
 
   startSelectedSemester() {
     const sel = document.getElementById("select-new-semester-to-start");
-    if (!sel || !sel.value) return;
+    if (!sel?.value) return;
     this.activateTrayecto(sel.value);
   }
 
@@ -323,7 +358,12 @@ class UniversityApp {
     const select = document.getElementById("select-switch-semester-picker");
     if (!select) return;
     select.innerHTML = pensum.trayectos.map(t => {
-      const statusText = t.actual ? " — [ACTIVO EN CURSO]" : (t.culminado ? " — [CULMINADO]" : "");
+      let statusText = "";
+      if (t.actual) {
+        statusText = " — [ACTIVO EN CURSO]";
+      } else if (t.culminado) {
+        statusText = " — [CULMINADO]";
+      }
       return `<option value="${t.id}" ${t.actual ? "selected" : ""}>${t.nombre}${statusText}</option>`;
     }).join("");
     this.openModal("modal-switch-semester");
@@ -331,7 +371,7 @@ class UniversityApp {
 
   confirmSwitchSemesterFromModal() {
     const select = document.getElementById("select-switch-semester-picker");
-    if (!select || !select.value) return;
+    if (!select?.value) return;
     const chosenId = select.value;
     this.closeModal("modal-switch-semester");
     this.activateTrayecto(chosenId);
@@ -752,7 +792,14 @@ class UniversityApp {
 
   renderDashboard() {
     const stats = this.getCalculatedStats(this.currentCareer);
+    const pensum = this.state.pensum[this.currentCareer];
 
+    this._updateDashboardStats(stats);
+    this._updateDashboardSemesterStatus(pensum);
+    this._renderDashboardTrayectosSummary(pensum);
+  }
+
+  _updateDashboardStats(stats) {
     const pctTSU = Math.min(100, Math.round((stats.ucTSUAprobadas / stats.metaUC_TSU) * 100));
     const tsuVal = document.getElementById("stat-uc-tsu-val");
     if (tsuVal) tsuVal.textContent = `${stats.ucTSUAprobadas} / ${stats.metaUC_TSU} UC`;
@@ -781,133 +828,153 @@ class UniversityApp {
     if (matConsulta) matConsulta.textContent = String(stats.materiasConsulta);
     const notifsCount = document.getElementById("stat-eval-pendientes");
     if (notifsCount) notifsCount.textContent = String(this.state.notificaciones.length);
+  }
 
-    // Actualizar Tarjeta de Estado del Semestre en Inicio (Limpio y sin saturación)
-    const pensum = this.state.pensum[this.currentCareer];
+  _updateDashboardSemesterStatus(pensum) {
     const activeTrayecto = pensum.trayectos.find(t => t.actual);
 
     let countRepetir = 0;
-    pensum.trayectos.forEach(t => t.materias.forEach(m => { if (m.estatus === "repetir") countRepetir++; }));
+    pensum.trayectos.forEach(t => {
+      t.materias.forEach(m => {
+        if (m.estatus === "repetir") countRepetir++;
+      });
+    });
 
     const semNameEl = document.getElementById("home-semester-name");
     const semDetailsEl = document.getElementById("home-semester-details");
     const semBadgeEl = document.getElementById("home-semester-active-badge");
 
-    if (activeTrayecto) {
-      const enCursoCount = activeTrayecto.materias.filter(m => m.estatus === "en_curso").length;
-      if (semNameEl) semNameEl.textContent = activeTrayecto.nombre;
-      if (semDetailsEl) semDetailsEl.textContent = `${enCursoCount} materias en curso de este semestre • ${countRepetir} pendientes por repetir`;
-      if (semBadgeEl) {
-        semBadgeEl.className = "status-badge status-en_curso";
-        semBadgeEl.textContent = "En Curso";
+    const enCursoCount = activeTrayecto ? activeTrayecto.materias.filter(m => m.estatus === "en_curso").length : 0;
+
+    if (semNameEl) {
+      semNameEl.textContent = activeTrayecto ? activeTrayecto.nombre : "Semestre Culminado / Sin Semestre Activo";
+    }
+    if (semDetailsEl) {
+      semDetailsEl.textContent = activeTrayecto
+        ? `${enCursoCount} materias en curso de este semestre • ${countRepetir} pendientes por repetir`
+        : `Selecciona tu próximo semestre en 'Mi Semestre' • ${countRepetir} pendientes por repetir`;
+    }
+    if (semBadgeEl) {
+      semBadgeEl.className = activeTrayecto ? "status-badge status-en_curso" : "status-badge status-aprobada";
+      semBadgeEl.textContent = activeTrayecto ? "En Curso" : "Culminado";
+    }
+  }
+
+  _getTrayectoSummaryMetrics(trayecto) {
+    let aprobadas = 0;
+    let repetir = 0;
+    let enCurso = 0;
+    let ucGanadas = 0;
+
+    trayecto.materias.forEach(m => {
+      if (m.estatus === "aprobada") {
+        aprobadas++;
+        ucGanadas += m.uc;
+      } else if (m.estatus === "repetir") {
+        repetir++;
+      } else if (m.estatus === "en_curso") {
+        enCurso++;
       }
-    } else {
-      if (semNameEl) semNameEl.textContent = "Semestre Culminado / Sin Semestre Activo";
-      if (semDetailsEl) semDetailsEl.textContent = `Selecciona tu próximo semestre en 'Mi Semestre' • ${countRepetir} pendientes por repetir`;
-      if (semBadgeEl) {
-        semBadgeEl.className = "status-badge status-aprobada";
-        semBadgeEl.textContent = "Culminado";
-      }
+    });
+
+    return { aprobadas, repetir, enCurso, ucGanadas };
+  }
+
+  _createDashboardSubjectItemHtml(m) {
+    const statusTextMap = {
+      aprobada: "Aprobada",
+      en_curso: "En Curso",
+      repetir: "Por Repetir",
+      intensivo_verano: "Intensivo Verano",
+      pendiente_consulta: "Pendiente Consulta",
+      por_cursar: "Por Cursar"
+    };
+
+    const notaHtml = m.nota
+      ? `<span style="font-size: 0.78rem; font-weight: 700; color: var(--primary-blue); margin-left: 6px;">• ${m.nota} pts</span>`
+      : "";
+
+    return `
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 8px; border-bottom: 1px dashed var(--border-color); flex-wrap: wrap; gap: 6px; cursor: pointer;" onclick="app.openSubjectDetailModal('${m.id}')">
+        <div>
+          <strong style="color: var(--text-dark); font-size: 0.8rem;">${m.nombre}</strong>
+          <span style="font-size: 0.72rem; color: var(--text-muted); margin-left: 4px;">(${m.uc} UC)</span>
+          ${notaHtml}
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <span class="status-badge status-${m.estatus}">${statusTextMap[m.estatus] || m.estatus}</span>
+          <button type="button" class="btn-action" onclick="event.stopPropagation(); app.openSubjectDetailModal('${m.id}')">Notas</button>
+        </div>
+      </div>
+    `;
+  }
+
+  _createDashboardTrayectoActions(t, isCurrentActive, aprobadas) {
+    if (isCurrentActive) {
+      return `
+        <span style="font-size: 0.72rem; background: #E8F8F5; color: #117A65; border: 1px solid #A3E4D7; padding: 1px 6px; border-radius: 4px; font-weight: bold;">En Curso</span>
+        <button type="button" class="btn-action" style="background: #117A65; color: white; border: none; font-weight: bold; font-size: 0.72rem; margin-left: 4px;" onclick="app.culminateTrayecto('${t.id}', event)">Culminar</button>
+      `;
     }
 
-    // Render Dashboard Trayectos Summary
+    const isAllApproved = t.materias.length > 0 && aprobadas === t.materias.length;
+    if (t.culminado || isAllApproved) {
+      return `
+        <span style="font-size: 0.72rem; background: #D1F2EB; color: #0E6251; padding: 1px 6px; border-radius: 4px; font-weight: bold;">Culminado</span>
+        <button type="button" class="btn-action" style="color: var(--primary-blue); border-color: var(--primary-blue); font-size: 0.72rem; margin-left: 4px;" onclick="app.activateTrayecto('${t.id}', event)">Iniciar</button>
+        <button type="button" class="btn-action" style="background: #117A65; color: white; border: none; font-weight: bold; font-size: 0.72rem; margin-left: 4px;" onclick="app.culminateTrayecto('${t.id}', event)">Culminar</button>
+      `;
+    }
+
+    return `
+      <button type="button" class="btn-action" style="color: var(--primary-blue); border-color: var(--primary-blue); font-weight: bold; font-size: 0.72rem;" onclick="app.activateTrayecto('${t.id}', event)">Iniciar</button>
+      <button type="button" class="btn-action" style="background: #117A65; color: white; border: none; font-weight: bold; font-size: 0.72rem; margin-left: 4px;" onclick="app.culminateTrayecto('${t.id}', event)">Culminar</button>
+    `;
+  }
+
+  _renderDashboardTrayectosSummary(pensum) {
     const summaryContainer = document.getElementById("dashboard-trayectos-summary");
-    if (summaryContainer) {
-      const openTrayectos = new Set(Array.from(document.querySelectorAll("#dashboard-trayectos-summary details[open]")).map(d => d.dataset.trayectoId));
-      const pensum = this.state.pensum[this.currentCareer];
-      let trayectosHtml = "";
+    if (!summaryContainer) return;
 
-      let activeTrayectoName = "";
+    const openTrayectos = new Set(
+      Array.from(document.querySelectorAll("#dashboard-trayectos-summary details[open]")).map(d => d.dataset.trayectoId)
+    );
+    let trayectosHtml = "";
+    let activeTrayectoName = "";
 
-      pensum.trayectos.forEach(t => {
-        let aprobadas = 0;
-        let repetir = 0;
-        let enCurso = 0;
-        let consulta = 0;
-        let ucGanadas = 0;
+    pensum.trayectos.forEach(t => {
+      const { aprobadas, repetir, enCurso, ucGanadas } = this._getTrayectoSummaryMetrics(t);
+      const matListHtml = t.materias.map(m => this._createDashboardSubjectItemHtml(m)).join("");
 
-        let matListHtml = "";
-        t.materias.forEach(m => {
-          if (m.estatus === "aprobada") {
-            aprobadas++;
-            ucGanadas += m.uc;
-          }
-          if (m.estatus === "repetir") repetir++;
-          if (m.estatus === "en_curso") enCurso++;
-          if (m.estatus === "pendiente_consulta") consulta++;
-
-          const statusTextMap = {
-            aprobada: "Aprobada",
-            en_curso: "En Curso",
-            repetir: "Por Repetir",
-            intensivo_verano: "Intensivo Verano",
-            pendiente_consulta: "Pendiente Consulta",
-            por_cursar: "Por Cursar"
-          };
-
-          matListHtml += `
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 8px; border-bottom: 1px dashed var(--border-color); flex-wrap: wrap; gap: 6px; cursor: pointer;" onclick="app.openSubjectDetailModal('${m.id}')">
-              <div>
-                <strong style="color: var(--text-dark); font-size: 0.8rem;">${m.nombre}</strong>
-                <span style="font-size: 0.72rem; color: var(--text-muted); margin-left: 4px;">(${m.uc} UC)</span>
-                ${m.nota ? `<span style="font-size: 0.78rem; font-weight: 700; color: var(--primary-blue); margin-left: 6px;">• ${m.nota} pts</span>` : ''}
-              </div>
-              <div style="display: flex; align-items: center; gap: 6px;">
-                <span class="status-badge status-${m.estatus}">${statusTextMap[m.estatus] || m.estatus}</span>
-                <button type="button" class="btn-action" onclick="event.stopPropagation(); app.openSubjectDetailModal('${m.id}')">Notas</button>
-              </div>
-            </div>
-          `;
-        });
-
-        const isCurrentActive = t.actual || (enCurso > 0);
-        if (isCurrentActive && !activeTrayectoName) {
-          activeTrayectoName = `${t.nombre} (En Curso)`;
-        }
-
-        let trayectoActionBtn = "";
-        if (isCurrentActive) {
-          trayectoActionBtn = `
-            <span style="font-size: 0.72rem; background: #E8F8F5; color: #117A65; border: 1px solid #A3E4D7; padding: 1px 6px; border-radius: 4px; font-weight: bold;">En Curso</span>
-            <button type="button" class="btn-action" style="background: #117A65; color: white; border: none; font-weight: bold; font-size: 0.72rem; margin-left: 4px;" onclick="app.culminateTrayecto('${t.id}', event)">Culminar</button>
-          `;
-        } else if (t.culminado || (aprobadas === t.materias.length && t.materias.length > 0)) {
-          trayectoActionBtn = `
-            <span style="font-size: 0.72rem; background: #D1F2EB; color: #0E6251; padding: 1px 6px; border-radius: 4px; font-weight: bold;">Culminado</span>
-            <button type="button" class="btn-action" style="color: var(--primary-blue); border-color: var(--primary-blue); font-size: 0.72rem; margin-left: 4px;" onclick="app.activateTrayecto('${t.id}', event)">Iniciar</button>
-            <button type="button" class="btn-action" style="background: #117A65; color: white; border: none; font-weight: bold; font-size: 0.72rem; margin-left: 4px;" onclick="app.culminateTrayecto('${t.id}', event)">Culminar</button>
-          `;
-        } else {
-          trayectoActionBtn = `
-            <button type="button" class="btn-action" style="color: var(--primary-blue); border-color: var(--primary-blue); font-weight: bold; font-size: 0.72rem;" onclick="app.activateTrayecto('${t.id}', event)">Iniciar</button>
-            <button type="button" class="btn-action" style="background: #117A65; color: white; border: none; font-weight: bold; font-size: 0.72rem; margin-left: 4px;" onclick="app.culminateTrayecto('${t.id}', event)">Culminar</button>
-          `;
-        }
-
-        const isOpenAttr = openTrayectos.has(t.id) ? "open" : "";
-
-        trayectosHtml += `
-          <details data-trayecto-id="${t.id}" ${isOpenAttr} class="trayecto-block" style="margin-bottom: 6px; border-radius: 8px;">
-            <summary class="trayecto-header" style="padding: 7px 10px; cursor: pointer; user-select: none;">
-              <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
-                <h3 style="margin: 0; font-size: 0.85rem; color: var(--primary-blue); display: inline-block;">${t.nombre}</h3>
-                <div style="display: inline-flex; align-items: center; gap: 4px; flex-wrap: wrap;">${trayectoActionBtn}</div>
-              </div>
-              <div style="font-size: 0.72rem; color: var(--text-secondary);">
-                Aprobadas: <strong>${aprobadas}</strong> | Repetir: <strong>${repetir}</strong> | UC: <strong>${ucGanadas}/${t.totalUC}</strong>
-              </div>
-            </summary>
-            <div style="padding: 6px 10px; border-top: 1px solid var(--border-color);">${matListHtml}</div>
-          </details>
-        `;
-      });
-
-      summaryContainer.innerHTML = trayectosHtml;
-
-      const phaseDesc = document.getElementById("home-phase-desc");
-      if (phaseDesc && activeTrayectoName) {
-        phaseDesc.textContent = activeTrayectoName;
+      const isCurrentActive = t.actual || (enCurso > 0);
+      if (isCurrentActive && !activeTrayectoName) {
+        activeTrayectoName = `${t.nombre} (En Curso)`;
       }
+
+      const trayectoActionBtn = this._createDashboardTrayectoActions(t, isCurrentActive, aprobadas);
+      const isOpenAttr = openTrayectos.has(t.id) ? "open" : "";
+
+      trayectosHtml += `
+        <details data-trayecto-id="${t.id}" ${isOpenAttr} class="trayecto-block" style="margin-bottom: 6px; border-radius: 8px;">
+          <summary class="trayecto-header" style="padding: 7px 10px; cursor: pointer; user-select: none;">
+            <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+              <h3 style="margin: 0; font-size: 0.85rem; color: var(--primary-blue); display: inline-block;">${t.nombre}</h3>
+              <div style="display: inline-flex; align-items: center; gap: 4px; flex-wrap: wrap;">${trayectoActionBtn}</div>
+            </div>
+            <div style="font-size: 0.72rem; color: var(--text-secondary);">
+              Aprobadas: <strong>${aprobadas}</strong> | Repetir: <strong>${repetir}</strong> | UC: <strong>${ucGanadas}/${t.totalUC}</strong>
+            </div>
+          </summary>
+          <div style="padding: 6px 10px; border-top: 1px solid var(--border-color);">${matListHtml}</div>
+        </details>
+      `;
+    });
+
+    summaryContainer.innerHTML = trayectosHtml;
+
+    const phaseDesc = document.getElementById("home-phase-desc");
+    if (phaseDesc && activeTrayectoName) {
+      phaseDesc.textContent = activeTrayectoName;
     }
   }
 
@@ -980,52 +1047,7 @@ class UniversityApp {
               <tbody>
       `;
 
-      filteredMaterias.forEach(m => {
-        const statusClass = `status-${m.estatus}`;
-        const statusTextMap = {
-          aprobada: "Aprobada",
-          en_curso: "En Curso",
-          repetir: "Por Repetir",
-          intensivo_verano: "Intensivo Verano",
-          pendiente_consulta: "Pendiente Consulta",
-          por_cursar: "Por Cursar"
-        };
-
-        const notaDisplay = m.nota ? `<strong>${m.nota} pts</strong>` : "-";
-
-        let prelaHtml = "";
-        if (typeof MAPA_PRELACIONES !== "undefined" && MAPA_PRELACIONES[this.currentCareer]) {
-          const careerPrela = MAPA_PRELACIONES[this.currentCareer];
-          if (careerPrela[m.id]) {
-            prelaHtml += `<div class="prela-tag">Requisito clave</div>`;
-          }
-          for (const [reqId, info] of Object.entries(careerPrela)) {
-            if (info.prelaA && info.prelaA.includes(m.id)) {
-              let reqSub = null;
-              pensum.trayectos.forEach(tr => tr.materias.forEach(mat => { if (mat.id === reqId) reqSub = mat; }));
-              if (reqSub && reqSub.estatus === "repetir") {
-                prelaHtml += `<div class="prela-warning-tag">Prelada por: ${reqSub.nombre} (Por Repetir)</div>`;
-              }
-            }
-          }
-        }
-
-        html += `
-          <tr style="cursor: pointer;" onclick="app.openSubjectDetailModal('${m.id}')">
-            <td class="subject-code">${m.codigo}</td>
-            <td class="subject-name">
-              ${m.nombre}
-              ${prelaHtml}
-            </td>
-            <td><strong>${m.uc}</strong></td>
-            <td><span class="status-badge ${statusClass}">${statusTextMap[m.estatus] || m.estatus}</span></td>
-            <td>${notaDisplay}</td>
-            <td>
-              <button type="button" class="btn-action" style="color: var(--primary-blue); font-weight: bold;" onclick="event.stopPropagation(); app.openSubjectDetailModal('${m.id}')">Ficha / Notas →</button>
-            </td>
-          </tr>
-        `;
-      });
+      html += filteredMaterias.map(m => this.renderPensumSubjectRow(m)).join("");
 
       html += `
               </tbody>
@@ -1038,6 +1060,62 @@ class UniversityApp {
     container.innerHTML = html || '<div style="text-align:center; padding:20px; color:var(--text-muted);">No hay asignaturas que coincidan con la búsqueda.</div>';
   }
 
+  renderSubjectPrelacionTags(subjectId) {
+    if (typeof MAPA_PRELACIONES === "undefined" || !MAPA_PRELACIONES[this.currentCareer]) {
+      return "";
+    }
+
+    const careerPrela = MAPA_PRELACIONES[this.currentCareer];
+    let prelaHtml = "";
+
+    if (careerPrela[subjectId]) {
+      prelaHtml += `<div class="prela-tag">Requisito clave</div>`;
+    }
+
+    for (const [reqId, info] of Object.entries(careerPrela)) {
+      if (info.prelaA?.includes(subjectId)) {
+        const { foundSubject: reqSub } = this.findSubjectAndTrayecto(reqId);
+        if (reqSub?.estatus === "repetir") {
+          prelaHtml += `<div class="prela-warning-tag">Prelada por: ${reqSub.nombre} (Por Repetir)</div>`;
+        }
+      }
+    }
+
+    return prelaHtml;
+  }
+
+  renderPensumSubjectRow(m) {
+    const statusTextMap = {
+      aprobada: "Aprobada",
+      en_curso: "En Curso",
+      repetir: "Por Repetir",
+      intensivo_verano: "Intensivo Verano",
+      pendiente_consulta: "Pendiente Consulta",
+      por_cursar: "Por Cursar"
+    };
+
+    const statusClass = `status-${m.estatus}`;
+    const notaDisplay = m.nota ? `<strong>${m.nota} pts</strong>` : "-";
+    const prelaHtml = this.renderSubjectPrelacionTags(m.id);
+    const statusLabel = statusTextMap[m.estatus] || m.estatus;
+
+    return `
+      <tr style="cursor: pointer;" onclick="app.openSubjectDetailModal('${m.id}')">
+        <td class="subject-code">${m.codigo}</td>
+        <td class="subject-name">
+          ${m.nombre}
+          ${prelaHtml}
+        </td>
+        <td><strong>${m.uc}</strong></td>
+        <td><span class="status-badge ${statusClass}">${statusLabel}</span></td>
+        <td>${notaDisplay}</td>
+        <td>
+          <button type="button" class="btn-action" style="color: var(--primary-blue); font-weight: bold;" onclick="event.stopPropagation(); app.openSubjectDetailModal('${m.id}')">Ficha / Notas →</button>
+        </td>
+      </tr>
+    `;
+  }
+
   filterSubjects() {
     this.renderPensum();
   }
@@ -1048,23 +1126,143 @@ class UniversityApp {
     this.openModal("modal-subject-detail");
   }
 
+  findSubjectAndTrayecto(subjectId) {
+    const pensum = this.state.pensum[this.currentCareer];
+    if (!pensum?.trayectos) return { foundSubject: null, foundTrayecto: null };
+
+    for (const t of pensum.trayectos) {
+      const found = t.materias?.find(m => m.id === subjectId);
+      if (found) {
+        return { foundSubject: found, foundTrayecto: t };
+      }
+    }
+    return { foundSubject: null, foundTrayecto: null };
+  }
+
+  isProyectoSubject(subject) {
+    if (!subject) return false;
+    const name = (subject.nombre || "").toLowerCase();
+    const code = (subject.codigo || "").toLowerCase();
+    return name.includes("proyecto socio") || code.includes("psi") || code.includes("pst");
+  }
+
+  calcSubjectEvaluations(evals = []) {
+    let totalWeight = 0;
+    let totalScoreWeighted = 0;
+
+    for (const e of evals) {
+      const weight = Number.parseFloat(e.ponderacion || 0);
+      totalWeight += weight;
+      if (e.nota !== null && e.nota !== undefined) {
+        totalScoreWeighted += Number.parseFloat(e.nota) * (weight / 100);
+      }
+    }
+
+    const remainingWeight = Math.max(0, 100 - totalWeight);
+    return { totalWeight, totalScoreWeighted, remainingWeight };
+  }
+
+  formatPredictiveScore(reqGrade, successLabel) {
+    if (reqGrade === "N/A") return "N/A";
+    const gradeNum = Number.parseFloat(reqGrade);
+    if (gradeNum <= 0) return successLabel;
+    if (gradeNum > 20) return "No alcanza";
+    return `${reqGrade} pts prom.`;
+  }
+
+  calcPredictiveTarget(targetScore, totalScoreWeighted, remainingWeight, successLabel) {
+    const needed = Math.max(0, targetScore - totalScoreWeighted);
+    const reqGrade = remainingWeight > 0 ? (needed / (remainingWeight / 100)).toFixed(1) : "N/A";
+    return {
+      needed,
+      displayScore: this.formatPredictiveScore(reqGrade, successLabel)
+    };
+  }
+
+  renderPredictiveBox(subject, evalCalc) {
+    const { totalWeight, totalScoreWeighted, remainingWeight } = evalCalc;
+    if (totalWeight >= 100 && subject.estatus === "aprobada") {
+      return "";
+    }
+
+    const isProyecto = this.isProyectoSubject(subject);
+    const minPassScore = isProyecto ? 16 : 13;
+    const goodScore = isProyecto ? 18 : 16;
+    const excelScore = 20;
+
+    const minTarget = this.calcPredictiveTarget(minPassScore, totalScoreWeighted, remainingWeight, "¡Aprobado!");
+    const goodTarget = this.calcPredictiveTarget(goodScore, totalScoreWeighted, remainingWeight, "¡Alcanzado!");
+    const excelTarget = this.calcPredictiveTarget(excelScore, totalScoreWeighted, remainingWeight, "¡Alcanzado!");
+
+    return `
+      <div class="eval-predictive-box" style="margin-top: 12px; margin-bottom: 12px;">
+        <div class="predictive-header">
+          <div class="predictive-title">
+            <span>Simulador de Calificación (${isProyecto ? 'Proyecto: Mínimo 16 pts' : 'General: Mínimo 13 pts'})</span>
+          </div>
+          <div style="font-size: 0.75rem; color: #166534; font-weight: bold;">
+            Por evaluar: ${remainingWeight}%
+          </div>
+        </div>
+        <div class="predictive-targets-grid">
+          <div class="predictive-target-card">
+            <div class="predictive-target-name">Mínimo para Aprobar (${minPassScore} pts)</div>
+            <div class="predictive-target-score">${minTarget.displayScore}</div>
+            <div style="font-size:0.68rem; color:var(--text-muted); margin-top: 2px;">Faltan ${minTarget.needed.toFixed(2)} pts</div>
+          </div>
+          <div class="predictive-target-card">
+            <div class="predictive-target-name">Meta Rendimiento (${goodScore} pts)</div>
+            <div class="predictive-target-score">${goodTarget.displayScore}</div>
+            <div style="font-size:0.68rem; color:var(--text-muted); margin-top: 2px;">Faltan ${goodTarget.needed.toFixed(2)} pts</div>
+          </div>
+          <div class="predictive-target-card">
+            <div class="predictive-target-name">Sobresaliente (${excelScore} pts)</div>
+            <div class="predictive-target-score">${excelTarget.displayScore}</div>
+            <div style="font-size:0.68rem; color:var(--text-muted); margin-top: 2px;">Faltan ${excelTarget.needed.toFixed(2)} pts</div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  renderEvalTableRows(evals = []) {
+    if (evals.length === 0) {
+      return '<tr><td colspan="6" style="text-align:center; padding:16px; color:var(--text-muted); font-size:0.8rem;">Sin evaluaciones registradas aún. Presiona <strong>+ Nueva Evaluación</strong> para agregar una.</td></tr>';
+    }
+
+    return evals.map((e, idx) => {
+      const ptsGanados = (e.nota !== null && e.nota !== undefined)
+        ? ((e.nota * e.ponderacion) / 100).toFixed(2)
+        : "-";
+      const statusBadge = e.completada
+        ? '<span class="status-badge status-aprobada" style="font-size:0.68rem;">Completada</span>'
+        : '<span class="status-badge status-intensivo_verano" style="font-size:0.68rem;">Pendiente</span>';
+      const notaDisplay = (e.nota !== null && e.nota !== undefined) ? `<strong>${e.nota} pts</strong>` : "-";
+
+      return `
+        <tr>
+          <td class="subject-name" style="font-size:0.82rem;">${e.nombre}</td>
+          <td style="font-size:0.8rem;"><strong>${e.ponderacion}%</strong></td>
+          <td style="font-size:0.8rem;">${notaDisplay}</td>
+          <td style="font-size:0.8rem;"><strong style="color: var(--primary-blue);">${ptsGanados} pts</strong></td>
+          <td>${statusBadge}</td>
+          <td>
+            <div style="display:flex; gap:4px;">
+              <button type="button" class="btn-action" style="padding:2px 6px; font-size:0.7rem;" onclick="app.openEditEvalModal('${idx}')">Editar</button>
+              <button type="button" class="btn-action" style="padding:2px 6px; font-size:0.7rem; color:#BE123C; border-color:#FECDD3;" onclick="app.deleteEvaluation('${idx}')">&times;</button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join("");
+  }
+
   renderSubjectDetailContent(subjectId) {
     const container = document.getElementById("detail-subject-content");
     const titleEl = document.getElementById("detail-subject-title");
     if (!container) return;
 
-    const pensum = this.state.pensum[this.currentCareer];
-    let foundSubject = null;
-    let foundTrayecto = null;
-
-    pensum.trayectos.forEach(t => {
-      t.materias.forEach(m => {
-        if (m.id === subjectId) {
-          foundSubject = m;
-          foundTrayecto = t;
-        }
-      });
-    });
+    const { foundSubject, foundTrayecto } = this.findSubjectAndTrayecto(subjectId);
 
     if (!foundSubject) {
       container.innerHTML = '<div style="padding:20px; text-align:center; color:var(--text-muted);">Asignatura no encontrada.</div>';
@@ -1084,104 +1282,29 @@ class UniversityApp {
       por_cursar: "Por Cursar"
     };
 
-    const isProyecto = (foundSubject.nombre.toLowerCase().includes("proyecto socio") || foundSubject.codigo.toLowerCase().includes("psi") || foundSubject.codigo.toLowerCase().includes("pst"));
-    const minPassScore = isProyecto ? 16 : 13;
-    const goodScore = isProyecto ? 18 : 16;
-    const excelScore = 20;
-
     const evals = this.state.evaluaciones[subjectId] || [];
-    let totalWeight = 0;
-    let totalScoreWeighted = 0;
+    const evalCalc = this.calcSubjectEvaluations(evals);
+    const predictiveHtml = this.renderPredictiveBox(foundSubject, evalCalc);
+    const evalRows = this.renderEvalTableRows(evals);
 
-    evals.forEach(e => {
-      totalWeight += Number.parseFloat(e.ponderacion || 0);
-      if (e.nota !== null && e.nota !== undefined) {
-        totalScoreWeighted += (Number.parseFloat(e.nota) * (Number.parseFloat(e.ponderacion) / 100));
-      }
-    });
+    const trayectoName = foundTrayecto ? foundTrayecto.nombre : "Pensum";
+    const notaOficial = foundSubject.nota !== null ? `${foundSubject.nota} pts` : "Sin calificar";
+    const refDocHtml = foundSubject.refDoc
+      ? `<div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 2px;"><strong>Profesor / Nota:</strong> ${foundSubject.refDoc}</div>`
+      : "";
+    const statusText = statusTextMap[foundSubject.estatus] || foundSubject.estatus;
 
-    const remainingWeight = Math.max(0, 100 - totalWeight);
-    let predictiveHtml = "";
-    if (totalWeight < 100 || foundSubject.estatus !== "aprobada") {
-      const neededMin = Math.max(0, minPassScore - totalScoreWeighted);
-      const reqGradeMin = remainingWeight > 0 ? (neededMin / (remainingWeight / 100)).toFixed(1) : "N/A";
-
-      const neededGood = Math.max(0, goodScore - totalScoreWeighted);
-      const reqGradeGood = remainingWeight > 0 ? (neededGood / (remainingWeight / 100)).toFixed(1) : "N/A";
-
-      const neededExcel = Math.max(0, excelScore - totalScoreWeighted);
-      const reqGradeExcel = remainingWeight > 0 ? (neededExcel / (remainingWeight / 100)).toFixed(1) : "N/A";
-
-      predictiveHtml = `
-        <div class="eval-predictive-box" style="margin-top: 12px; margin-bottom: 12px;">
-          <div class="predictive-header">
-            <div class="predictive-title">
-              <span>Simulador de Calificación (${isProyecto ? 'Proyecto: Mínimo 16 pts' : 'General: Mínimo 13 pts'})</span>
-            </div>
-            <div style="font-size: 0.75rem; color: #166534; font-weight: bold;">
-              Por evaluar: ${remainingWeight}%
-            </div>
-          </div>
-          <div class="predictive-targets-grid">
-            <div class="predictive-target-card">
-              <div class="predictive-target-name">Mínimo para Aprobar (${minPassScore} pts)</div>
-              <div class="predictive-target-score">${reqGradeMin <= 0 ? "¡Aprobado!" : (reqGradeMin > 20 ? "No alcanza" : `${reqGradeMin} pts prom.`)}</div>
-              <div style="font-size:0.68rem; color:var(--text-muted); margin-top: 2px;">Faltan ${neededMin.toFixed(2)} pts</div>
-            </div>
-            <div class="predictive-target-card">
-              <div class="predictive-target-name">Meta Rendimiento (${goodScore} pts)</div>
-              <div class="predictive-target-score">${reqGradeGood <= 0 ? "¡Alcanzado!" : (reqGradeGood > 20 ? "No alcanza" : `${reqGradeGood} pts prom.`)}</div>
-              <div style="font-size:0.68rem; color:var(--text-muted); margin-top: 2px;">Faltan ${neededGood.toFixed(2)} pts</div>
-            </div>
-            <div class="predictive-target-card">
-              <div class="predictive-target-name">Sobresaliente (${excelScore} pts)</div>
-              <div class="predictive-target-score">${reqGradeExcel <= 0 ? "¡Alcanzado!" : (reqGradeExcel > 20 ? "No alcanza" : `${reqGradeExcel} pts prom.`)}</div>
-              <div style="font-size:0.68rem; color:var(--text-muted); margin-top: 2px;">Faltan ${neededExcel.toFixed(2)} pts</div>
-            </div>
-          </div>
-        </div>
-      `;
-    }
-
-    let evalRows = "";
-    if (evals.length === 0) {
-      evalRows = '<tr><td colspan="6" style="text-align:center; padding:16px; color:var(--text-muted); font-size:0.8rem;">Sin evaluaciones registradas aún. Presiona <strong>+ Nueva Evaluación</strong> para agregar una.</td></tr>';
-    } else {
-      evals.forEach((e, idx) => {
-        const ptsGanados = (e.nota !== null) ? ((e.nota * e.ponderacion) / 100).toFixed(2) : "-";
-        const statusBadge = e.completada
-          ? '<span class="status-badge status-aprobada" style="font-size:0.68rem;">Completada</span>'
-          : '<span class="status-badge status-intensivo_verano" style="font-size:0.68rem;">Pendiente</span>';
-
-        evalRows += `
-          <tr>
-            <td class="subject-name" style="font-size:0.82rem;">${e.nombre}</td>
-            <td style="font-size:0.8rem;"><strong>${e.ponderacion}%</strong></td>
-            <td style="font-size:0.8rem;">${e.nota !== null ? `<strong>${e.nota} pts</strong>` : "-"}</td>
-            <td style="font-size:0.8rem;"><strong style="color: var(--primary-blue);">${ptsGanados} pts</strong></td>
-            <td>${statusBadge}</td>
-            <td>
-              <div style="display:flex; gap:4px;">
-                <button type="button" class="btn-action" style="padding:2px 6px; font-size:0.7rem;" onclick="app.openEditEvalModal('${idx}')">Editar</button>
-                <button type="button" class="btn-action" style="padding:2px 6px; font-size:0.7rem; color:#BE123C; border-color:#FECDD3;" onclick="app.deleteEvaluation('${idx}')">&times;</button>
-              </div>
-            </td>
-          </tr>
-        `;
-      });
-    }
-
-    const html = `
+    container.innerHTML = `
       <div style="display: flex; flex-direction: column; gap: 8px;">
         <div style="background: var(--bg-hover); border-radius: 8px; padding: 10px 12px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
           <div>
             <div style="font-size: 0.72rem; font-weight: bold; color: var(--primary-blue); text-transform: uppercase;">
-              ${foundTrayecto ? foundTrayecto.nombre : 'Pensum'} • ${foundSubject.uc} UC • Nota Oficial: <strong>${foundSubject.nota !== null ? foundSubject.nota + ' pts' : 'Sin calificar'}</strong>
+              ${trayectoName} • ${foundSubject.uc} UC • Nota Oficial: <strong>${notaOficial}</strong>
             </div>
-            ${foundSubject.refDoc ? `<div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 2px;"><strong>Profesor / Nota:</strong> ${foundSubject.refDoc}</div>` : ''}
+            ${refDocHtml}
           </div>
           <div style="display: flex; align-items: center; gap: 6px;">
-            <span class="status-badge status-${foundSubject.estatus}">${statusTextMap[foundSubject.estatus] || foundSubject.estatus}</span>
+            <span class="status-badge status-${foundSubject.estatus}">${statusText}</span>
             <button type="button" class="btn-action" style="font-size: 0.72rem; padding: 3px 8px;" onclick="app.openEditSubjectModal('${foundSubject.id}')">Editar Datos</button>
           </div>
         </div>
@@ -1191,7 +1314,7 @@ class UniversityApp {
         <div style="background: white; border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; margin-top: 4px;">
           <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; background: var(--bg-hover); border-bottom: 1px solid var(--border-color); flex-wrap: wrap; gap: 6px;">
             <div style="font-size: 0.78rem; font-weight: bold; color: var(--text-dark);">
-              Ponderación: ${totalWeight}% / 100% • Acumulado: <span style="color: var(--primary-blue);">${totalScoreWeighted.toFixed(2)} / 20 pts</span>
+              Ponderación: ${evalCalc.totalWeight}% / 100% • Acumulado: <span style="color: var(--primary-blue);">${evalCalc.totalScoreWeighted.toFixed(2)} / 20 pts</span>
             </div>
             <div style="display: flex; gap: 6px;">
               <button type="button" class="btn-primary" style="padding: 3px 8px; font-size: 0.72rem;" onclick="app.openAddEvalModal()">+ Nueva Evaluación</button>
@@ -1219,8 +1342,6 @@ class UniversityApp {
         </div>
       </div>
     `;
-
-    container.innerHTML = html;
   }
 
   openAddSubjectModal() {
@@ -1247,17 +1368,7 @@ class UniversityApp {
 
   openEditSubjectModal(subjectId) {
     const pensum = this.state.pensum[this.currentCareer];
-    let foundMat = null;
-    let foundTrayecto = null;
-
-    pensum.trayectos.forEach(t => {
-      t.materias.forEach(m => {
-        if (m.id === subjectId) {
-          foundMat = m;
-          foundTrayecto = t;
-        }
-      });
-    });
+    const { foundSubject: foundMat, foundTrayecto } = this.findSubjectAndTrayecto(subjectId);
 
     if (!foundMat) return;
 
@@ -1280,92 +1391,83 @@ class UniversityApp {
     this.openModal("modal-edit-subject");
   }
 
-  saveSubjectEdit(event) {
-    event.preventDefault();
-    const scrollPos = window.scrollY;
-
+  getSubjectFormData() {
     const id = document.getElementById("edit-subject-id").value;
     const name = (document.getElementById("edit-subject-name").value || "").trim();
-    let code = (document.getElementById("edit-subject-code").value || "").trim();
-    const ucVal = document.getElementById("edit-subject-uc").value;
-    const uc = ucVal ? Number.parseInt(ucVal, 10) : 2;
-    const trayectoTarget = document.getElementById("edit-subject-trayecto").value;
-    const newStatus = document.getElementById("edit-subject-status").value;
-    const newGradeVal = document.getElementById("edit-subject-grade").value;
-    const newRef = (document.getElementById("edit-subject-ref").value || "").trim();
-
     if (!name) {
       this.showToast("Por favor ingresa el nombre de la asignatura.", "warning");
-      return;
+      return null;
     }
 
-    if (!code) {
-      code = name.substring(0, 3).toUpperCase() + "-" + Math.floor(100 + Math.random() * 900);
+    const rawCode = (document.getElementById("edit-subject-code").value || "").trim();
+    const randomSuffix = (typeof crypto !== "undefined" && crypto.getRandomValues)
+      ? 100 + (crypto.getRandomValues(new Uint32Array(1))[0] % 900)
+      : 100 + (Date.now() % 900);
+    const code = rawCode || `${name.substring(0, 3).toUpperCase()}-${randomSuffix}`;
+    const ucVal = document.getElementById("edit-subject-uc").value;
+    const uc = ucVal ? Number.parseInt(ucVal, 10) : 2;
+
+    return {
+      id,
+      name,
+      code,
+      uc,
+      trayectoTarget: document.getElementById("edit-subject-trayecto").value,
+      status: document.getElementById("edit-subject-status").value,
+      gradeVal: document.getElementById("edit-subject-grade").value,
+      refDoc: (document.getElementById("edit-subject-ref").value || "").trim()
+    };
+  }
+
+  calculateFinalStatusAndGrade(name, code, status, gradeVal) {
+    if (gradeVal === "" || gradeVal === null || gradeVal === undefined) {
+      return { gradeNum: null, finalStatus: status };
     }
 
-    const pensum = this.state.pensum[this.currentCareer];
-    const isProyecto = name.toLowerCase().includes("proyecto socio") || code.toLowerCase().includes("psi") || code.toLowerCase().includes("pst");
-    const minPass = isProyecto ? 16 : 13;
-    let finalStatus = newStatus;
-    let gradeNum = null;
+    const gradeNum = Number.parseFloat(gradeVal);
+    const minPass = this.isProyectoSubject({ nombre: name, codigo: code }) ? 16 : 13;
+    const pendingStatuses = ["en_curso", "por_cursar", "repetir"];
 
-    if (newGradeVal !== "") {
-      gradeNum = Number.parseFloat(newGradeVal);
-      if (gradeNum >= minPass && (newStatus === "en_curso" || newStatus === "por_cursar" || newStatus === "repetir")) {
-        finalStatus = "aprobada";
-      } else if (gradeNum < minPass && newStatus === "aprobada") {
-        finalStatus = "repetir";
-      }
+    if (gradeNum >= minPass && pendingStatuses.includes(status)) {
+      return { gradeNum, finalStatus: "aprobada" };
+    }
+    if (gradeNum < minPass && status === "aprobada") {
+      return { gradeNum, finalStatus: "repetir" };
     }
 
-    if (id !== "") {
-      let existingMat = null;
-      let currentTrayecto = null;
+    return { gradeNum, finalStatus: status };
+  }
 
-      pensum.trayectos.forEach(t => {
-        t.materias.forEach(m => {
-          if (m.id === id) {
-            existingMat = m;
-            currentTrayecto = t;
-          }
-        });
-      });
+  updateExistingSubject(id, subjectData, trayectoTarget, pensum) {
+    const { foundSubject: existingMat, foundTrayecto: currentTrayecto } = this.findSubjectAndTrayecto(id);
+    if (!existingMat) return;
 
-      if (existingMat) {
-        existingMat.nombre = name;
-        existingMat.codigo = code;
-        existingMat.uc = uc;
-        existingMat.estatus = finalStatus;
-        existingMat.nota = gradeNum;
-        existingMat.refDoc = newRef;
+    Object.assign(existingMat, subjectData);
 
-        if (currentTrayecto && currentTrayecto.id !== trayectoTarget) {
-          currentTrayecto.materias = currentTrayecto.materias.filter(m => m.id !== id);
-          let newTrayectoObj = pensum.trayectos.find(t => t.id === trayectoTarget);
-          if (!newTrayectoObj) newTrayectoObj = currentTrayecto;
-          newTrayectoObj.materias.push(existingMat);
-        }
-      }
-    } else {
-      const newSubject = {
-        id: (this.currentCareer === "ADM" ? "adm-" : "inf-") + Date.now(),
-        codigo: code,
-        nombre: name,
-        uc: uc,
-        estatus: finalStatus,
-        nota: gradeNum,
-        refDoc: newRef
-      };
-
-      let targetTrayectoObj = pensum.trayectos.find(t => t.id === trayectoTarget);
-      if (!targetTrayectoObj) {
-        targetTrayectoObj = pensum.trayectos.find(t => t.actual) || pensum.trayectos[0];
-      }
-      if (targetTrayectoObj) {
-        targetTrayectoObj.materias.push(newSubject);
-      }
+    if (currentTrayecto && currentTrayecto.id !== trayectoTarget) {
+      currentTrayecto.materias = currentTrayecto.materias.filter(m => m.id !== id);
+      const newTrayecto = pensum.trayectos.find(t => t.id === trayectoTarget) || currentTrayecto;
+      newTrayecto.materias.push(existingMat);
     }
+  }
 
+  createNewSubject(subjectData, trayectoTarget, pensum) {
+    const prefix = this.currentCareer === "ADM" ? "adm-" : "inf-";
+    const newSubject = {
+      id: `${prefix}${Date.now()}`,
+      ...subjectData
+    };
+
+    const targetTrayecto = pensum.trayectos.find(t => t.id === trayectoTarget)
+      || pensum.trayectos.find(t => t.actual)
+      || pensum.trayectos[0];
+
+    if (targetTrayecto) {
+      targetTrayecto.materias.push(newSubject);
+    }
+  }
+
+  refreshSubjectViews(targetId, scrollPos, subjectName) {
     this.saveState();
     this.closeModal("modal-edit-subject");
 
@@ -1380,13 +1482,41 @@ class UniversityApp {
     this.renderSemestreActual();
     this.renderConsultas();
 
-    const targetId = id || this.selectedEvalSubjectId;
     if (targetId) {
       this.renderSubjectDetailContent(targetId);
       this.loadEvaluationsForSubject(targetId);
     }
     window.scrollTo({ top: scrollPos, behavior: "instant" });
-    this.showToast(`¡Asignatura "${name}" guardada con éxito!`, "success");
+    this.showToast(`¡Asignatura "${subjectName}" guardada con éxito!`, "success");
+  }
+
+  saveSubjectEdit(event) {
+    event.preventDefault();
+    const scrollPos = window.scrollY;
+    const formData = this.getSubjectFormData();
+    if (!formData) return;
+
+    const { id, name, code, uc, trayectoTarget, status, gradeVal, refDoc } = formData;
+    const { gradeNum, finalStatus } = this.calculateFinalStatusAndGrade(name, code, status, gradeVal);
+    const pensum = this.state.pensum[this.currentCareer];
+
+    const subjectData = {
+      nombre: name,
+      codigo: code,
+      uc,
+      estatus: finalStatus,
+      nota: gradeNum,
+      refDoc
+    };
+
+    if (id) {
+      this.updateExistingSubject(id, subjectData, trayectoTarget, pensum);
+    } else {
+      this.createNewSubject(subjectData, trayectoTarget, pensum);
+    }
+
+    const targetId = id || this.selectedEvalSubjectId;
+    this.refreshSubjectViews(targetId, scrollPos, name);
   }
 
   deleteSubject(subjectId) {
@@ -1503,125 +1633,146 @@ class UniversityApp {
     }
   }
 
-  loadEvaluationsForSubject(subjectId) {
-    this.selectedEvalSubjectId = subjectId;
-    this.renderSubjectDetailContent(subjectId);
-    const container = document.getElementById("eval-panel-container");
+  renderEvalSubjectHeader(foundSubject, foundTrayecto) {
+    if (!foundSubject) return "";
 
-    const pensum = this.state.pensum[this.currentCareer];
-    let foundSubject = null;
-    let foundTrayecto = null;
+    const statusTextMap = {
+      aprobada: "Aprobada",
+      en_curso: "En Curso",
+      repetir: "Por Repetir",
+      intensivo_verano: "Intensivo Verano",
+      pendiente_consulta: "Pendiente Consulta",
+      por_cursar: "Por Cursar"
+    };
 
-    pensum.trayectos.forEach(t => {
-      t.materias.forEach(m => {
-        if (m.id === subjectId) {
-          foundSubject = m;
-          foundTrayecto = t;
-        }
-      });
-    });
+    const trayectoName = foundTrayecto ? foundTrayecto.nombre : "Pensum Académico";
+    const refDocHtml = foundSubject.refDoc
+      ? `<p style="margin: 6px 0 0 0; font-size: 0.85rem; color: var(--text-secondary);"><strong>Detalles / Profesor / Soporte:</strong> ${foundSubject.refDoc}</p>`
+      : "";
+    const statusLabel = statusTextMap[foundSubject.estatus] || foundSubject.estatus;
 
-    const evals = this.state.evaluaciones[subjectId] || [];
-
-    let totalWeight = 0;
-    let totalScoreWeighted = 0;
-
-    evals.forEach(e => {
-      totalWeight += Number.parseFloat(e.ponderacion || 0);
-      if (e.nota !== null && e.nota !== undefined) {
-        totalScoreWeighted += (Number.parseFloat(e.nota) * (Number.parseFloat(e.ponderacion) / 100));
-      }
-    });
-
-    let subjectHeaderHtml = "";
-    if (foundSubject) {
-      const statusTextMap = {
-        aprobada: "Aprobada",
-        en_curso: "En Curso",
-        repetir: "Por Repetir",
-        intensivo_verano: "Intensivo Verano",
-        pendiente_consulta: "Pendiente Consulta",
-        por_cursar: "Por Cursar"
-      };
-
-      subjectHeaderHtml = `
-        <div class="subject-eval-header-card" style="background: white; border-radius: 12px; padding: 18px 22px; margin-bottom: 20px; border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
-          <div>
-            <div style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: var(--primary-marine); letter-spacing: 0.5px; margin-bottom: 4px;">
-              ${foundTrayecto ? foundTrayecto.nombre : 'Pensum Académico'} • ${foundSubject.uc} UC
-            </div>
-            <h2 style="margin: 0; font-size: 1.35rem; color: var(--text-dark);">
-              ${foundSubject.nombre}
-            </h2>
-            ${foundSubject.refDoc ? `<p style="margin: 6px 0 0 0; font-size: 0.85rem; color: var(--text-secondary);"><strong>Detalles / Profesor / Soporte:</strong> ${foundSubject.refDoc}</p>` : ''}
+    return `
+      <div class="subject-eval-header-card" style="background: white; border-radius: 12px; padding: 18px 22px; margin-bottom: 20px; border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+        <div>
+          <div style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: var(--primary-marine); letter-spacing: 0.5px; margin-bottom: 4px;">
+            ${trayectoName} • ${foundSubject.uc} UC
           </div>
-          <div>
-            <span class="status-badge status-${foundSubject.estatus}">${statusTextMap[foundSubject.estatus] || foundSubject.estatus}</span>
-          </div>
+          <h2 style="margin: 0; font-size: 1.35rem; color: var(--text-dark);">
+            ${foundSubject.nombre}
+          </h2>
+          ${refDocHtml}
         </div>
-      `;
+        <div>
+          <span class="status-badge status-${foundSubject.estatus}">${statusLabel}</span>
+        </div>
+      </div>
+    `;
+  }
+
+  renderEvalPredictiveBox(foundSubject, evalCalc) {
+    const { totalWeight, totalScoreWeighted, remainingWeight } = evalCalc;
+    if (totalWeight >= 100 && foundSubject?.estatus === "aprobada") {
+      return "";
     }
 
-    // Calculador Predictivo de Nota Necesaria con Regla UNEXCA: General (13 pts) / Proyecto (16 pts)
-    const isProyecto = (foundSubject && (foundSubject.nombre.toLowerCase().includes("proyecto socio") || foundSubject.codigo.toLowerCase().includes("psi") || foundSubject.codigo.toLowerCase().includes("pst")));
+    const isProyecto = this.isProyectoSubject(foundSubject);
     const minPassScore = isProyecto ? 16 : 13;
     const goodScore = isProyecto ? 18 : 16;
     const excelScore = 20;
 
-    let predictiveHtml = "";
-    const remainingWeight = Math.max(0, 100 - totalWeight);
-    if (totalWeight < 100 || (foundSubject && foundSubject.estatus !== "aprobada")) {
-      const neededMin = Math.max(0, minPassScore - totalScoreWeighted);
-      const reqGradeMin = remainingWeight > 0 ? (neededMin / (remainingWeight / 100)).toFixed(1) : "N/A";
+    const minTarget = this.calcPredictiveTarget(minPassScore, totalScoreWeighted, remainingWeight, "¡Aprobado!");
+    const goodTarget = this.calcPredictiveTarget(goodScore, totalScoreWeighted, remainingWeight, "¡Alcanzado!");
+    const excelTarget = this.calcPredictiveTarget(excelScore, totalScoreWeighted, remainingWeight, "¡Alcanzado!");
 
-      const neededGood = Math.max(0, goodScore - totalScoreWeighted);
-      const reqGradeGood = remainingWeight > 0 ? (neededGood / (remainingWeight / 100)).toFixed(1) : "N/A";
+    const subtitle = isProyecto ? "Proyecto: Mínimo 16 pts" : "Materia General: Mínimo 13 pts";
 
-      const neededExcel = Math.max(0, excelScore - totalScoreWeighted);
-      const reqGradeExcel = remainingWeight > 0 ? (neededExcel / (remainingWeight / 100)).toFixed(1) : "N/A";
-
-      predictiveHtml = `
-        <div class="eval-predictive-box">
-          <div class="predictive-header">
-            <div class="predictive-title">
-              <span>Simulador de Calificación Necesaria (${isProyecto ? 'Proyecto: Mínimo 16 pts' : 'Materia General: Mínimo 13 pts'})</span>
-            </div>
-            <div style="font-size: 0.8rem; color: #166534; font-weight: bold;">
-              Ponderación restante por evaluar: ${remainingWeight}%
-            </div>
+    return `
+      <div class="eval-predictive-box">
+        <div class="predictive-header">
+          <div class="predictive-title">
+            <span>Simulador de Calificación Necesaria (${subtitle})</span>
           </div>
-          <div class="predictive-targets-grid">
-            <div class="predictive-target-card">
-              <div class="predictive-target-name">Mínimo para Aprobar (${minPassScore} pts)</div>
-              <div class="predictive-target-score">${reqGradeMin <= 0 ? "¡Aprobado!" : (reqGradeMin > 20 ? "No alcanza" : `${reqGradeMin} pts prom.`)}</div>
-              <div style="font-size:0.72rem; color:var(--text-muted); margin-top: 3px;">Faltan ${neededMin.toFixed(2)} pts acumulados</div>
-            </div>
-            <div class="predictive-target-card">
-              <div class="predictive-target-name">Meta Rendimiento Bueno (${goodScore} pts)</div>
-              <div class="predictive-target-score">${reqGradeGood <= 0 ? "¡Alcanzado!" : (reqGradeGood > 20 ? "No alcanza" : `${reqGradeGood} pts prom.`)}</div>
-              <div style="font-size:0.72rem; color:var(--text-muted); margin-top: 3px;">Faltan ${neededGood.toFixed(2)} pts acumulados</div>
-            </div>
-            <div class="predictive-target-card">
-              <div class="predictive-target-name">Meta Distinción / Sobresaliente (${excelScore} pts)</div>
-              <div class="predictive-target-score">${reqGradeExcel <= 0 ? "¡Alcanzado!" : (reqGradeExcel > 20 ? "No alcanza" : `${reqGradeExcel} pts prom.`)}</div>
-              <div style="font-size:0.72rem; color:var(--text-muted); margin-top: 3px;">Faltan ${neededExcel.toFixed(2)} pts acumulados</div>
-            </div>
+          <div style="font-size: 0.8rem; color: #166534; font-weight: bold;">
+            Ponderación restante por evaluar: ${remainingWeight}%
           </div>
         </div>
-      `;
+        <div class="predictive-targets-grid">
+          <div class="predictive-target-card">
+            <div class="predictive-target-name">Mínimo para Aprobar (${minPassScore} pts)</div>
+            <div class="predictive-target-score">${minTarget.displayScore}</div>
+            <div style="font-size:0.72rem; color:var(--text-muted); margin-top: 3px;">Faltan ${minTarget.needed.toFixed(2)} pts acumulados</div>
+          </div>
+          <div class="predictive-target-card">
+            <div class="predictive-target-name">Meta Rendimiento Bueno (${goodScore} pts)</div>
+            <div class="predictive-target-score">${goodTarget.displayScore}</div>
+            <div style="font-size:0.72rem; color:var(--text-muted); margin-top: 3px;">Faltan ${goodTarget.needed.toFixed(2)} pts acumulados</div>
+          </div>
+          <div class="predictive-target-card">
+            <div class="predictive-target-name">Meta Distinción / Sobresaliente (${excelScore} pts)</div>
+            <div class="predictive-target-score">${excelTarget.displayScore}</div>
+            <div style="font-size:0.72rem; color:var(--text-muted); margin-top: 3px;">Faltan ${excelTarget.needed.toFixed(2)} pts acumulados</div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  renderMainEvalTableRows(evals = []) {
+    if (evals.length === 0) {
+      return `<tr><td colspan="7" style="text-align:center; padding:30px; color:var(--text-muted);">No hay evaluaciones registradas para esta asignatura aún.<br><span style="font-size:0.85rem; margin-top:5px; display:inline-block;">Haz clic en <strong>+ Nueva Evaluación</strong> arriba para registrar lo acordado con el profesor.</span></td></tr>`;
     }
 
-    let html = `
+    return evals.map((e, idx) => {
+      const ptsGanados = (e.nota !== null && e.nota !== undefined)
+        ? ((Number.parseFloat(e.nota) * Number.parseFloat(e.ponderacion || 0)) / 100).toFixed(2)
+        : "-";
+      const statusBadge = e.completada
+        ? '<span class="status-badge status-aprobada">COMPLETADA</span>'
+        : '<span class="status-badge status-intensivo_verano">PENDIENTE</span>';
+      const notaDisplay = (e.nota !== null && e.nota !== undefined) ? `<strong>${e.nota} pts</strong>` : "-";
+
+      return `
+        <tr>
+          <td class="subject-name">${e.nombre}</td>
+          <td><strong>${e.ponderacion}%</strong></td>
+          <td>${notaDisplay}</td>
+          <td><strong style="color: var(--primary-marine);">${ptsGanados} pts</strong></td>
+          <td>${e.fecha || "-"}</td>
+          <td>${statusBadge}</td>
+          <td>
+            <button type="button" class="btn-action" onclick="app.openEditEvalModal('${idx}')">Editar</button>
+            <button type="button" class="btn-action" style="color:#C0392B; border-color:#FDEDEC;" onclick="app.deleteEvaluation('${idx}')">Eliminar</button>
+          </td>
+        </tr>
+      `;
+    }).join("");
+  }
+
+  loadEvaluationsForSubject(subjectId) {
+    this.selectedEvalSubjectId = subjectId;
+    this.renderSubjectDetailContent(subjectId);
+    const container = document.getElementById("eval-panel-container");
+    if (!container) return;
+
+    const { foundSubject, foundTrayecto } = this.findSubjectAndTrayecto(subjectId);
+    const evals = this.state.evaluaciones[subjectId] || [];
+    const evalCalc = this.calcSubjectEvaluations(evals);
+
+    const subjectHeaderHtml = this.renderEvalSubjectHeader(foundSubject, foundTrayecto);
+    const predictiveHtml = this.renderEvalPredictiveBox(foundSubject, evalCalc);
+    const tableRowsHtml = this.renderMainEvalTableRows(evals);
+
+    container.innerHTML = `
       ${subjectHeaderHtml}
       ${predictiveHtml}
       <div class="eval-panel">
         <div class="eval-summary-bar">
           <div>
-            <span>PONDERACIÓN ACUMULADA: <strong>${totalWeight}%</strong> de 100%</span>
+            <span>PONDERACIÓN ACUMULADA: <strong>${evalCalc.totalWeight}%</strong> de 100%</span>
           </div>
           <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
             <div class="eval-score-total">
-              NOTA ACUMULADA: ${totalScoreWeighted.toFixed(2)} / 20 pts
+              NOTA ACUMULADA: ${evalCalc.totalScoreWeighted.toFixed(2)} / 20 pts
             </div>
             <button type="button" class="btn-action" style="background: var(--primary-marine); color: white; border: none; font-weight: bold; padding: 6px 12px;" onclick="app.syncEvalGradeToPensum('${subjectId}')">
               Sincronizar con Pensum
@@ -1643,69 +1794,26 @@ class UniversityApp {
               </tr>
             </thead>
             <tbody>
-    `;
-
-    if (evals.length === 0) {
-      html += `<tr><td colspan="7" style="text-align:center; padding:30px; color:var(--text-muted);">No hay evaluaciones registradas para esta asignatura aún.<br><span style="font-size:0.85rem; margin-top:5px; display:inline-block;">Haz clic en <strong>+ Nueva Evaluación</strong> arriba para registrar lo acordado con el profesor.</span></td></tr>`;
-    } else {
-      evals.forEach((e, idx) => {
-        const ptsGanados = (e.nota !== null) ? ((e.nota * e.ponderacion) / 100).toFixed(2) : "-";
-        const statusBadge = e.completada
-          ? '<span class="status-badge status-aprobada">COMPLETADA</span>'
-          : '<span class="status-badge status-intensivo_verano">PENDIENTE</span>';
-
-        html += `
-          <tr>
-            <td class="subject-name">${e.nombre}</td>
-            <td><strong>${e.ponderacion}%</strong></td>
-            <td>${e.nota !== null ? `<strong>${e.nota} pts</strong>` : "-"}</td>
-            <td><strong style="color: var(--primary-marine);">${ptsGanados} pts</strong></td>
-            <td>${e.fecha || "-"}</td>
-            <td>${statusBadge}</td>
-            <td>
-              <button type="button" class="btn-action" onclick="app.openEditEvalModal('${idx}')">Editar</button>
-              <button type="button" class="btn-action" style="color:#C0392B; border-color:#FDEDEC;" onclick="app.deleteEvaluation('${idx}')">Eliminar</button>
-            </td>
-          </tr>
-        `;
-      });
-    }
-
-    html += `
+              ${tableRowsHtml}
             </tbody>
           </table>
         </div>
       </div>
     `;
-
-    container.innerHTML = html;
   }
 
   syncEvalGradeToPensum(subjectId) {
     const scrollPos = window.scrollY;
-    const pensum = this.state.pensum[this.currentCareer];
-    let found = null;
-    pensum.trayectos.forEach(t => {
-      t.materias.forEach(m => {
-        if (m.id === subjectId) found = m;
-      });
-    });
+    const { foundSubject: found } = this.findSubjectAndTrayecto(subjectId);
     if (!found) return;
 
     const evals = this.state.evaluaciones[subjectId] || [];
-    let totalScoreWeighted = 0;
-    let totalWeight = 0;
-    evals.forEach(e => {
-      totalWeight += Number.parseFloat(e.ponderacion || 0);
-      if (e.nota !== null && e.nota !== undefined) {
-        totalScoreWeighted += (Number.parseFloat(e.nota) * (Number.parseFloat(e.ponderacion) / 100));
-      }
-    });
+    const { totalWeight, totalScoreWeighted } = this.calcSubjectEvaluations(evals);
 
     const finalGrade = Math.round(totalScoreWeighted * 10) / 10;
     found.nota = finalGrade;
 
-    const isProyecto = found.nombre.toLowerCase().includes("proyecto socio") || found.codigo.toLowerCase().includes("psi") || found.codigo.toLowerCase().includes("pst");
+    const isProyecto = this.isProyectoSubject(found);
     const minPass = isProyecto ? 16 : 13;
 
     if (finalGrade >= minPass) {
@@ -2135,7 +2243,7 @@ class UniversityApp {
       }
 
       if (titleEl) titleEl.textContent = title;
-      if (msgEl) msgEl.innerHTML = message.replace(/\n/g, "<br>");
+      if (msgEl) msgEl.innerHTML = message.replaceAll("\n", "<br>");
       if (iconEl) iconEl.textContent = icon;
       btnAccept.textContent = acceptText;
       btnCancel.textContent = cancelText;
