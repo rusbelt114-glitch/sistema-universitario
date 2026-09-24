@@ -55,6 +55,7 @@ class UniversityApp {
 
   init() {
     this.loadState();
+    this.updateAuthUI();
     this.initSupabaseAuthAndSync();
 
     const landing = document.getElementById("landing-screen");
