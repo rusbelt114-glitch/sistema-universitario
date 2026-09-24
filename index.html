@@ -178,56 +178,61 @@
             </div>
           </div>
 
-          <!-- Módulo de Índices Académicos & Promedios (IRA) -->
-          <div class="gpa-summary-strip">
-            <div class="gpa-card">
-              <div class="gpa-card-title">Promedio Ponderado (IRA)</div>
-              <div id="stat-promedio-ponderado" class="gpa-card-val">0.00</div>
-              <div id="stat-promedio-sub" class="gpa-card-sub">Base ponderada por UC</div>
+          <!-- Módulo de Índices Académicos & Promedios (IRA) en Carrusel Snap Horizontal -->
+          <div class="section-header-row">
+            <h2 class="section-header-title">Métricas & Progreso</h2>
+            <span class="swipe-hint">Desliza ↔</span>
+          </div>
+
+          <div class="snap-carousel-track" role="region" aria-label="Métricas de rendimiento">
+            <div class="snap-metric-card">
+              <span class="metric-label">Promedio Ponderado (IRA)</span>
+              <div id="stat-promedio-ponderado" class="metric-val">0.00</div>
+              <span id="stat-promedio-sub" class="metric-sub">Base ponderada por UC</span>
             </div>
 
-            <div class="gpa-card">
-              <div class="gpa-card-title">Promedio Simple</div>
-              <div id="stat-promedio-simple" class="gpa-card-val">0.00</div>
-              <div id="stat-materias-evaluadas" class="gpa-card-sub">0 materias evaluadas</div>
+            <div class="snap-metric-card">
+              <span class="metric-label">Promedio Simple</span>
+              <div id="stat-promedio-simple" class="metric-val">0.00</div>
+              <span id="stat-materias-evaluadas" class="metric-sub">0 materias evaluadas</span>
             </div>
 
-            <div class="gpa-card">
-              <div class="gpa-card-title">Eficiencia Académica</div>
-              <div id="stat-eficiencia-val" class="gpa-card-val">0%</div>
-              <div id="stat-eficiencia-sub" class="gpa-card-sub">Aprobadas vs Cursadas</div>
+            <div class="snap-metric-card">
+              <span class="metric-label">Eficiencia Curricular</span>
+              <div id="stat-eficiencia-val" class="metric-val">0%</div>
+              <span id="stat-eficiencia-sub" class="metric-sub">Aprobadas vs Cursadas</span>
             </div>
 
-            <div class="gpa-card">
-              <div class="gpa-card-title">Progreso Titulación</div>
-              <div id="stat-uc-tsu-val" class="gpa-card-val">0 / 110 UC</div>
-              <div id="stat-uc-tsu-pct" class="gpa-card-sub">0% completado TSU</div>
+            <div class="snap-metric-card">
+              <span class="metric-label">Progreso TSU</span>
+              <div id="stat-uc-tsu-val" class="metric-val">0 / 110 UC</div>
+              <span id="stat-uc-tsu-pct" class="metric-sub">0% completado TSU</span>
             </div>
           </div>
 
           <!-- Resumen de Semestre Activo -->
-          <div id="home-semester-status-card" class="trayecto-block" style="margin-top: 10px; background: white; border: 1.5px solid var(--border-color); border-radius: 10px; padding: 14px 16px; box-shadow: var(--shadow-xs);">
-            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+          <div id="home-semester-status-card" class="trayecto-block" style="margin-top: 6px; background: white; border: 1.5px solid var(--border-color); border-radius: 12px; padding: 12px 14px; box-shadow: var(--shadow-xs);">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
               <div>
-                <div style="display: flex; align-items: center; gap: 8px;">
-                  <span style="font-size: 0.72rem; font-weight: 800; color: #1E40AF; background: #DBEAFE; padding: 2px 8px; border-radius: 4px; text-transform: uppercase;">Semestre Actual</span>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  <span style="font-size: 0.7rem; font-weight: 800; color: #1E40AF; background: #DBEAFE; padding: 2px 7px; border-radius: 4px; text-transform: uppercase;">Semestre Actual</span>
                   <span id="home-semester-active-badge" class="status-badge status-en_curso">En Curso</span>
                 </div>
-                <h3 id="home-semester-name" style="margin: 4px 0 2px 0; font-size: 1.05rem; color: var(--text-primary); font-weight: 800;">Trayecto II - Fase II (2-2)</h3>
-                <p id="home-semester-details" style="font-size: 0.8rem; color: var(--text-secondary); margin: 0;">8 materias en curso • 3 materias por repetir</p>
+                <h3 id="home-semester-name" style="margin: 4px 0 2px 0; font-size: 1rem; color: var(--text-primary); font-weight: 800;">Trayecto II - Fase II (2-2)</h3>
+                <p id="home-semester-details" style="font-size: 0.78rem; color: var(--text-secondary); margin: 0;">8 materias en curso • 3 materias por repetir</p>
               </div>
-              <button type="button" class="btn-primary" style="padding: 8px 16px; font-weight: 700; font-size: 0.82rem; border-radius: 6px;" onclick="app.switchTab('semestre')">
-                Abrir Mi Semestre →
+              <button type="button" class="btn-primary" style="padding: 6px 14px; font-weight: 800; font-size: 0.8rem; border-radius: 8px;" onclick="app.switchTab('semestre')">
+                Mi Semestre →
               </button>
             </div>
           </div>
 
-          <!-- Historial de Trayectos -->
-          <div class="trayecto-block" style="margin-top: 10px;">
+          <!-- Historial Curricular de Trayectos -->
+          <div class="trayecto-block" style="margin-top: 8px;">
             <div class="trayecto-header">
               <div class="trayecto-title">Historial Curricular por Trayectos</div>
             </div>
-            <div style="padding: 8px 12px;">
+            <div style="padding: 6px 10px;">
               <div id="dashboard-trayectos-summary"></div>
             </div>
           </div>
@@ -244,18 +249,18 @@
              MÓDULO 3: PENSUM COMPLETO & NOTAS
              ==================================================================== -->
         <section id="tab-pensum" class="tab-section" style="display: none;">
-          <div class="section-toolbar">
+          <div class="section-toolbar" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px;">
             <div class="search-box">
-              <input type="text" id="search-subject-input" class="search-input"
+              <input type="text" id="search-subject-input" class="form-control"
                 placeholder="Buscar materia por nombre o código..." aria-label="Buscar materia"
                 oninput="app.filterSubjects()">
             </div>
 
-            <div class="filter-group">
-              <select id="filter-status-select" class="filter-select" aria-label="Filtrar por estatus"
+            <div class="filter-group" style="display: flex; gap: 6px; flex-wrap: wrap;">
+              <select id="filter-status-select" class="form-control" style="flex: 1; min-width: 140px;" aria-label="Filtrar por estatus"
                 onchange="app.filterSubjects()">
                 <option value="todos">Todos los Estatus</option>
-                <option value="en_curso">En Curso (Fase Activa)</option>
+                <option value="en_curso">En Curso</option>
                 <option value="aprobada">Aprobadas</option>
                 <option value="repetir">Por Repetir</option>
                 <option value="intensivo_verano">Intensivo Verano</option>
@@ -263,20 +268,12 @@
                 <option value="por_cursar">Por Cursar</option>
               </select>
 
-              <select id="filter-trayecto-select" class="filter-select" aria-label="Filtrar por trayecto"
+              <select id="filter-trayecto-select" class="form-control" style="flex: 1; min-width: 140px;" aria-label="Filtrar por trayecto"
                 onchange="app.filterSubjects()">
                 <option value="todos">Todos los Trayectos</option>
-                <option value="1-1">Trayecto 1-1</option>
-                <option value="1-2">Trayecto 1-2</option>
-                <option value="2-1">Trayecto 2-1</option>
-                <option value="2-2">Trayecto 2-2 (Actual)</option>
-                <option value="3-1">Trayecto 3-1</option>
-                <option value="3-2">Trayecto 3-2</option>
-                <option value="4-1">Trayecto 4-1</option>
-                <option value="4-2">Trayecto 4-2</option>
               </select>
 
-              <button class="btn-primary" onclick="app.openAddSubjectModal()">+ Nueva Materia</button>
+              <button class="btn-primary" style="width: 100%;" onclick="app.openAddSubjectModal()">+ Nueva Materia</button>
             </div>
           </div>
 
@@ -287,25 +284,25 @@
              MÓDULO 3: HORARIO & TAREAS
              ==================================================================== -->
         <section id="tab-horario" class="tab-section" style="display: none;">
-          <div class="section-toolbar">
-            <h2>Horario Semanal - <span id="horario-week-title">Semana A</span></h2>
-            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-              <button class="btn-secondary" onclick="app.toggleWeek()">Cambiar Semana (A / B)</button>
-              <button class="btn-secondary" style="color: #BE123C; border-color: #FECDD3;"
+          <div class="section-toolbar" style="margin-bottom: 10px;">
+            <h2 style="font-size: 1.05rem; font-weight: 800;">Horario Semanal - <span id="horario-week-title">Semana A</span></h2>
+            <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px;">
+              <button class="btn-secondary" style="flex: 1; min-height: 40px;" onclick="app.toggleWeek()">Cambiar Semana (A/B)</button>
+              <button class="btn-secondary" style="flex: 1; min-height: 40px; color: #BE123C; border-color: #FECDD3;"
                 onclick="app.clearCurrentSchedule()">Limpiar Horario</button>
-              <button class="btn-primary" onclick="app.openAddScheduleModal()">+ Agregar Clase</button>
+              <button class="btn-primary" style="width: 100%;" onclick="app.openAddScheduleModal()">+ Agregar Clase</button>
             </div>
           </div>
 
           <div id="schedule-cards-container" class="schedule-grid"></div>
 
-          <div class="trayecto-block" style="margin-top: 14px;">
+          <div class="trayecto-block" style="margin-top: 12px;">
             <div class="trayecto-header" style="justify-content: space-between;">
               <div class="trayecto-title">Tareas & Recordatorios Académicos</div>
-              <button class="btn-primary" style="padding: 4px 10px; font-size: 0.72rem;"
+              <button class="btn-primary" style="padding: 4px 10px; font-size: 0.72rem; min-height: 32px;"
                 onclick="app.openAddTaskModal()">+ Nueva Alerta</button>
             </div>
-            <div style="padding: 10px 12px;">
+            <div style="padding: 8px 10px;">
               <div id="notif-list-container"></div>
             </div>
           </div>
@@ -313,7 +310,7 @@
 
       </main>
 
-      <footer>
+      <footer style="text-align: center; font-size: 0.72rem; color: var(--text-muted); padding: 16px 8px 24px 8px;">
         <p>Sistema Universitario Personal • PNF Administración & Informática UNEXCA</p>
       </footer>
 

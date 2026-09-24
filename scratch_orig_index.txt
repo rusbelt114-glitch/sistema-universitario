@@ -125,4 +125,8 @@ The following code has been modified to include a line number before every line,
 118:                   Trayecto II - Fase II (2-2) En Curso</div>
 119:               </div>
 120:               <button type="button" id="home-week-pill" class="week-badge" style="cursor: pointer;"
+<<<<<<< HEAD
 The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.
+=======
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.
+>>>>>>> 97c9edd94f50ee46e60fa7d582d7085c53a12c56

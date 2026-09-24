@@ -605,28 +605,28 @@ class UniversityApp {
       `;
     }
 
-    // --- BLOQUE 1: ASIGNATURAS DEL SEMESTRE EN CURSO ---
+    // --- BLOQUE 1: ASIGNATURAS DEL SEMESTRE EN CURSO (SNAP HORIZONTAL TÁCTIL) ---
     html += `
-      <div class="trayecto-block" style="margin-bottom: 14px; border-radius: 10px; overflow: hidden; border: 1px solid var(--border-color); background: white;">
-        <div class="trayecto-header" style="background: #F8FAFC; border-bottom: 1px solid var(--border-color); padding: 10px 14px; display: flex; justify-content: space-between; align-items: center;">
+      <div class="trayecto-block" style="margin-bottom: 12px; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color); background: white;">
+        <div class="trayecto-header" style="background: #F8FAFC; border-bottom: 1px solid var(--border-color); padding: 10px 12px; display: flex; justify-content: space-between; align-items: center;">
           <div style="display: flex; align-items: center; gap: 6px;">
             <span style="font-size: 1rem;">📚</span>
-            <strong style="font-size: 0.9rem; color: var(--text-primary);">Materias del Semestre en Curso</strong>
+            <strong style="font-size: 0.88rem; color: var(--text-primary);">Materias del Semestre en Curso</strong>
             <span class="status-badge status-en_curso" style="margin-left: 4px;">${currentSemesterMaterias.length} materias</span>
           </div>
-          ${activeTrayecto ? `<span style="font-size: 0.72rem; color: var(--text-muted); font-weight: 700;">${activeTrayecto.nombre}</span>` : ''}
+          <span class="swipe-hint">Desliza ↔</span>
         </div>
-        <div style="padding: 12px;">
+        <div style="padding: 10px 12px 6px 12px;">
     `;
 
     if (!activeTrayecto || currentSemesterMaterias.length === 0) {
       html += `
-        <div style="text-align: center; padding: 24px 12px; color: var(--text-muted); font-size: 0.85rem;">
+        <div style="text-align: center; padding: 20px 10px; color: var(--text-muted); font-size: 0.85rem;">
           No hay asignaturas en curso actualmente. Inicia un nuevo semestre arriba para ver sus materias aquí.
         </div>
       `;
     } else {
-      html += `<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 8px;">`;
+      html += `<div class="snap-carousel-track" role="region" aria-label="Materias en curso">`;
       currentSemesterMaterias.forEach(m => {
         const statusTextMap = {
           aprobada: "Aprobada",
@@ -636,20 +636,29 @@ class UniversityApp {
           pendiente_consulta: "Pendiente Consulta",
           por_cursar: "Por Cursar"
         };
+        const isProyecto = (m.nombre.toLowerCase().includes("proyecto socio") || m.codigo.toLowerCase().includes("psi") || m.codigo.toLowerCase().includes("pst"));
+        const minPass = isProyecto ? 16 : 13;
+
         html += `
-          <div class="schedule-item" style="display: flex; flex-direction: column; justify-content: space-between; padding: 10px 12px; margin-bottom: 0; border: 1px solid var(--border-color); border-radius: 8px; background: #FFFFFF; cursor: pointer; transition: transform 0.1s ease, box-shadow 0.1s ease;" onclick="app.openSubjectDetailModal('${m.id}')">
+          <article class="snap-card" style="display: flex; flex-direction: column; justify-content: space-between; cursor: pointer;" onclick="app.openSubjectDetailModal('${m.id}')">
             <div>
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                <span style="font-size: 0.72rem; font-weight: 800; color: #64748B;">${m.codigo} • ${m.uc} UC</span>
-                <div style="font-size: 1rem; font-weight: 900; color: var(--primary-blue);">${m.nota ? `${m.nota} pts` : '-'}</div>
+                <span style="font-size: 0.7rem; font-weight: 800; color: var(--text-muted);">${m.codigo} • ${m.uc} UC</span>
+                <span class="status-badge status-${m.estatus}">${statusTextMap[m.estatus] || m.estatus}</span>
               </div>
-              <div style="font-size: 0.88rem; font-weight: 800; color: #0F172A; line-height: 1.25; margin-bottom: 8px;">${m.nombre}</div>
+              <h3 style="font-size: 0.88rem; font-weight: 800; color: var(--text-primary); line-height: 1.25; margin: 4px 0 8px 0;">${m.nombre}</h3>
             </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed #E2E8F0; padding-top: 6px; margin-top: 4px;">
-              <span class="status-badge status-${m.estatus}">${statusTextMap[m.estatus] || m.estatus}</span>
-              <button type="button" class="btn-action" style="font-size: 0.72rem; padding: 3px 8px;" onclick="event.stopPropagation(); app.openSubjectDetailModal('${m.id}')">Ficha / Notas →</button>
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-app); padding: 4px 8px; border-radius: 6px; margin-bottom: 8px;">
+                <span style="font-size: 0.72rem; color: var(--text-secondary);">Nota Oficial:</span>
+                <strong style="font-size: 0.92rem; color: var(--primary-marine);">${m.nota ? `${m.nota} pts` : 'Pendiente'}</strong>
+              </div>
+              <div style="font-size: 0.65rem; color: #166534; font-weight: 700; margin-bottom: 6px;">Mín. para aprobar: ${minPass} pts</div>
+              <button type="button" class="btn-primary" style="width: 100%; min-height: 38px; font-size: 0.75rem; padding: 6px;" onclick="event.stopPropagation(); app.openSubjectDetailModal('${m.id}')">
+                Ficha & Notas →
+              </button>
             </div>
-          </div>
+          </article>
         `;
       });
       html += `</div>`;

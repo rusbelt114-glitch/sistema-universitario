@@ -155,4 +155,8 @@ The following code has been modified to include a line number before every line,
 148:   border: 1px solid var(--border-color);
 149:   padding: 8px 14px;
 150:   border-radius: var(--radius-pill);
+<<<<<<< HEAD
 The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.
+=======
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.
+>>>>>>> 97c9edd94f50ee46e60fa7d582d7085c53a12c56
