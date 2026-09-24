@@ -16,12 +16,12 @@
   <link rel="apple-touch-icon" href="icon.jpg">
   <link rel="icon" type="image/jpeg" href="icon.jpg">
 
-  <!-- Tipografía Open Sans -->
+  <!-- Tipografía Moderna Premium: Plus Jakarta Sans & Outfit -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="styles.css?v=10">
+  <link rel="stylesheet" href="styles.css?v=16">
 </head>
 
 <body>
@@ -130,7 +130,7 @@
       </header>
 
       <!-- Pestañas de Navegación Seleccionables -->
-      <nav class="nav-tabs">
+      <nav class="nav-tabs" aria-label="Navegación principal">
         <button type="button" class="tab-btn active" onclick="app.switchTab('dashboard')">Inicio</button>
         <button type="button" class="tab-btn" onclick="app.switchTab('semestre')">Mi Semestre</button>
         <button type="button" class="tab-btn" onclick="app.switchTab('pensum')">Pensum Completo</button>
@@ -184,7 +184,7 @@
             <span class="swipe-hint">Desliza ↔</span>
           </div>
 
-          <div class="snap-carousel-track" role="region" aria-label="Métricas de rendimiento">
+          <section class="snap-carousel-track" aria-label="Métricas de rendimiento">
             <div class="snap-metric-card">
               <span class="metric-label">Promedio Ponderado (IRA)</span>
               <div id="stat-promedio-ponderado" class="metric-val">0.00</div>
@@ -208,20 +208,20 @@
               <div id="stat-uc-tsu-val" class="metric-val">0 / 110 UC</div>
               <span id="stat-uc-tsu-pct" class="metric-sub">0% completado TSU</span>
             </div>
-          </div>
+          </section>
 
           <!-- Resumen de Semestre Activo -->
-          <div id="home-semester-status-card" class="trayecto-block" style="margin-top: 6px; background: white; border: 1.5px solid var(--border-color); border-radius: 12px; padding: 12px 14px; box-shadow: var(--shadow-xs);">
-            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+          <div id="home-semester-status-card" class="home-summary-card" style="margin-top: 8px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
               <div>
                 <div style="display: flex; align-items: center; gap: 6px;">
-                  <span style="font-size: 0.7rem; font-weight: 800; color: #1E40AF; background: #DBEAFE; padding: 2px 7px; border-radius: 4px; text-transform: uppercase;">Semestre Actual</span>
+                  <span style="font-size: 0.72rem; font-weight: 800; color: #1D4ED8; background: #EFF6FF; border: 1px solid #BFDBFE; padding: 2px 8px; border-radius: 4px; text-transform: uppercase;">Semestre Actual</span>
                   <span id="home-semester-active-badge" class="status-badge status-en_curso">En Curso</span>
                 </div>
-                <h3 id="home-semester-name" style="margin: 4px 0 2px 0; font-size: 1rem; color: var(--text-primary); font-weight: 800;">Trayecto II - Fase II (2-2)</h3>
-                <p id="home-semester-details" style="font-size: 0.78rem; color: var(--text-secondary); margin: 0;">8 materias en curso • 3 materias por repetir</p>
+                <h3 id="home-semester-name" style="margin: 6px 0 3px 0; font-size: 1.05rem; color: var(--text-primary); font-weight: 800;">Trayecto II - Fase II (2-2)</h3>
+                <p id="home-semester-details" style="font-size: 0.8rem; color: var(--text-secondary); margin: 0; font-weight: 500;">8 materias en curso • 3 materias por repetir</p>
               </div>
-              <button type="button" class="btn-primary" style="padding: 6px 14px; font-weight: 800; font-size: 0.8rem; border-radius: 8px;" onclick="app.switchTab('semestre')">
+              <button type="button" class="btn-primary" style="padding: 8px 16px; font-weight: 700; font-size: 0.82rem; border-radius: 10px;" onclick="app.switchTab('semestre')">
                 Mi Semestre →
               </button>
             </div>
@@ -318,7 +318,7 @@
       <button type="button" class="mobile-fab" onclick="app.triggerFabAction()" aria-label="Acción rápida">+</button>
 
       <!-- Barra de Navegación Inferior Fija para Móvil -->
-      <nav class="mobile-bottom-nav">
+      <nav class="mobile-bottom-nav" aria-label="Navegación móvil">
         <button type="button" class="bottom-nav-item active" onclick="app.switchTab('dashboard')">
           <span class="bottom-nav-icon">Inicio</span>
         </button>
@@ -586,6 +586,23 @@
     </div>
   </div>
 
+  <!-- MODAL DE DETALLE DE TRAYECTO / SPOTLIGHT FOCUS (VISTA ENFOCADA Y NUBLE DEL FONDO) -->
+  <div id="modal-trayecto-detail" class="modal-overlay">
+    <div class="modal-card" style="max-width: 680px; max-height: 88vh; padding: 22px 20px;">
+      <div class="modal-header" style="margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+          <h3 id="modal-trayecto-title" class="modal-title" style="font-size: 1.15rem; margin: 0;">Detalle del Trayecto</h3>
+          <span id="modal-trayecto-status-badge"></span>
+        </div>
+        <button type="button" class="modal-close-btn" onclick="app.closeModal('modal-trayecto-detail')"
+          aria-label="Cerrar">&times;</button>
+      </div>
+      <div id="modal-trayecto-content">
+        <!-- Dynamically rendered content -->
+      </div>
+    </div>
+  </div>
+
   <!-- TOAST NOTIFICATION CONTAINER -->
   <div id="app-toast-container" class="app-toast-container"></div>
 
@@ -607,8 +624,8 @@
   </div>
 
   <!-- Scripts & Service Worker registration for PWA -->
-  <script src="pensumData.js?v=11"></script>
-  <script src="app.js?v=11"></script>
+  <script src="pensumData.js?v=16"></script>
+  <script src="app.js?v=16"></script>
   <script>
     if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
       window.addEventListener('load', () => {

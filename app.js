@@ -52,6 +52,7 @@ class UniversityApp {
 
     this.updateWeekUI();
     this.setupModalDismiss();
+    this.setupSwipeAndDragHandlers();
     this.render();
     if (this.hasEnteredApp) {
       this.switchTab(this.currentTab || "dashboard");
@@ -66,6 +67,128 @@ class UniversityApp {
         }
       });
     });
+  }
+
+  setupSwipeAndDragHandlers() {
+    // 1. Deslizamiento / Arrastre fluido con Mouse en PC para carruseles y pestañas
+    let isMouseDown = false;
+    let startX = 0;
+    let scrollStart = 0;
+    let activeTrack = null;
+    let dragDistance = 0;
+    let preventClickTimer = 0;
+
+    document.addEventListener("mousedown", (e) => {
+      // Solo botón izquierdo del mouse
+      if (e.button !== 0) return;
+      const track = e.target.closest(".snap-carousel-track, .nav-tabs");
+      if (!track) return;
+
+      activeTrack = track;
+      isMouseDown = true;
+      startX = e.pageX - track.offsetLeft;
+      scrollStart = track.scrollLeft;
+      dragDistance = 0;
+    });
+
+    document.addEventListener("mousemove", (e) => {
+      if (!isMouseDown || !activeTrack) return;
+      const x = e.pageX - activeTrack.offsetLeft;
+      const walk = (x - startX);
+      dragDistance = Math.abs(walk);
+
+      if (dragDistance > 6) {
+        activeTrack.style.cursor = "grabbing";
+        activeTrack.style.scrollSnapType = "none";
+        activeTrack.style.scrollBehavior = "auto";
+        activeTrack.scrollLeft = scrollStart - (walk * 1.3);
+      }
+    });
+
+    const finishDrag = () => {
+      if (isMouseDown && activeTrack) {
+        activeTrack.style.cursor = "";
+        activeTrack.style.scrollSnapType = "";
+        activeTrack.style.scrollBehavior = "";
+        if (dragDistance > 8) {
+          preventClickTimer = Date.now() + 280;
+        }
+      }
+      isMouseDown = false;
+      activeTrack = null;
+    };
+
+    document.addEventListener("mouseup", finishDrag);
+    window.addEventListener("blur", finishDrag);
+
+    // Evitar que el click accione botones/fichas si el usuario estaba arrastrando/deslizando
+    document.addEventListener("click", (e) => {
+      if (Date.now() < preventClickTimer) {
+        e.stopPropagation();
+        e.preventDefault();
+      }
+    }, true);
+
+    // 2. Rueda del Mouse en PC para desplazamiento horizontal inteligente
+    document.addEventListener("wheel", (e) => {
+      const track = e.target.closest(".snap-carousel-track, .nav-tabs");
+      if (!track) return;
+
+      if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+        const maxScroll = track.scrollWidth - track.clientWidth;
+        if (maxScroll > 6) {
+          const atStart = track.scrollLeft <= 0;
+          const atEnd = track.scrollLeft >= maxScroll - 2;
+          if ((e.deltaY < 0 && !atStart) || (e.deltaY > 0 && !atEnd)) {
+            e.preventDefault();
+            track.scrollBy({ left: e.deltaY * 1.1, behavior: 'auto' });
+          }
+        }
+      }
+    }, { passive: false });
+
+    // 3. Deslizamiento táctil horizontal entre Pestañas Principales
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let touchStartTime = 0;
+    const tabArea = document.getElementById("tab-content-area");
+
+    if (tabArea) {
+      tabArea.addEventListener("touchstart", (e) => {
+        if (e.touches.length !== 1) return;
+        // Si el toque inicia dentro de un carrusel o elemento de formulario, no cambiar de pestaña
+        if (e.target.closest(".snap-carousel-track, input, select, textarea, button, .modal-card, table")) {
+          touchStartX = 0;
+          return;
+        }
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+        touchStartTime = Date.now();
+      }, { passive: true });
+
+      tabArea.addEventListener("touchend", (e) => {
+        if (!touchStartX || !this.hasEnteredApp) return;
+        const diffX = e.changedTouches[0].clientX - touchStartX;
+        const diffY = e.changedTouches[0].clientY - touchStartY;
+        const elapsed = Date.now() - touchStartTime;
+
+        // Validar gesto de swipe horizontal rápido y claro
+        if (elapsed < 600 && Math.abs(diffX) > 65 && Math.abs(diffX) > Math.abs(diffY) * 1.6) {
+          const tabs = ["dashboard", "semestre", "pensum", "horario"];
+          const curIndex = tabs.indexOf(this.currentTab);
+          if (curIndex !== -1) {
+            if (diffX < 0 && curIndex < tabs.length - 1) {
+              // Deslizar a la izquierda -> Siguiente pestaña
+              this.switchTab(tabs[curIndex + 1]);
+            } else if (diffX > 0 && curIndex > 0) {
+              // Deslizar a la derecha -> Pestaña anterior
+              this.switchTab(tabs[curIndex - 1]);
+            }
+          }
+        }
+        touchStartX = 0;
+      }, { passive: true });
+    }
   }
 
   // --- INSTALACIÓN PWA EN PANTALLA DE INICIO ---
@@ -666,7 +789,7 @@ class UniversityApp {
         </div>
       `;
     } else {
-      html += `<div class="snap-carousel-track" role="region" aria-label="Materias en curso">`;
+      html += `<section class="snap-carousel-track" aria-label="Materias en curso">`;
       currentSemesterMaterias.forEach(m => {
         const statusTextMap = {
           aprobada: "Aprobada",
@@ -701,7 +824,7 @@ class UniversityApp {
           </article>
         `;
       });
-      html += `</div>`;
+      html += `</section>`;
     }
     html += `</div></div>`;
 
@@ -932,41 +1055,173 @@ class UniversityApp {
     `;
   }
 
+  openTrayectoDetailModal(trayectoId) {
+    const pensum = this.state.pensum[this.currentCareer];
+    const targetTrayecto = pensum.trayectos.find(t => t.id === trayectoId);
+    if (!targetTrayecto) return;
+
+    const modalTitle = document.getElementById("modal-trayecto-title");
+    const statusBadge = document.getElementById("modal-trayecto-status-badge");
+    const content = document.getElementById("modal-trayecto-content");
+
+    if (modalTitle) {
+      modalTitle.textContent = targetTrayecto.nombre;
+    }
+
+    const { aprobadas, repetir, enCurso, ucGanadas } = this._getTrayectoSummaryMetrics(targetTrayecto);
+    const isCurrentActive = targetTrayecto.actual || (enCurso > 0);
+
+    if (statusBadge) {
+      if (isCurrentActive) {
+        statusBadge.className = "status-badge status-en_curso";
+        statusBadge.textContent = "EN CURSO";
+      } else if (targetTrayecto.culminado || (targetTrayecto.materias.length > 0 && aprobadas === targetTrayecto.materias.length)) {
+        statusBadge.className = "status-badge status-aprobada";
+        statusBadge.textContent = "CULMINADO";
+      } else {
+        statusBadge.className = "status-badge status-por_cursar";
+        statusBadge.textContent = "POR CURSAR";
+      }
+    }
+
+    const statusTextMap = {
+      aprobada: "Aprobada",
+      en_curso: "En Curso",
+      repetir: "Por Repetir",
+      intensivo_verano: "Intensivo Verano",
+      pendiente_consulta: "Pendiente Consulta",
+      por_cursar: "Por Cursar"
+    };
+
+    let actionsHtml = "";
+    if (isCurrentActive) {
+      actionsHtml = `
+        <button type="button" class="btn-primary" style="padding: 7px 14px; font-size: 0.8rem; border-radius: 8px;" onclick="app.culminateTrayecto('${targetTrayecto.id}', event); app.closeModal('modal-trayecto-detail');">
+          ✓ Culminar Semestre
+        </button>
+      `;
+    } else if (targetTrayecto.culminado) {
+      actionsHtml = `
+        <button type="button" class="btn-secondary" style="padding: 7px 14px; font-size: 0.8rem; border-radius: 8px;" onclick="app.activateTrayecto('${targetTrayecto.id}', event); app.closeModal('modal-trayecto-detail');">
+          Reactivar Semestre
+        </button>
+      `;
+    } else {
+      actionsHtml = `
+        <button type="button" class="btn-primary" style="padding: 7px 14px; font-size: 0.8rem; border-radius: 8px;" onclick="app.activateTrayecto('${targetTrayecto.id}', event); app.closeModal('modal-trayecto-detail');">
+          ▶ Iniciar Este Semestre
+        </button>
+      `;
+    }
+
+    let subjectsHtml = "";
+    targetTrayecto.materias.forEach(m => {
+      const isProyecto = (m.nombre.toLowerCase().includes("proyecto socio") || m.codigo.toLowerCase().includes("psi") || m.codigo.toLowerCase().includes("pst"));
+      const minPass = isProyecto ? 16 : 13;
+      const notaStr = m.nota !== null && m.nota !== undefined ? `${m.nota} pts` : "Sin nota";
+
+      subjectsHtml += `
+        <div class="modal-subject-item" onclick="app.closeModal('modal-trayecto-detail'); app.openSubjectDetailModal('${m.id}');">
+          <div class="modal-subject-item-left">
+            <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+              <span style="font-size: 0.72rem; font-weight: 800; color: var(--text-muted); background: white; border: 1px solid var(--border-color); padding: 2px 7px; border-radius: 4px;">
+                ${m.codigo} • ${m.uc} UC
+              </span>
+              <span class="status-badge status-${m.estatus}" style="font-size: 0.65rem;">
+                ${statusTextMap[m.estatus] || m.estatus}
+              </span>
+            </div>
+            <strong style="font-size: 0.94rem; color: var(--text-primary); margin-top: 3px;">${m.nombre}</strong>
+            <span style="font-size: 0.72rem; color: #166534; font-weight: 700;">Mín. aprobatorio: ${minPass} pts</span>
+          </div>
+
+          <div class="modal-subject-item-right">
+            <div style="text-align: right;">
+              <div style="font-size: 0.68rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Nota Oficial</div>
+              <strong style="font-size: 0.98rem; font-family: var(--font-family-heading); color: var(--primary-marine);">${notaStr}</strong>
+            </div>
+            <button type="button" class="btn-action" style="color: var(--primary-marine); border-color: var(--primary-accent); font-weight: 700;" onclick="event.stopPropagation(); app.closeModal('modal-trayecto-detail'); app.openSubjectDetailModal('${m.id}');">
+              Ficha & Notas →
+            </button>
+          </div>
+        </div>
+      `;
+    });
+
+    if (content) {
+      content.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center; background: #F8FAFC; border: 1.5px solid var(--border-color); border-radius: 12px; padding: 12px 14px; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
+          <div>
+            <div style="font-size: 0.72rem; color: var(--text-muted); font-weight: 800; text-transform: uppercase; letter-spacing: 0.03em;">Resumen del Trayecto</div>
+            <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px;">
+              <span class="meta-pill meta-aprobadas">✓ ${aprobadas} Aprobadas</span>
+              ${repetir > 0 ? `<span class="meta-pill meta-repetir">⚠️ ${repetir} Por Repetir</span>` : ''}
+              <span class="meta-pill meta-uc">🎯 ${ucGanadas} / ${targetTrayecto.totalUC} UC</span>
+            </div>
+          </div>
+          <div>${actionsHtml}</div>
+        </div>
+
+        <div style="margin-bottom: 4px;">
+          <div style="font-size: 0.78rem; font-weight: 800; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 8px;">
+            Asignaturas del Trayecto (${targetTrayecto.materias.length}):
+          </div>
+          <div style="max-height: 52vh; overflow-y: auto; padding-right: 4px;">
+            ${subjectsHtml}
+          </div>
+        </div>
+      `;
+    }
+
+    this.openModal("modal-trayecto-detail");
+  }
+
   _renderDashboardTrayectosSummary(pensum) {
     const summaryContainer = document.getElementById("dashboard-trayectos-summary");
     if (!summaryContainer) return;
 
-    const openTrayectos = new Set(
-      Array.from(document.querySelectorAll("#dashboard-trayectos-summary details[open]")).map(d => d.dataset.trayectoId)
-    );
     let trayectosHtml = "";
     let activeTrayectoName = "";
 
     pensum.trayectos.forEach(t => {
       const { aprobadas, repetir, enCurso, ucGanadas } = this._getTrayectoSummaryMetrics(t);
-      const matListHtml = t.materias.map(m => this._createDashboardSubjectItemHtml(m)).join("");
-
       const isCurrentActive = t.actual || (enCurso > 0);
       if (isCurrentActive && !activeTrayectoName) {
         activeTrayectoName = `${t.nombre} (En Curso)`;
       }
 
-      const trayectoActionBtn = this._createDashboardTrayectoActions(t, isCurrentActive, aprobadas);
-      const isOpenAttr = openTrayectos.has(t.id) ? "open" : "";
+      let statusChip = "";
+      if (isCurrentActive) {
+        statusChip = `<span class="status-badge status-en_curso" style="font-size: 0.68rem;">EN CURSO</span>`;
+      } else if (t.culminado || (t.materias.length > 0 && aprobadas === t.materias.length)) {
+        statusChip = `<span class="status-badge status-aprobada" style="font-size: 0.68rem;">CULMINADO</span>`;
+      }
 
       trayectosHtml += `
-        <details data-trayecto-id="${t.id}" ${isOpenAttr} class="trayecto-block" style="margin-bottom: 6px; border-radius: 8px;">
-          <summary class="trayecto-header" style="padding: 7px 10px; cursor: pointer; user-select: none;">
-            <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
-              <h3 style="margin: 0; font-size: 0.85rem; color: var(--primary-blue); display: inline-block;">${t.nombre}</h3>
-              <div style="display: inline-flex; align-items: center; gap: 4px; flex-wrap: wrap;">${trayectoActionBtn}</div>
+        <div class="trayecto-summary-card" onclick="app.openTrayectoDetailModal('${t.id}')">
+          <div class="trayecto-summary-card-header">
+            <div class="trayecto-summary-title-wrap">
+              <span class="trayecto-folder-icon">📚</span>
+              <div>
+                <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                  <h3 class="trayecto-card-title">${t.nombre}</h3>
+                  ${statusChip}
+                </div>
+                <div class="trayecto-card-meta">
+                  <span class="meta-pill meta-aprobadas">✓ ${aprobadas} Aprobadas</span>
+                  ${repetir > 0 ? `<span class="meta-pill meta-repetir">⚠️ ${repetir} Por Repetir</span>` : ''}
+                  <span class="meta-pill meta-uc">🎯 ${ucGanadas}/${t.totalUC} UC</span>
+                </div>
+              </div>
             </div>
-            <div style="font-size: 0.72rem; color: var(--text-secondary);">
-              Aprobadas: <strong>${aprobadas}</strong> | Repetir: <strong>${repetir}</strong> | UC: <strong>${ucGanadas}/${t.totalUC}</strong>
+
+            <div class="trayecto-summary-actions">
+              <button type="button" class="btn-primary" style="padding: 7px 14px; font-size: 0.78rem; border-radius: 8px; font-weight: 700;" onclick="event.stopPropagation(); app.openTrayectoDetailModal('${t.id}')">
+                Ver Materias (${t.materias.length}) ▾
+              </button>
             </div>
-          </summary>
-          <div style="padding: 6px 10px; border-top: 1px solid var(--border-color);">${matListHtml}</div>
-        </details>
+          </div>
+        </div>
       `;
     });
 

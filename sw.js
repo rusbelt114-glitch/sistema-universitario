@@ -1,6 +1,6 @@
 /* global self, caches */
 // Service Worker para Sistema Universitario PWA
-const CACHE_NAME = "sistema-univ-v12";
+const CACHE_NAME = "sistema-univ-v16";
 const ASSETS = [
   "./",
   "./index.html",
@@ -38,7 +38,7 @@ self.addEventListener("fetch", (e) => {
   e.respondWith(
     fetch(e.request)
       .then((networkResponse) => {
-        if (networkResponse && networkResponse.status === 200) {
+        if (networkResponse?.status === 200) {
           const responseClone = networkResponse.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(e.request, responseClone));
         }
