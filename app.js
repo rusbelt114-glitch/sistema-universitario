@@ -4,6 +4,11 @@
  */
 /* global PENSUM_ADMINISTRACION, PENSUM_INFORMATICA, EVALUACIONES_INICIALES, HORARIO_DEFECTO */
 
+const SUPABASE_CONFIG = {
+  url: "https://cnpqkrgobykztuyywkee.supabase.co",
+  anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNucHFrcmdvYnlrenR1eXl3a2VlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAyMzA5NjQsImV4cCI6MjEwNTgwNjk2NH0.jGu_tiQSodQ2Bj5yhSwdPZIgst-uY7dn6SB1yRUX5LY"
+};
+
 let deferredPrompt;
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
@@ -17,8 +22,20 @@ class UniversityApp {
   currentTab = "dashboard";
   hasEnteredApp = false;
   selectedEvalSubjectId = null;
+  isAdmin = false;
+  currentUser = null;
+  supabaseClient = null;
+  cloudSyncTimer = null;
 
   constructor() {
+    if (window.supabase && SUPABASE_CONFIG.url) {
+      try {
+        this.supabaseClient = window.supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
+      } catch (err) {
+        console.warn("Supabase init error:", err);
+      }
+    }
+
     this.state = {
       pensum: {
         ADM: structuredClone(PENSUM_ADMINISTRACION),
@@ -38,6 +55,7 @@ class UniversityApp {
 
   init() {
     this.loadState();
+    this.initSupabaseAuthAndSync();
 
     const landing = document.getElementById("landing-screen");
     const mainApp = document.getElementById("main-app-screen");
@@ -358,7 +376,304 @@ class UniversityApp {
     };
     localStorage.setItem(this.storageKey, JSON.stringify(toSave));
 
-    fetch('/api/git-sync', { method: 'POST' }).catch(() => { });
+    if (this.isAdmin) {
+      if (this.cloudSyncTimer) clearTimeout(this.cloudSyncTimer);
+      this.cloudSyncTimer = setTimeout(() => {
+        this.syncToCloud();
+      }, 600);
+    }
+  }
+
+  // --- CONTROL DE SEGURIDAD & NUBE (SUPABASE) ---
+  requireAdmin(actionDescription = "realizar modificaciones") {
+    if (!this.isAdmin) {
+      this.showToast(`🔒 Modo Lectura. Inicia sesión como administrador para ${actionDescription}.`, "warning");
+      this.openAdminLoginModal();
+      return false;
+    }
+    return true;
+  }
+
+  async initSupabaseAuthAndSync() {
+    if (!this.supabaseClient) return;
+
+    this.supabaseClient.auth.onAuthStateChange((event, session) => {
+      this.handleAuthStateChange(session);
+    });
+
+    try {
+      const { data } = await this.supabaseClient.auth.getSession();
+      this.handleAuthStateChange(data?.session);
+    } catch (e) {
+      console.warn("Error leyendo sesión Supabase:", e);
+    }
+
+    await this.fetchFromCloud();
+  }
+
+  handleAuthStateChange(session) {
+    if (session && session.user) {
+      this.isAdmin = true;
+      this.currentUser = session.user;
+    } else {
+      this.isAdmin = false;
+      this.currentUser = null;
+    }
+    this.updateAuthUI();
+  }
+
+  updateAuthUI() {
+    // 1. Alternar clases en body para ocultar/mostrar botones de edición
+    document.body.classList.toggle('is-admin-mode', this.isAdmin);
+    document.body.classList.toggle('is-readonly-mode', !this.isAdmin);
+
+    const userDisplay = this.currentUser?.email?.split('@')[0] || 'rusbelt';
+
+    // 2. Botón píldora en cabecera
+    const btn = document.getElementById("btn-admin-auth");
+    const indicator = document.getElementById("admin-auth-indicator");
+    const text = document.getElementById("admin-auth-status-text");
+    if (btn) {
+      if (this.isAdmin) {
+        btn.style.background = "rgba(16, 185, 129, 0.35)";
+        btn.style.borderColor = "#10B981";
+        btn.style.color = "#FFFFFF";
+        btn.title = `Conectado como: ${userDisplay}. Clic para cerrar sesión.`;
+        if (indicator) indicator.textContent = "🟢";
+        if (text) text.textContent = `Admin (${userDisplay})`;
+      } else {
+        btn.style.background = "rgba(255, 255, 255, 0.15)";
+        btn.style.borderColor = "rgba(255, 255, 255, 0.35)";
+        btn.style.color = "#FFFFFF";
+        btn.title = "Modo Lectura. Clic para Iniciar Sesión de Administrador.";
+        if (indicator) indicator.textContent = "🔒";
+        if (text) text.textContent = "Modo Lectura";
+      }
+    }
+
+    // 3. Banner Visual Permanente debajo de cabecera
+    const banner = document.getElementById("mode-status-banner");
+    if (banner) {
+      if (this.isAdmin) {
+        banner.className = "mode-status-banner mode-banner-admin";
+        banner.innerHTML = `
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="font-size:1.25rem;">🟢</span>
+            <span><strong>MODO ADMINISTRADOR ACTIVO</strong> — Conectado como <strong>${userDisplay}</strong>. Edición completa y guardado automático en la nube.</span>
+          </div>
+          <button type="button" onclick="app.logoutAdmin()" class="mode-banner-btn" style="color:#065F46;border-color:#10B981;background:#D1FAE5;">
+            🚪 Cerrar Sesión Admin
+          </button>
+        `;
+      } else {
+        banner.className = "mode-status-banner mode-banner-readonly";
+        banner.innerHTML = `
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="font-size:1.25rem;">👁️</span>
+            <span><strong>MODO SOLO LECTURA</strong> — Consulta de pensum, notas y horarios. Opciones de edición bloqueadas.</span>
+          </div>
+          <button type="button" onclick="app.openAdminLoginModal()" class="mode-banner-btn" style="color:#92400E;border-color:#F59E0B;background:#FEF3C7;">
+            🔑 Iniciar Sesión como Administrador
+          </button>
+        `;
+      }
+    }
+
+    // 4. Insignia en pantalla de inicio (landing)
+    const landingBadge = document.getElementById("landing-auth-badge");
+    if (landingBadge) {
+      if (this.isAdmin) {
+        landingBadge.innerHTML = `
+          <div style="display:inline-flex;align-items:center;gap:8px;background:#ECFDF5;border:1px solid #A7F3D0;padding:6px 14px;border-radius:20px;">
+            <span style="color:#065F46;font-size:0.82rem;font-weight:700;">🟢 Administrador: <strong>${userDisplay}</strong></span>
+            <button type="button" onclick="app.logoutAdmin()" style="background:none;border:none;color:#BE123C;font-size:0.8rem;cursor:pointer;text-decoration:underline;font-weight:bold;margin-left:4px;">Cerrar Sesión</button>
+          </div>
+        `;
+      } else {
+        landingBadge.innerHTML = `
+          <div style="display:inline-flex;align-items:center;gap:8px;background:#F8FAFC;border:1px solid #E2E8F0;padding:6px 14px;border-radius:20px;">
+            <span style="color:#64748b;font-size:0.8rem;font-weight:600;">👁️ Modo Consulta (Público)</span>
+            <button type="button" onclick="app.openAdminLoginModal()" style="background:none;border:none;color:#0A4D40;font-size:0.82rem;cursor:pointer;text-decoration:underline;font-weight:bold;margin-left:4px;">🔑 Acceso Administrador</button>
+          </div>
+        `;
+      }
+    }
+  }
+
+  handleAuthButtonClick() {
+    if (this.isAdmin) {
+      const email = this.currentUser ? this.currentUser.email : "Admin";
+      if (confirm(`Estás conectado en Modo Administrador (${email}).\n¿Deseas cerrar sesión y volver a Modo Lectura?`)) {
+        this.logoutAdmin();
+      }
+    } else {
+      this.openAdminLoginModal();
+    }
+  }
+
+  openAdminLoginModal() {
+    const errorBox = document.getElementById("admin-login-error");
+    if (errorBox) {
+      errorBox.style.display = "none";
+      errorBox.textContent = "";
+    }
+    const emailInput = document.getElementById("admin-login-email");
+    const passInput = document.getElementById("admin-login-password");
+    if (emailInput) {
+      const savedUser = localStorage.getItem("last_admin_username") || "rusbelt";
+      emailInput.value = savedUser;
+    }
+    if (passInput) {
+      passInput.value = "";
+    }
+    this.openModal("modal-admin-login");
+    setTimeout(() => {
+      if (passInput && document.getElementById("admin-login-email")?.value) {
+        passInput.focus();
+      } else if (emailInput) {
+        emailInput.focus();
+      }
+    }, 150);
+  }
+
+  quickFillAdminUser(username = "rusbelt") {
+    const emailInput = document.getElementById("admin-login-email");
+    const passInput = document.getElementById("admin-login-password");
+    if (emailInput) {
+      emailInput.value = username;
+      emailInput.dispatchEvent(new Event("input", { bubbles: true }));
+      emailInput.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+    if (passInput) {
+      passInput.focus();
+    }
+  }
+
+  async submitAdminLogin(event) {
+    event.preventDefault();
+    if (!this.supabaseClient) {
+      alert("Error: Conexión con Supabase no inicializada.");
+      return;
+    }
+
+    const rawInput = document.getElementById("admin-login-email").value.trim();
+    localStorage.setItem("last_admin_username", rawInput);
+    let email = rawInput;
+    if (!email.includes("@")) {
+      email = "rusbelt.114@gmail.com";
+    }
+    const password = document.getElementById("admin-login-password").value;
+    const errorBox = document.getElementById("admin-login-error");
+    const btnSubmit = document.getElementById("btn-submit-admin-login");
+
+    if (btnSubmit) {
+      btnSubmit.disabled = true;
+      btnSubmit.textContent = "Verificando...";
+    }
+
+    try {
+      const { data, error } = await this.supabaseClient.auth.signInWithPassword({
+        email: email,
+        password: password
+      });
+
+      if (error) {
+        if (errorBox) {
+          errorBox.style.display = "block";
+          errorBox.textContent = "Error: " + (error.message || "Credenciales incorrectas.");
+        }
+      } else {
+        this.handleAuthStateChange(data.session);
+        this.closeModal("modal-admin-login");
+        this.showToast("¡Sesión iniciada con éxito! Modo Administrador activado.", "success");
+        await this.syncToCloud(true);
+      }
+    } catch (err) {
+      if (errorBox) {
+        errorBox.style.display = "block";
+        errorBox.textContent = "Error de conexión: " + err.message;
+      }
+    } finally {
+      if (btnSubmit) {
+        btnSubmit.disabled = false;
+        btnSubmit.textContent = "Entrar y Activar Edición";
+      }
+    }
+  }
+
+  async logoutAdmin() {
+    if (this.supabaseClient) {
+      try {
+        await this.supabaseClient.auth.signOut();
+      } catch (e) {
+        console.warn(e);
+      }
+    }
+    this.isAdmin = false;
+    this.currentUser = null;
+    this.updateAuthUI();
+    this.render();
+    this.showToast("Sesión de Administrador cerrada. Ahora estás en Modo Lectura.", "info");
+  }
+
+  async fetchFromCloud() {
+    if (!this.supabaseClient) return;
+    try {
+      const { data, error } = await this.supabaseClient
+        .from('app_state')
+        .select('data, updated_at')
+        .eq('id', 'master_data')
+        .single();
+
+      if (!error && data && data.data && Object.keys(data.data).length > 0) {
+        if (data.data.pensum) {
+          this.applySavedState(data.data);
+          this.render();
+          console.log("☁️ Datos sincronizados desde Supabase:", data.updated_at);
+        }
+      } else if (this.isAdmin) {
+        await this.syncToCloud(true);
+      }
+    } catch (e) {
+      console.warn("No se pudo cargar desde Supabase:", e);
+    }
+  }
+
+  async syncToCloud(force = false) {
+    if (!this.supabaseClient) return;
+    if (!this.isAdmin && !force) return;
+
+    const payload = {
+      pensum: this.state.pensum,
+      evaluaciones: this.state.evaluaciones,
+      horario: this.state.horario,
+      notificaciones: this.state.notificaciones,
+      currentCareer: this.currentCareer,
+      currentWeek: this.currentWeek,
+      currentTab: this.currentTab
+    };
+
+    try {
+      const statusText = document.getElementById("admin-auth-status-text");
+      if (statusText && this.isAdmin) statusText.textContent = "Admin (Guardando...)";
+
+      const { error } = await this.supabaseClient
+        .from('app_state')
+        .upsert({
+          id: 'master_data',
+          data: payload,
+          updated_at: new Date().toISOString()
+        });
+
+      if (error) {
+        console.warn("Fallo al guardar en Supabase:", error.message);
+      }
+    } catch (e) {
+      console.warn("Error en syncToCloud:", e);
+    } finally {
+      const statusText = document.getElementById("admin-auth-status-text");
+      if (statusText && this.isAdmin) statusText.textContent = "Admin (Activo)";
+    }
   }
 
   // --- CONTROL DE NAVEGACIÓN Y CARRERA ---
@@ -377,7 +692,8 @@ class UniversityApp {
     this.switchTab(this.currentTab || "dashboard");
   }
 
-  logout() {
+  async logout() {
+    await this.logoutAdmin();
     this.hasEnteredApp = false;
     this.saveState();
     const landing = document.getElementById("landing-screen");
@@ -1503,8 +1819,8 @@ class UniversityApp {
           <td>${statusBadge}</td>
           <td>
             <div style="display:flex; gap:4px;">
-              <button type="button" class="btn-action" style="padding:2px 6px; font-size:0.7rem;" onclick="app.openEditEvalModal('${idx}')">Editar</button>
-              <button type="button" class="btn-action" style="padding:2px 6px; font-size:0.7rem; color:#BE123C; border-color:#FECDD3;" onclick="app.deleteEvaluation('${idx}')">&times;</button>
+              <button type="button" class="btn-action admin-only-btn" style="padding:2px 6px; font-size:0.7rem;" onclick="app.openEditEvalModal('${idx}')">Editar</button>
+              <button type="button" class="btn-action admin-only-btn" style="padding:2px 6px; font-size:0.7rem; color:#BE123C; border-color:#FECDD3;" onclick="app.deleteEvaluation('${idx}')">&times;</button>
             </div>
           </td>
         </tr>
@@ -1560,7 +1876,7 @@ class UniversityApp {
           </div>
           <div style="display: flex; align-items: center; gap: 6px;">
             <span class="status-badge status-${foundSubject.estatus}">${statusText}</span>
-            <button type="button" class="btn-action" style="font-size: 0.72rem; padding: 3px 8px;" onclick="app.openEditSubjectModal('${foundSubject.id}')">Editar Datos</button>
+            <button type="button" class="btn-action admin-only-btn" style="font-size: 0.72rem; padding: 3px 8px;" onclick="app.openEditSubjectModal('${foundSubject.id}')">Editar Datos</button>
           </div>
         </div>
 
@@ -1572,8 +1888,8 @@ class UniversityApp {
               Ponderación: ${evalCalc.totalWeight}% / 100% • Acumulado: <span style="color: var(--primary-blue);">${evalCalc.totalScoreWeighted.toFixed(2)} / 20 pts</span>
             </div>
             <div style="display: flex; gap: 6px;">
-              <button type="button" class="btn-primary" style="padding: 3px 8px; font-size: 0.72rem;" onclick="app.openAddEvalModal()">+ Nueva Evaluación</button>
-              <button type="button" class="btn-action" style="background: #117A65; color: white; border: none; font-weight: bold; padding: 3px 8px; font-size: 0.72rem;" onclick="app.syncEvalGradeToPensum('${subjectId}')">Sincronizar Nota</button>
+              <button type="button" class="btn-primary admin-only-btn" style="padding: 3px 8px; font-size: 0.72rem;" onclick="app.openAddEvalModal()">+ Nueva Evaluación</button>
+              <button type="button" class="btn-action admin-only-btn" style="background: #117A65; color: white; border: none; font-weight: bold; padding: 3px 8px; font-size: 0.72rem;" onclick="app.syncEvalGradeToPensum('${subjectId}')">Sincronizar Nota</button>
             </div>
           </div>
 
@@ -1747,6 +2063,7 @@ class UniversityApp {
 
   saveSubjectEdit(event) {
     event.preventDefault();
+    if (!this.requireAdmin("editar o crear asignaturas")) return;
     const scrollPos = window.scrollY;
     const formData = this.getSubjectFormData();
     if (!formData) return;
@@ -1775,6 +2092,7 @@ class UniversityApp {
   }
 
   deleteSubject(subjectId) {
+    if (!this.requireAdmin("eliminar asignaturas del pensum")) return;
     const pensum = this.state.pensum[this.currentCareer];
     pensum.trayectos.forEach(t => {
       t.materias = t.materias.filter(m => m.id !== subjectId);
@@ -2058,6 +2376,7 @@ class UniversityApp {
   }
 
   syncEvalGradeToPensum(subjectId) {
+    if (!this.requireAdmin("sincronizar notas al pensum")) return;
     const scrollPos = window.scrollY;
     const { foundSubject: found } = this.findSubjectAndTrayecto(subjectId);
     if (!found) return;
@@ -2121,6 +2440,7 @@ class UniversityApp {
 
   saveEvaluation(event) {
     event.preventDefault();
+    if (!this.requireAdmin("guardar evaluaciones")) return;
     if (!this.selectedEvalSubjectId) return;
 
     const scrollPos = window.scrollY;
@@ -2158,6 +2478,7 @@ class UniversityApp {
   }
 
   deleteEvaluation(index) {
+    if (!this.requireAdmin("eliminar evaluaciones")) return;
     this.state.evaluaciones[this.selectedEvalSubjectId].splice(index, 1);
     this.saveState();
     this.loadEvaluationsForSubject(this.selectedEvalSubjectId);
@@ -2220,6 +2541,7 @@ class UniversityApp {
   }
 
   clearCurrentSchedule() {
+    if (!this.requireAdmin("limpiar el horario")) return;
     const items = this.getScheduleList();
     items.length = 0;
     this.saveState();
@@ -2228,6 +2550,7 @@ class UniversityApp {
   }
 
   deleteScheduleClass(classId) {
+    if (!this.requireAdmin("eliminar clases del horario")) return;
     const items = this.getScheduleList();
     const idx = items.findIndex(i => i.id === classId);
     if (idx !== -1) {
@@ -2261,6 +2584,7 @@ class UniversityApp {
 
   saveScheduleClass(event) {
     event.preventDefault();
+    if (!this.requireAdmin("guardar clases en el horario")) return;
     const day = document.getElementById("sched-day").value;
     const shift = document.getElementById("sched-shift")?.value || "Mañana";
     const time = document.getElementById("sched-time").value;
@@ -2325,6 +2649,7 @@ class UniversityApp {
 
   saveTaskNotification(event) {
     event.preventDefault();
+    if (!this.requireAdmin("crear tareas o alertas")) return;
     const title = document.getElementById("task-title").value;
     const desc = document.getElementById("task-desc").value;
     const priority = document.getElementById("task-priority").value;
@@ -2343,6 +2668,7 @@ class UniversityApp {
   }
 
   deleteNotification(notifId) {
+    if (!this.requireAdmin("eliminar alertas o tareas")) return;
     const idx = this.state.notificaciones.findIndex(n => n.id === notifId);
     if (idx !== -1) {
       this.state.notificaciones.splice(idx, 1);
@@ -2636,6 +2962,7 @@ class UniversityApp {
   }
 
   async importDataJSON(event) {
+    if (!this.requireAdmin("importar datos de respaldo")) return;
     const file = event.target.files[0];
     if (!file) return;
 

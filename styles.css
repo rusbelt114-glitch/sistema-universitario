@@ -82,19 +82,22 @@
 /* ==========================================================================
    RESET & NORMAS ESTRICTAS ANTI-DESBORDAMIENTO
    ========================================================================== */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
   -webkit-tap-highlight-color: transparent;
 }
 
-html, body {
+html,
+body {
   width: 100%;
   max-width: 100%;
   overflow-x: hidden;
   background-color: #F8FAFC;
-  background-image: 
+  background-image:
     radial-gradient(at 0% 0%, rgba(6, 78, 59, 0.035) 0px, transparent 50%),
     radial-gradient(at 100% 0%, rgba(37, 99, 235, 0.035) 0px, transparent 50%),
     radial-gradient(at 50% 100%, rgba(13, 148, 136, 0.03) 0px, transparent 50%);
@@ -108,16 +111,22 @@ html, body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-h1, h2, h3, h4, h5, h6, 
-.user-login-title, 
-.section-header-title, 
-.modal-title, 
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.user-login-title,
+.section-header-title,
+.modal-title,
 .header-title-text h1 {
   font-family: var(--font-family-heading);
   letter-spacing: -0.025em;
 }
 
-img, svg {
+img,
+svg {
   max-width: 100%;
   height: auto;
   display: block;
@@ -517,11 +526,12 @@ img, svg {
   align-items: center;
   justify-content: center;
   background: transparent;
-  color: #4D6263; /* M3 onSurfaceVariant / secondary */
+  color: #4D6263;
+  /* M3 onSurfaceVariant / secondary */
   transition: background-color 0.28s cubic-bezier(0.2, 0, 0, 1),
-              color 0.28s cubic-bezier(0.2, 0, 0, 1),
-              transform 0.28s cubic-bezier(0.2, 0, 0, 1),
-              box-shadow 0.28s cubic-bezier(0.2, 0, 0, 1);
+    color 0.28s cubic-bezier(0.2, 0, 0, 1),
+    transform 0.28s cubic-bezier(0.2, 0, 0, 1),
+    box-shadow 0.28s cubic-bezier(0.2, 0, 0, 1);
 }
 
 .bottom-nav-svg {
@@ -544,8 +554,10 @@ img, svg {
 
 /* Estado ACTIVO: Píldora verde claro agua brillante + Icono/Texto en verde azulado profundo */
 .bottom-nav-item.active .bottom-nav-pill {
-  background: #CCE8E9; /* M3 secondaryContainer (Verde Claro Agua) */
-  color: #002022; /* M3 onPrimaryContainer */
+  background: #CCE8E9;
+  /* M3 secondaryContainer (Verde Claro Agua) */
+  color: #002022;
+  /* M3 onPrimaryContainer */
   box-shadow: 0 2px 10px rgba(0, 105, 110, 0.18);
   animation: navPillPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
@@ -555,7 +567,8 @@ img, svg {
 }
 
 .bottom-nav-item.active .bottom-nav-label {
-  color: #002022; /* M3 onPrimaryContainer */
+  color: #002022;
+  /* M3 onPrimaryContainer */
   font-weight: 800;
   transform: translateY(-0.5px);
 }
@@ -564,9 +577,11 @@ img, svg {
   0% {
     transform: scale(0.82);
   }
+
   60% {
     transform: scale(1.08);
   }
+
   100% {
     transform: scale(1);
   }
@@ -607,12 +622,15 @@ img, svg {
   .nav-tabs {
     display: none;
   }
+
   .mobile-bottom-nav {
     display: flex;
   }
+
   .mobile-fab {
     display: flex;
   }
+
   #tab-content-area {
     padding-bottom: 98px;
   }
@@ -705,19 +723,36 @@ img, svg {
     margin: 0 0 14px 0;
     padding: 4px 2px 12px 2px;
   }
+
   .snap-metric-card {
     flex: 1 1 0;
     max-width: none;
   }
+
   .snap-card {
     flex: 0 0 280px;
   }
 }
 
-.snap-metric-card:nth-child(1) { background: linear-gradient(145deg, #EFF6FF 0%, #DBEAFE 100%); border-color: #BFDBFE; }
-.snap-metric-card:nth-child(2) { background: linear-gradient(145deg, #ECFDF5 0%, #D1FAE5 100%); border-color: #A7F3D0; }
-.snap-metric-card:nth-child(3) { background: linear-gradient(145deg, #FFFBEB 0%, #FEF3C7 100%); border-color: #FDE68A; }
-.snap-metric-card:nth-child(4) { background: linear-gradient(145deg, #FAF5FF 0%, #F3E8FF 100%); border-color: #E9D5FF; }
+.snap-metric-card:nth-child(1) {
+  background: linear-gradient(145deg, #EFF6FF 0%, #DBEAFE 100%);
+  border-color: #BFDBFE;
+}
+
+.snap-metric-card:nth-child(2) {
+  background: linear-gradient(145deg, #ECFDF5 0%, #D1FAE5 100%);
+  border-color: #A7F3D0;
+}
+
+.snap-metric-card:nth-child(3) {
+  background: linear-gradient(145deg, #FFFBEB 0%, #FEF3C7 100%);
+  border-color: #FDE68A;
+}
+
+.snap-metric-card:nth-child(4) {
+  background: linear-gradient(145deg, #FAF5FF 0%, #F3E8FF 100%);
+  border-color: #E9D5FF;
+}
 
 .metric-label {
   font-size: 0.7rem;
@@ -889,7 +924,7 @@ details[open].trayecto-block {
   background: #FFFFFF;
 }
 
-details[open] > .trayecto-header {
+details[open]>.trayecto-header {
   border-bottom: 1.5px solid var(--border-color);
   background: linear-gradient(145deg, #F8FAFC 0%, #EFF6FF 100%);
 }
@@ -931,12 +966,41 @@ details[open] > .trayecto-header {
   border: 1px solid transparent;
 }
 
-.status-aprobada { background: var(--status-aprobada-bg); color: var(--status-aprobada-text); border-color: var(--status-aprobada-border); }
-.status-en_curso { background: var(--status-en-curso-bg); color: var(--status-en-curso-text); border-color: var(--status-en-curso-border); }
-.status-repetir { background: var(--status-repetir-bg); color: var(--status-repetir-text); border-color: var(--status-repetir-border); }
-.status-intensivo_verano { background: var(--status-intensivo-bg); color: var(--status-intensivo-text); border-color: var(--status-intensivo-border); }
-.status-pendiente_consulta { background: var(--status-pendiente-bg); color: var(--status-pendiente-text); border-color: var(--status-pendiente-border); }
-.status-por_cursar { background: var(--status-por-cursar-bg); color: var(--status-por-cursar-text); border-color: var(--status-por-cursar-border); }
+.status-aprobada {
+  background: var(--status-aprobada-bg);
+  color: var(--status-aprobada-text);
+  border-color: var(--status-aprobada-border);
+}
+
+.status-en_curso {
+  background: var(--status-en-curso-bg);
+  color: var(--status-en-curso-text);
+  border-color: var(--status-en-curso-border);
+}
+
+.status-repetir {
+  background: var(--status-repetir-bg);
+  color: var(--status-repetir-text);
+  border-color: var(--status-repetir-border);
+}
+
+.status-intensivo_verano {
+  background: var(--status-intensivo-bg);
+  color: var(--status-intensivo-text);
+  border-color: var(--status-intensivo-border);
+}
+
+.status-pendiente_consulta {
+  background: var(--status-pendiente-bg);
+  color: var(--status-pendiente-text);
+  border-color: var(--status-pendiente-border);
+}
+
+.status-por_cursar {
+  background: var(--status-por-cursar-bg);
+  color: var(--status-por-cursar-text);
+  border-color: var(--status-por-cursar-border);
+}
 
 /* ==========================================================================
    BOTONES ERGONÓMICOS TÁCTILES
@@ -1164,8 +1228,13 @@ details[open] > .trayecto-header {
 }
 
 @keyframes modalOverlayFadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 .modal-card {
@@ -1182,8 +1251,15 @@ details[open] > .trayecto-header {
 }
 
 @keyframes modalScaleIn {
-  from { opacity: 0; transform: scale(0.95) translateY(8px); }
-  to { opacity: 1; transform: scale(1) translateY(0); }
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
 
 .modal-header {
@@ -1298,10 +1374,21 @@ details[open] > .trayecto-header {
   transform: translateY(0);
 }
 
-.app-toast-success { border-left: 4px solid #10B981; }
-.app-toast-warning { border-left: 4px solid #F59E0B; }
-.app-toast-error { border-left: 4px solid #EF4444; }
-.app-toast-info { border-left: 4px solid #3B82F6; }
+.app-toast-success {
+  border-left: 4px solid #10B981;
+}
+
+.app-toast-warning {
+  border-left: 4px solid #F59E0B;
+}
+
+.app-toast-error {
+  border-left: 4px solid #EF4444;
+}
+
+.app-toast-info {
+  border-left: 4px solid #3B82F6;
+}
 
 /* ==========================================================================
    COMPONENTES ESPECÍFICOS: TABLAS, SIMULADOR, HORARIO & ALERTAS
@@ -1505,18 +1592,79 @@ tr:hover td {
     background: white;
     color: black;
   }
-  .app-header, .nav-tabs, .mobile-bottom-nav, .mobile-fab, .form-actions, .modal-close-btn {
+
+  .app-header,
+  .nav-tabs,
+  .mobile-bottom-nav,
+  .mobile-fab,
+  .form-actions,
+  .modal-close-btn {
     display: none !important;
   }
+
   .modal-overlay {
     position: static;
     display: block;
     background: white;
     padding: 0;
   }
+
   .modal-card {
     max-width: 100%;
     box-shadow: none;
     padding: 0;
   }
+}
+
+/* ==========================================================================
+   BANNER DE ESTADO Y SEGURIDAD (MODO LECTURA VS MODO ADMINISTRADOR)
+   ========================================================================== */
+.mode-status-banner {
+  padding: 10px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border-bottom: 2px solid rgba(0, 0, 0, 0.06);
+  transition: all 0.3s ease;
+}
+
+.mode-banner-admin {
+  background: #ECFDF5;
+  color: #065F46;
+  border-left: 6px solid #10B981;
+}
+
+.mode-banner-readonly {
+  background: #FFFBEB;
+  color: #92400E;
+  border-left: 6px solid #F59E0B;
+}
+
+.mode-banner-btn {
+  padding: 6px 14px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid currentColor;
+  background: #FFFFFF;
+  cursor: pointer;
+  transition: var(--transition);
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mode-banner-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-xs);
+}
+
+/* Ocultar botones de edición para usuarios en Modo Lectura */
+body.is-readonly-mode .admin-only-btn {
+  display: none !important;
 }
